@@ -1,237 +1,540 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Super Jump Adventure</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;background:#70d8ff;font-family:Arial;text-align:center}
-h2{color:#173a70}
-canvas{width:min(96vw,900px);height:auto;border:4px solid white;border-radius:8px}
-p{font-weight:bold}
-button{padding:12px 20px;margin:5px;border:0;border-radius:10px;
-background:#ffce32;font-size:18px;font-weight:bold}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Mario Mini Game</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+        body {
+            background-color: #111;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        #game-container {
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            border: 4px solid #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #5c94fc;
+        }
+        canvas {
+            display: block;
+            background: #5c94fc;
+        }
+        #ui-overlay {
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px #000;
+            z-index: 10;
+        }
+        #controls-hint {
+            margin-top: 12px;
+            text-align: center;
+            color: #ccc;
+            font-size: 14px;
+        }
+        /* Touch Controls for Mobile */
+        #touch-controls {
+            display: none;
+            margin-top: 15px;
+            gap: 20px;
+            z-index: 20;
+        }
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid #fff;
+            color: white;
+            padding: 12px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            touch-action: manipulation;
+        }
+        .btn:active {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        @media (max-width: 768px) {
+            #touch-controls {
+                display: flex;
+            }
+        }
+    </style>
 </head>
 <body>
-<h2>🍄 SUPER JUMP ADVENTURE</h2>
-<p>Điểm: <span id="score">0</span> | Xu: <span id="coins">0</span></p>
-<canvas id="game" width="900" height="500"></canvas>
-<div>
-<button onclick="keys.left=true">⬅️</button>
-<button onclick="jump()">NHẢY ⬆️</button>
-<button onclick="keys.right=true">➡️</button>
-<button onclick="restart()">🔄 Chơi lại</button>
-</div>
-<p>Máy tính: ← → để chạy, Space hoặc ↑ để nhảy.</p>
+
+    <div id="game-container">
+        <div id="ui-overlay">
+            <div>MARIO<br><span id="score">000000</span></div>
+            <div>COINS<br>🪙 x<span id="coins">00</span></div>
+            <div>WORLD<br>1-1</div>
+            <div>TIME<br><span id="timer">400</span></div>
+        </div>
+        <canvas id="canvas" width="640" height="400"></canvas>
+    </div>
+
+    <div id="controls-hint">
+        🎮 <b>Điều khiển:</b> ⬅️ ➡️ Di chuyển | <b>Z / Space / ⬆️</b> Nhảy
+    </div>
+
+    <div id="touch-controls">
+        <button class="btn" id="btn-left">⬅️ Left</button>
+        <button class="btn" id="btn-jump">🚀 Jump</button>
+        <button class="btn" id="btn-right">Right ➡️</button>
+    </div>
 
 <script>
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
-const W=900,H=500;
-let keys={left:false,right:false};
-let player,platforms,coins,enemies,score,coinCount,camera,over,win;
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
 
-function restart(){
- player={x:50,y:300,w:30,h:40,vx:0,vy:0,onGround:false};
- platforms=[
-  {x:0,y:450,w:500,h:50},
-  {x:560,y:450,w:250,h:50},
-  {x:870,y:450,w:350,h:50},
-  {x:300,y:350,w:100,h:18},
-  {x:620,y:340,w:100,h:18},
-  {x:930,y:360,w:120,h:18},
-  {x:1120,y:320,w:100,h:18},
-  {x:1300,y:450,w:500,h:50}
- ];
- coins=[
-  {x:320,y:310,got:false},{x:360,y:310,got:false},
-  {x:650,y:300,got:false},{x:700,y:300,got:false},
-  {x:960,y:320,got:false},{x:1150,y:280,got:false},
-  {x:1400,y:400,got:false},{x:1460,y:400,got:false}
- ];
- enemies=[
-  {x:390,y:420,vx:1.1,alive:true},
-  {x:700,y:310,vx:1,alive:true},
-  {x:1020,y:420,vx:1.3,alive:true},
-  {x:1510,y:420,vx:1.2,alive:true}
- ];
- score=0;coinCount=0;camera=0;over=false;win=false;
-}
-restart();
+// --- Audio Synthesizer (Không cần tệp MP3 bên ngoài) ---
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
 
-function jump(){
- if(player.onGround&&!over&&!win){
-  player.vy=-12;
-  player.onGround=false;
- }
+function initAudio() {
+    if (!audioCtx) audioCtx = new AudioContext();
 }
-document.addEventListener("keydown",e=>{
- if(["ArrowLeft","ArrowRight","ArrowUp"," "].includes(e.key))e.preventDefault();
- if(e.repeat)return;
- if(e.key==="ArrowLeft")keys.left=true;
- if(e.key==="ArrowRight")keys.right=true;
- if(e.key==="ArrowUp"||e.key===" ")jump();
+
+function playSound(type) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    const now = audioCtx.currentTime;
+    if (type === 'jump') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.15);
+        osc.start(now);
+        osc.stop(now + 0.15);
+    } else if (type === 'coin') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(987.77, now);
+        osc.frequency.setValueAtTime(1318.51, now + 0.08);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+    } else if (type === 'stomp') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.linearRampToValueAtTime(30, now + 0.1);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+    } else if (type === 'win') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.setValueAtTime(600, now + 0.1);
+        osc.frequency.setValueAtTime(800, now + 0.2);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.5);
+        osc.start(now);
+        osc.stop(now + 0.5);
+    }
+}
+
+// --- Cấu hình Game ---
+const GRAVITY = 0.45;
+const BLOCK_SIZE = 32;
+
+let score = 0;
+let coins = 0;
+let gameOver = false;
+let gameWon = false;
+let cameraX = 0;
+
+// Keys
+const keys = { left: false, right: false, jump: false };
+
+window.addEventListener('keydown', e => {
+    initAudio();
+    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ' || e.key === 'z') {
+        if (!keys.jump && mario.grounded) {
+            mario.vy = -mario.jumpPower;
+            mario.grounded = false;
+            playSound('jump');
+        }
+        keys.jump = true;
+    }
 });
-document.addEventListener("keyup",e=>{
- if(e.key==="ArrowLeft")keys.left=false;
- if(e.key==="ArrowRight")keys.right=false;
+
+window.addEventListener('keyup', e => {
+    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ' || e.key === 'z') keys.jump = false;
 });
 
-function hit(a,b){
- return a.x<b.x+b.w&&a.x+a.w>b.x&&
- a.y<b.y+b.h&&a.y+a.h>b.y;
+// Mobile Touch
+document.getElementById('btn-left').addEventListener('touchstart', (e) => { e.preventDefault(); initAudio(); keys.left = true; });
+document.getElementById('btn-left').addEventListener('touchend', () => keys.left = false);
+document.getElementById('btn-right').addEventListener('touchstart', (e) => { e.preventDefault(); initAudio(); keys.right = true; });
+document.getElementById('btn-right').addEventListener('touchend', () => keys.right = false);
+document.getElementById('btn-jump').addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    initAudio();
+    if (mario.grounded) {
+        mario.vy = -mario.jumpPower;
+        mario.grounded = false;
+        playSound('jump');
+    }
+});
+
+// --- Vẽ Pixel Art bằng Canvas ---
+function drawMarioSprite(ctx, x, y, facing, isJumping) {
+    ctx.save();
+    ctx.translate(x + 16, y + 16);
+    if (facing === 'left') ctx.scale(-1, 1);
+
+    // Mũ & Áo đỏ
+    ctx.fillStyle = '#e52521';
+    ctx.fillRect(-10, -16, 18, 6); // Cap
+    ctx.fillRect(-8, -6, 14, 10);  // Shirt
+
+    // Mặt màu da
+    ctx.fillStyle = '#fccc97';
+    ctx.fillRect(-10, -10, 16, 6);
+
+    // Mắt & Râu
+    ctx.fillStyle = '#000';
+    ctx.fillRect(2, -10, 3, 4);
+    ctx.fillRect(-4, -6, 12, 3);
+
+    // Quần yếm xanh
+    ctx.fillStyle = '#0020c2';
+    ctx.fillRect(-8, 2, 16, 8);
+
+    // Giày nâu
+    ctx.fillStyle = '#8b4513';
+    if (isJumping) {
+        ctx.fillRect(-12, 8, 8, 6);
+        ctx.fillRect(4, 6, 8, 6);
+    } else {
+        ctx.fillRect(-10, 10, 8, 6);
+        ctx.fillRect(2, 10, 8, 6);
+    }
+
+    ctx.restore();
 }
 
-function update(){
- if(over||win)return;
+function drawGoombaSprite(ctx, x, y, frame) {
+    // Đầu/Thân
+    ctx.fillStyle = '#b84418';
+    ctx.beginPath();
+    ctx.arc(x + 16, y + 14, 14, Math.PI, 0, false);
+    ctx.fill();
+    ctx.fillRect(x + 2, y + 14, 28, 10);
 
- player.vx=keys.right?4:keys.left?-4:0;
- player.x+=player.vx;
+    // Mắt
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x + 6, y + 8, 5, 8);
+    ctx.fillRect(x + 21, y + 8, 5, 8);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(x + 8, y + 10, 3, 6);
+    ctx.fillRect(x + 21, y + 10, 3, 6);
 
- let oldY=player.y;
- player.vy+=.55;
- player.y+=player.vy;
- player.onGround=false;
-
- for(const p of platforms){
-  const obj={x:p.x,y:p.y,w:p.w,h:p.h};
-  if(hit(player,obj)&&player.vy>=0&&oldY+player.h<=p.y+8){
-   player.y=p.y-player.h;
-   player.vy=0;
-   player.onGround=true;
-  }
- }
-
- // Không cho nhân vật đi xuyên cạnh trái
- player.x=Math.max(0,player.x);
-
- // Thu thập xu
- for(const c of coins){
-  if(!c.got&&hit(player,{x:c.x,y:c.y,w:18,h:18})){
-   c.got=true;coinCount++;score+=10;
-  }
- }
-
- // Quái vật đi qua lại trên đường
- for(const e of enemies){
-  if(!e.alive)continue;
-  e.x+=e.vx;
-  if(e.x<e.min||e.x>e.max){
-   e.vx*=-1;
-  }
-  if(!e.min){e.min=e.x-60;e.max=e.x+60;}
-
-  const enemyBox={x:e.x,y:e.y,w:30,h:30};
-  if(hit(player,enemyBox)){
-   if(player.vy>0&&oldY+player.h<=e.y+12){
-    e.alive=false;player.vy=-8;score+=50;
-   }else{
-    over=true;
-   }
-  }
- }
-
- if(player.y>H+100)over=true;
- score+=0.02;
- camera=Math.max(0,player.x-250);
-
- if(player.x>1700)win=true;
-
- document.getElementById("score").textContent=Math.floor(score);
- document.getElementById("coins").textContent=coinCount;
+    // Chân
+    ctx.fillStyle = '#000';
+    if (frame % 20 < 10) {
+        ctx.fillRect(x, y + 24, 10, 8);
+        ctx.fillRect(x + 20, y + 22, 10, 8);
+    } else {
+        ctx.fillRect(x + 2, y + 22, 10, 8);
+        ctx.fillRect(x + 22, y + 24, 10, 8);
+    }
 }
 
-function draw(){
- ctx.clearRect(0,0,W,H);
- ctx.save();
- ctx.translate(-camera,0);
+// --- Lớp Đối tượng Game ---
+class Mario {
+    constructor() {
+        this.x = 50;
+        this.y = 200;
+        this.w = 28;
+        this.h = 32;
+        this.vx = 0;
+        this.vy = 0;
+        this.speed = 3.5;
+        this.jumpPower = 11;
+        this.grounded = false;
+        this.facing = 'right';
+    }
 
- // Bầu trời và mây
- ctx.fillStyle="#70d8ff";ctx.fillRect(camera,0,W,H);
- for(let x=100;x<2000;x+=300){
-  ctx.fillStyle="#fff";
-  ctx.beginPath();ctx.arc(x,90,22,0,Math.PI*2);
-  ctx.arc(x+25,80,30,0,Math.PI*2);
-  ctx.arc(x+55,92,22,0,Math.PI*2);ctx.fill();
- }
+    update(map) {
+        if (keys.left) {
+            this.vx = -this.speed;
+            this.facing = 'left';
+        } else if (keys.right) {
+            this.vx = this.speed;
+            this.facing = 'right';
+        } else {
+            this.vx = 0;
+        }
 
- // Nền đất
- for(const p of platforms){
-  ctx.fillStyle="#9b572c";ctx.fillRect(p.x,p.y,p.w,p.h);
-  ctx.fillStyle="#39bb45";ctx.fillRect(p.x,p.y,p.w,9);
-  ctx.strokeStyle="#70401f";ctx.strokeRect(p.x,p.y,p.w,p.h);
- }
+        this.vy += GRAVITY;
 
- // Gạch trang trí
- for(let x=0;x<1800;x+=40){
-  ctx.fillStyle="#d58a50";
-  ctx.fillRect(x,470,38,25);
- }
+        // Trục X Collision
+        this.x += this.vx;
+        this.checkCollisionX(map);
 
- // Ống xanh
- for(const x of [180,750,1080]){
-  ctx.fillStyle="#159b35";
-  ctx.fillRect(x,390,50,60);
-  ctx.fillRect(x-6,383,62,15);
-  ctx.strokeStyle="#087b29";
-  ctx.strokeRect(x,390,50,60);
- }
+        // Trục Y Collision
+        this.y += this.vy;
+        this.grounded = false;
+        this.checkCollisionY(map);
 
- // Xu
- for(const c of coins){
-  if(c.got)continue;
-  ctx.fillStyle="#ffdf24";
-  ctx.beginPath();ctx.arc(c.x+9,c.y+9,9,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle="#f19d00";ctx.lineWidth=3;ctx.stroke();
- }
+        // Rơi xuống vực
+        if (this.y > canvas.height + 50) {
+            gameOver = true;
+        }
+    }
 
- // Quái vật
- for(const e of enemies){
-  if(!e.alive)continue;
-  ctx.fillStyle="#9b4f28";
-  ctx.fillRect(e.x,e.y,30,28);
-  ctx.fillStyle="#fff";
-  ctx.fillRect(e.x+5,e.y+6,7,8);
-  ctx.fillRect(e.x+19,e.y+6,7,8);
-  ctx.fillStyle="#222";
-  ctx.fillRect(e.x+8,e.y+8,3,4);
-  ctx.fillRect(e.x+21,e.y+8,3,4);
- }
+    checkCollisionX(map) {
+        for (let b of map) {
+            if (b.type === 'air') continue;
+            if (this.x < b.x + b.w && this.x + this.w > b.x &&
+                this.y < b.y + b.h && this.y + this.h > b.y) {
+                if (this.vx > 0) this.x = b.x - this.w;
+                else if (this.vx < 0) this.x = b.x + b.w;
+            }
+        }
+    }
 
- // Nhân vật
- ctx.fillStyle="#e83428";ctx.fillRect(player.x,player.y,30,12);
- ctx.fillStyle="#ffbd83";ctx.fillRect(player.x+5,player.y+12,22,12);
- ctx.fillStyle="#df3424";ctx.fillRect(player.x+3,player.y+24,24,8);
- ctx.fillStyle="#1858c8";ctx.fillRect(player.x+4,player.y+32,10,8);
- ctx.fillRect(player.x+17,player.y+32,10,8);
- ctx.fillStyle="#222";
- ctx.fillRect(player.x+20,player.y+15,3,3);
+    checkCollisionY(map) {
+        for (let b of map) {
+            if (b.type === 'air') continue;
+            if (this.x < b.x + b.w && this.x + this.w > b.x &&
+                this.y < b.y + b.h && this.y + this.h > b.y) {
+                if (this.vy > 0) {
+                    this.y = b.y - this.h;
+                    this.vy = 0;
+                    this.grounded = true;
+                } else if (this.vy < 0) {
+                    this.y = b.y + b.h;
+                    this.vy = 0;
+                    if (b.type === 'question' && !b.empty) {
+                        b.empty = true;
+                        coins++;
+                        score += 200;
+                        playSound('coin');
+                    }
+                }
+            }
+        }
+    }
 
- // Đích
- ctx.fillStyle="#fff";ctx.fillRect(1740,330,8,120);
- ctx.fillStyle="#e93636";ctx.fillRect(1748,330,60,35);
- ctx.fillStyle="#fff";ctx.fillRect(1748,347,60,8);
-
- ctx.restore();
-
- if(over||win){
-  ctx.fillStyle="#14243ddd";ctx.fillRect(200,170,500,150);
-  ctx.fillStyle="#fff";ctx.textAlign="center";
-  ctx.font="bold 36px Arial";
-  ctx.fillText(win?"🏆 CHIẾN THẮNG!":"GAME OVER",450,225);
-  ctx.font="22px Arial";
-  ctx.fillText("Điểm: "+Math.floor(score)+" | Xu: "+coinCount,450,270);
-  ctx.fillText("Nhấn Chơi lại để thử tiếp",450,300);
- }
+    draw() {
+        drawMarioSprite(ctx, this.x - cameraX, this.y, this.facing, !this.grounded);
+    }
 }
 
-function loop(){
- update();draw();requestAnimationFrame(loop);
+class Goomba {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.w = 32;
+        this.h = 32;
+        this.vx = -1;
+        this.alive = true;
+        this.animFrame = 0;
+    }
+
+    update(map) {
+        if (!this.alive) return;
+        this.x += this.vx;
+        this.animFrame++;
+
+        for (let b of map) {
+            if (b.type === 'air') continue;
+            if (this.x < b.x + b.w && this.x + this.w > b.x &&
+                this.y < b.y + b.h && this.y + this.h > b.y) {
+                this.vx *= -1;
+                this.x += this.vx;
+            }
+        }
+    }
+
+    draw() {
+        if (!this.alive) return;
+        drawGoombaSprite(ctx, this.x - cameraX, this.y, this.animFrame);
+    }
 }
-loop();
+
+// --- Tạo Bản Đồ (Level Map Design) ---
+const levelLayout = [
+    "                                                                                ",
+    "                                                                                ",
+    "                                                                                ",
+    "                                                                                ",
+    "                                                                                ",
+    "                   ?                                                            ",
+    "               ?  ?$?                                                           ",
+    "                                                                                ",
+    "                                    ---                                     |   ",
+    "         ?  ?$?                    -----                                    |   ",
+    "                                  -------                                  [ ]  ",
+    "==================   ==================================   ======================",
+    "==================   ==================================   ======================"
+];
+
+const mapBlocks = [];
+const goombas = [];
+let flagX = 0;
+
+for (let r = 0; r < levelLayout.length; r++) {
+    for (let c = 0; c < levelLayout[r].length; c++) {
+        const char = levelLayout[r][c];
+        const x = c * BLOCK_SIZE;
+        const y = r * BLOCK_SIZE;
+
+        if (char === '=') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'ground' });
+        else if (char === '?') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'question', empty: false });
+        else if (char === '$') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'brick' });
+        else if (char === '-') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'pipe' });
+        else if (char === '|') {
+            flagX = x;
+            mapBlocks.push({ x, y, w: 10, h: BLOCK_SIZE, type: 'flagpole' });
+        }
+    }
+}
+
+// Thêm một số quái Goomba
+goombas.push(new Goomba(400, 11 * BLOCK_SIZE - 32));
+goombas.push(new Goomba(750, 11 * BLOCK_SIZE - 32));
+goombas.push(new Goomba(1200, 11 * BLOCK_SIZE - 32));
+
+const mario = new Mario();
+
+// --- Game Loop Chính ---
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (!gameOver && !gameWon) {
+        mario.update(mapBlocks);
+
+        // Xử lý camera cuộn theo Mario
+        if (mario.x - cameraX > canvas.width / 2) {
+            cameraX = mario.x - canvas.width / 2;
+        }
+
+        // Cập nhật Goombas
+        for (let g of goombas) {
+            g.update(mapBlocks);
+
+            // Tương tác Mario & Goomba
+            if (g.alive && mario.x < g.x + g.w && mario.x + mario.w > g.x &&
+                mario.y < g.y + g.h && mario.y + mario.h > g.y) {
+                if (mario.vy > 0 && mario.y + mario.h - mario.vy <= g.y + 12) {
+                    g.alive = false;
+                    mario.vy = -7; // Bật nảy lên khi giẫm
+                    score += 100;
+                    playSound('stomp');
+                } else {
+                    gameOver = true;
+                }
+            }
+        }
+
+        // Kiểm tra Thắng (Cột cờ)
+        if (mario.x >= flagX) {
+            gameWon = true;
+            playSound('win');
+        }
+    }
+
+    // --- Vẽ Bản Đồ & Đối Tượng ---
+    for (let b of mapBlocks) {
+        if (b.x + b.w < cameraX || b.x > cameraX + canvas.width) continue;
+
+        if (b.type === 'ground') {
+            ctx.fillStyle = '#d86818';
+            ctx.fillRect(b.x - cameraX, b.y, b.w, b.h);
+            ctx.strokeStyle = '#000';
+            ctx.strokeRect(b.x - cameraX, b.y, b.w, b.h);
+        } else if (b.type === 'question') {
+            ctx.fillStyle = b.empty ? '#b87040' : '#fcb040';
+            ctx.fillRect(b.x - cameraX, b.y, b.w, b.h);
+            ctx.strokeStyle = '#000';
+            ctx.strokeRect(b.x - cameraX, b.y, b.w, b.h);
+            if (!b.empty) {
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 18px sans-serif';
+                ctx.fillText('?', b.x - cameraX + 10, b.y + 22);
+            }
+        } else if (b.type === 'brick') {
+            ctx.fillStyle = '#b84418';
+            ctx.fillRect(b.x - cameraX, b.y, b.w, b.h);
+            ctx.strokeStyle = '#000';
+            ctx.strokeRect(b.x - cameraX, b.y, b.w, b.h);
+        } else if (b.type === 'pipe') {
+            ctx.fillStyle = '#00a800';
+            ctx.fillRect(b.x - cameraX, b.y, b.w, b.h);
+            ctx.strokeStyle = '#000';
+            ctx.strokeRect(b.x - cameraX, b.y, b.w, b.h);
+        } else if (b.type === 'flagpole') {
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(b.x - cameraX, b.y, 6, b.h);
+        }
+    }
+
+    // Vẽ Goombas
+    for (let g of goombas) g.draw();
+
+    // Vẽ Mario
+    mario.draw();
+
+    // Cập nhật HUD Score
+    document.getElementById('score').innerText = String(score).padStart(6, '0');
+    document.getElementById('coins').innerText = String(coins).padStart(2, '0');
+
+    // Màn hình Game Over / Victory
+    if (gameOver) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 36px monospace';
+        ctx.fillText("GAME OVER", canvas.width / 2 - 100, canvas.height / 2);
+        ctx.font = '18px monospace';
+        ctx.fillText("Tải lại trang để chơi lại", canvas.width / 2 - 130, canvas.height / 2 + 40);
+    } else if (gameWon) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#22c55e';
+        ctx.font = 'bold 36px monospace';
+        ctx.fillText("VICTORY!", canvas.width / 2 - 80, canvas.height / 2);
+        ctx.fillStyle = '#fff';
+        ctx.font = '18px monospace';
+        ctx.fillText("Bạn đã về đích thành công!", canvas.width / 2 - 140, canvas.height / 2 + 40);
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+// Bắt đầu game
+requestAnimationFrame(gameLoop);
 </script>
 </body>
 </html>
