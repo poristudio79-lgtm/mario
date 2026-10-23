@@ -46,25 +46,62 @@ html_code = """
             bottom: 15px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
-            background: rgba(0,0,0,0.7);
-            padding: 6px 16px;
+            background: rgba(0,0,0,0.8);
+            padding: 8px 18px;
             border-radius: 20px;
             text-shadow: 1px 1px #000;
             z-index: 10;
             white-space: nowrap;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .horror-hud {
             color: #ff3333 !important;
             border: 1px solid #ff3333;
             box-shadow: 0 0 12px #ff0000;
+            animation: pulse-red 1s infinite alternate;
+        }
+        @keyframes pulse-red {
+            from { box-shadow: 0 0 5px #ff0000; }
+            to { box-shadow: 0 0 18px #ff0000; }
         }
         #controls-hint {
             margin-top: 12px;
             color: #aaa;
             font-size: 14px;
             text-align: center;
+        }
+
+        /* Hộp thoại của Mario.exe */
+        #dialog-box {
+            display: none;
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 0, 0, 0.95);
+            border: 3px solid #ff0000;
+            border-radius: 8px;
+            padding: 16px;
+            width: 80%;
+            text-align: center;
+            z-index: 40;
+            box-shadow: 0 0 20px #ff0000;
+        }
+        #dialog-speaker {
+            color: #ff3333;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        #dialog-text {
+            color: #ffffff;
+            font-size: 15px;
+            line-height: 1.5;
+            font-weight: bold;
         }
 
         /* Nút Bật/Tắt Nhạc */
@@ -169,6 +206,12 @@ html_code = """
 
         <button id="music-btn" onclick="toggleMusic()">🔊 Hồng Nhan Drill: BẬT</button>
 
+        <!-- HỘP THOẠI MARIO.EXE -->
+        <div id="dialog-box">
+            <div id="dialog-speaker">😈 MARIO.EXE:</div>
+            <div id="dialog-text">"Ngươi là kẻ yếu nhất ta từng thấy! Hãy chứng tỏ ngươi là một người đàn ông để giải cứu công chúa!"</div>
+        </div>
+
         <div id="hud-status">🌟 Chặng đường bình yên hướng về Lâu Đài!</div>
         <canvas id="gameCanvas" width="640" height="400"></canvas>
         
@@ -191,6 +234,7 @@ const retryBtn = document.getElementById('retry-btn');
 const musicBtn = document.getElementById('music-btn');
 const drillAudio = document.getElementById('drillAudio');
 const introOverlay = document.getElementById('intro-overlay');
+const dialogBox = document.getElementById('dialog-box');
 
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
@@ -309,31 +353,25 @@ window.addEventListener('keyup', e => {
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ' || e.key === 'z' || e.key === 'Z') keys.jump = false;
 });
 
-// VẼ MARIO THƯỜNG (MŨ ĐỎ, ÁO ĐỎ, QUẦN XANH DƯƠNG)
 function drawMarioSprite(ctx, x, y, facing, isJumping) {
     ctx.save();
     ctx.translate(x + 16, y + 16);
     if (facing === 'left') ctx.scale(-1, 1);
 
-    // Mũ & Áo Đỏ tươi Classic
     ctx.fillStyle = '#ff0000';
     ctx.fillRect(-10, -16, 18, 6);
     ctx.fillRect(-8, -6, 14, 10);
 
-    // Mặt màu da
     ctx.fillStyle = '#fccc97';
     ctx.fillRect(-10, -10, 16, 6);
 
-    // Mắt & Râu
     ctx.fillStyle = '#000';
     ctx.fillRect(2, -10, 3, 4);
     ctx.fillRect(-4, -6, 12, 3);
 
-    // Quần Yếm Xanh Dương
     ctx.fillStyle = '#0020c2';
     ctx.fillRect(-8, 2, 16, 8);
 
-    // Giày Nâu
     ctx.fillStyle = '#8b4513';
     if (isJumping) {
         ctx.fillRect(-12, 8, 8, 6);
@@ -345,7 +383,6 @@ function drawMarioSprite(ctx, x, y, facing, isJumping) {
     ctx.restore();
 }
 
-// VẼ MARIO.EXE (MẮT ĐEN CHẢY MÁU, NỤ CƯỜI RỘNG, ÁO ĐỎ SẪM)
 function drawMarioEXESprite(ctx, x, y) {
     ctx.save();
     ctx.translate(x + 16, y + 16);
@@ -464,6 +501,7 @@ const mario = {
         if (this.y > canvas.height + 60) {
             gameOver = true;
             retryBtn.style.display = 'block';
+            dialogBox.style.display = 'none';
             stopHongNhanDrill();
         }
     },
@@ -482,6 +520,7 @@ const marioEXE = {
         if (Math.abs(this.x - mario.x) < 22 && Math.abs(this.y - mario.y) < 26) {
             gameOver = true;
             retryBtn.style.display = 'block';
+            dialogBox.style.display = 'none';
             playSound('scream');
             stopHongNhanDrill();
         }
@@ -507,6 +546,7 @@ function resetGame() {
 
     stopHongNhanDrill();
     retryBtn.style.display = 'none';
+    dialogBox.style.display = 'none';
 
     for (let b of mapBlocks) {
         if (b.type === 'question') b.empty = false;
@@ -535,6 +575,7 @@ function gameLoop() {
         if (mario.x - cameraX > canvas.width / 2) cameraX = mario.x - canvas.width / 2;
         else if (mario.x - cameraX < canvas.width / 4 && cameraX > 0) cameraX = mario.x - canvas.width / 4;
 
+        /* PLOT TWIST: KHI TỚI CỔNG -> MARIO.EXE NÓI VÀ BẮT ĐẦU CHẠY ĐUỔI */
         if (!isHorrorPhase && mario.x >= flagX - 180) {
             isHorrorPhase = true;
             exeSpawned = true;
@@ -546,8 +587,14 @@ function gameLoop() {
             playSound('scream');
             startHongNhanDrill();
 
+            // Hiển thị hộp thoại câu nói của Mario.exe
+            dialogBox.style.display = 'block';
+            setTimeout(() => {
+                dialogBox.style.display = 'none';
+            }, 5000); // Ẩn hộp thoại sau 5 giây
+
             document.body.style.background = '#1a0000';
-            document.getElementById('hud-status').innerText = "🎶 HỒNG NHAN DRILL VANG LÊN! CỔNG BỊ KHOÁ, CHẠY NGAY!!";
+            document.getElementById('hud-status').innerText = "⚠️ MARIO.EXE: 'Ngươi là kẻ yếu nhất ta từng thấy! Hãy chứng tỏ ngươi là một người đàn ông để giải cứu công chúa!'";
             document.getElementById('hud-status').classList.add('horror-hud');
             document.getElementById('world-title').innerText = "DRILL";
             document.getElementById('world-title').style.color = "#ff0000";
@@ -556,6 +603,7 @@ function gameLoop() {
         if (isHorrorPhase && mario.x <= 20) {
             gameWon = true;
             retryBtn.style.display = 'block';
+            dialogBox.style.display = 'none';
             stopHongNhanDrill();
         }
     }
