@@ -123,7 +123,7 @@ html_code = """
         #retry-btn {
             display: none;
             position: absolute;
-            top: 65%;
+            top: 72%;
             left: 50%;
             transform: translate(-50%, -50%);
             padding: 12px 28px;
@@ -140,7 +140,6 @@ html_code = """
         }
         #retry-btn:hover { background: #ff0000; transform: translate(-50%, -50%) scale(1.08); }
 
-        /* MÀN HÌNH INTRO MENU & HOW TO PLAY MODAL */
         #intro-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -195,7 +194,6 @@ html_code = """
         #howtoplay-btn { color: #fff; background: #22c55e; }
         #howtoplay-btn:hover { background: #16a34a; transform: scale(1.05); }
 
-        /* BẢNG HƯỚNG DẪN CHI TIẾT (MODAL) */
         #instructions-modal {
             display: none;
             position: absolute;
@@ -243,7 +241,6 @@ html_code = """
 <body>
 
     <div id="game-wrapper">
-        <!-- MÀN HÌNH INTRO MENU -->
         <div id="intro-overlay">
             <div class="mario-logo">
                 <span class="c-blue">S</span><span class="c-yellow">U</span><span class="c-red">P</span><span class="c-green">E</span><span class="c-yellow">R</span>
@@ -261,7 +258,6 @@ html_code = """
             </div>
         </div>
 
-        <!-- BẢNG HOW TO PLAY -->
         <div id="instructions-modal">
             <h2>📖 HƯỚNG DẪN CÁCH CHƠI</h2>
             <div class="instruction-content">
@@ -681,7 +677,7 @@ const goombas = [
 const mario = {
     x: 50, y: 200, w: 28, h: 32, vx: 0, vy: 0, speed: 3.5, jumpPower: 11, grounded: false, facing: 'right', moving: false,
     update() {
-        if (isStabbing || isCutscene) return;
+        if (isStabbing || isCutscene || gameOver) return;
 
         let currentSpeed = keys.shift ? this.speed * 1.4 : this.speed;
         this.moving = false;
@@ -735,28 +731,19 @@ const mario = {
                     score += 100;
                     playSound('stomp');
                 } else {
-                    gameOver = true;
-                    retryBtn.style.display = 'block';
-                    playSound('scream');
-                    stopHongNhanDrill();
+                    triggerGameOver();
                 }
             }
         }
 
         for (let s of spikes) {
             if (this.x < s.x + s.w && this.x + this.w > s.x && this.y < s.y + s.h && this.y + this.h > s.y) {
-                gameOver = true;
-                retryBtn.style.display = 'block';
-                playSound('scream');
-                stopHongNhanDrill();
+                triggerGameOver();
             }
         }
 
         if (this.y > canvas.height + 60) {
-            gameOver = true;
-            retryBtn.style.display = 'block';
-            dialogBox.style.display = 'none';
-            stopHongNhanDrill();
+            triggerGameOver();
         }
     },
     draw() { drawMarioSprite(ctx, this.x - cameraX, this.y, this.facing, !this.grounded, this.moving); }
@@ -765,7 +752,7 @@ const mario = {
 const marioEXE = {
     x: 0, y: 0, w: 32, h: 32, speed: 3.1,
     update() {
-        if (!exeSpawned || isStabbing || isCutscene) return;
+        if (!exeSpawned || isStabbing || isCutscene || gameOver) return;
 
         if (this.x < mario.x) this.x += this.speed;
         if (this.x > mario.x) this.x -= this.speed;
@@ -773,15 +760,20 @@ const marioEXE = {
         if (this.y > mario.y) this.y -= 1;
 
         if (Math.abs(this.x - mario.x) < 22 && Math.abs(this.y - mario.y) < 26) {
-            gameOver = true;
-            retryBtn.style.display = 'block';
-            dialogBox.style.display = 'none';
-            playSound('scream');
-            stopHongNhanDrill();
+            triggerGameOver();
         }
     },
     draw() { if (exeSpawned) drawMarioEXESprite(ctx, this.x - cameraX, this.y); }
 };
+
+function triggerGameOver() {
+    if (gameOver) return;
+    gameOver = true;
+    retryBtn.style.display = 'block';
+    dialogBox.style.display = 'none';
+    playSound('scream');
+    stopHongNhanDrill();
+}
 
 function resetGame() {
     score = 0;
@@ -951,8 +943,10 @@ function gameLoop() {
         ctx.restore();
     }
 
-    mario.draw();
-    marioEXE.draw();
+    if (!gameOver) {
+        mario.draw();
+        marioEXE.draw();
+    }
 
     if (isStabbing) {
         ctx.save();
@@ -980,12 +974,49 @@ function gameLoop() {
     document.getElementById('score').innerText = String(score).padStart(6, '0');
     document.getElementById('coins').innerText = String(coins).padStart(2, '0');
 
+    // HIỂN THỊ CẢNH BỊ BẮT KINH DỊ KHI GAME OVER (MÔ PHỎNG HÌNH ẢNH MẪU)
     if (gameOver) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
+        ctx.fillStyle = '#0a0202';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Vẽ nền hang động tăm tối (các nhũ đá vàng rực/cam)
+        ctx.fillStyle = '#d48806';
+        ctx.beginPath();
+        ctx.moveTo(120, 400); ctx.lineTo(220, 180); ctx.lineTo(320, 400); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(420, 400); ctx.lineTo(560, 60); ctx.lineTo(640, 400); ctx.fill();
+
+        // Vẽ Mario.exe đang giơ tay tóm cổ Mario
+        // Mario.exe đứng bên phải
+        drawMarioEXESprite(ctx, canvas.width / 2 + 10, canvas.height / 2 - 20);
+
+        // Mario bị tóm cổ treo lơ lửng trên tay Mario.exe
+        ctx.save();
+        ctx.translate(canvas.width / 2 - 10, canvas.height / 2 - 10);
+        // Vẽ thân Mario gục ngã / bị tóm
         ctx.fillStyle = '#ff0000';
-        ctx.font = 'bold 42px monospace';
-        ctx.fillText("YOU DIED", canvas.width / 2 - 100, canvas.height / 2 - 20);
+        ctx.fillRect(-8, -10, 16, 12);
+        ctx.fillStyle = '#fccc97';
+        ctx.fillRect(-8, -16, 14, 8);
+        ctx.fillStyle = '#0020c2';
+        ctx.fillRect(-6, 2, 12, 10);
+        ctx.restore();
+
+        // Xác nhân vật thứ 2 nằm dưới đất (tím/tối)
+        ctx.save();
+        ctx.translate(canvas.width / 2 - 110, canvas.height / 2 + 50);
+        ctx.fillStyle = '#5c2288';
+        ctx.fillRect(-12, -8, 24, 16);
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(-14, -14, 16, 8);
+        ctx.restore();
+
+        // Chữ YOU DIED phong cách kinh dị
+        ctx.fillStyle = '#ff0000';
+        ctx.font = 'bold 38px monospace';
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 10;
+        ctx.fillText("YOU DIED", canvas.width / 2 - 95, 60);
     } else if (gameWon) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
