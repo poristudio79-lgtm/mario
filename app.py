@@ -79,7 +79,7 @@ html_code = """
         #dialog-box {
             display: none;
             position: absolute;
-            top: 35%;
+            top: 30%;
             left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(20, 0, 0, 0.95);
@@ -104,7 +104,6 @@ html_code = """
             font-weight: bold;
         }
 
-        /* Nút Bật/Tắt Nhạc */
         #music-btn {
             position: absolute;
             top: 55px;
@@ -122,7 +121,6 @@ html_code = """
         }
         #music-btn:hover { background: rgba(255, 255, 255, 0.3); }
 
-        /* Nút Try Again */
         #retry-btn {
             display: none;
             position: absolute;
@@ -143,7 +141,6 @@ html_code = """
         }
         #retry-btn:hover { background: #ff0000; transform: translate(-50%, -50%) scale(1.08); }
 
-        /* INTRO OVERLAY */
         #intro-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -187,12 +184,11 @@ html_code = """
 <body>
 
     <div id="game-wrapper">
-        <!-- INTRO OVERLAY -->
         <div id="intro-overlay">
             <div id="intro-title">🎬 WORLD 1-1: PEACEFUL JOURNEY</div>
             <div id="intro-desc">
                 Mario đang trên đường trở về Lâu Đài chiến thắng trong một ngày nắng đẹp bình yên.<br><br>
-                Hãy giúp Mario thu thập xu và tiến về phía Cột Cờ Victory...<br>
+                Hãy giúp Mario vượt qua vô số chướng ngại vật, hố sâu và quái vật để tiến về Cột Cờ...<br>
                 <b>Cho đến khi điều không ngờ xảy ra!</b>
             </div>
             <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU CHƠI</button>
@@ -206,7 +202,6 @@ html_code = """
 
         <button id="music-btn" onclick="toggleMusic()">🔊 Hồng Nhan Drill: BẬT</button>
 
-        <!-- HỘP THOẠI MARIO.EXE -->
         <div id="dialog-box">
             <div id="dialog-speaker">😈 MARIO.EXE:</div>
             <div id="dialog-text">"Ngươi là kẻ yếu nhất ta từng thấy! Hãy chứng tỏ ngươi là một người đàn ông để giải cứu công chúa!"</div>
@@ -222,7 +217,6 @@ html_code = """
         🎮 <b>Di chuyển:</b> ⬅️ ➡️ | <b>Nhảy:</b> Space / Z / ⬆️ | <b>Chạy nhanh:</b> Shift
     </div>
 
-    <!-- Nhạc Hồng Nhan Drill -->
     <audio id="drillAudio" loop preload="auto">
         <source src="https://files.catbox.moe/k3t2p4.mp3" type="audio/mpeg">
     </audio>
@@ -311,6 +305,14 @@ function playSound(type) {
             gain.gain.linearRampToValueAtTime(0, now + 0.9);
             osc.start(now);
             osc.stop(now + 0.9);
+        } else if (type === 'slash') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(1200, now);
+            osc.frequency.exponentialRampToValueAtTime(100, now + 0.4);
+            gain.gain.setValueAtTime(0.4, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.4);
+            osc.start(now);
+            osc.stop(now + 0.4);
         }
     } catch(e){}
 }
@@ -327,11 +329,18 @@ let gameOver = false;
 let gameWon = false;
 let flashAlpha = 0;
 let shakeAmount = 0;
+let animFrame = 0;
+
+// Trạng thái đâm kiếm tiêu diệt Mario.exe
+let isStabbing = false;
+let stabTimer = 0;
+let swordX = 320;
+let swordY = 260;
 
 const keys = { left: false, right: false, jump: false, shift: false };
 
 window.addEventListener('keydown', e => {
-    if (!gameStarted) return;
+    if (!gameStarted || isStabbing) return;
     initAudio();
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
@@ -353,7 +362,8 @@ window.addEventListener('keyup', e => {
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ' || e.key === 'z' || e.key === 'Z') keys.jump = false;
 });
 
-function drawMarioSprite(ctx, x, y, facing, isJumping) {
+// VẼ MARIO CÓ ĐỘNG TÁC BƯỚC CHÂN CHẠY
+function drawMarioSprite(ctx, x, y, facing, isJumping, moving) {
     ctx.save();
     ctx.translate(x + 16, y + 16);
     if (facing === 'left') ctx.scale(-1, 1);
@@ -376,6 +386,10 @@ function drawMarioSprite(ctx, x, y, facing, isJumping) {
     if (isJumping) {
         ctx.fillRect(-12, 8, 8, 6);
         ctx.fillRect(4, 6, 8, 6);
+    } else if (moving) {
+        let legOffset = Math.sin(animFrame * 0.3) * 5;
+        ctx.fillRect(-10 + legOffset, 10, 8, 6);
+        ctx.fillRect(2 - legOffset, 10, 8, 6);
     } else {
         ctx.fillRect(-10, 10, 8, 6);
         ctx.fillRect(2, 10, 8, 6);
@@ -383,6 +397,7 @@ function drawMarioSprite(ctx, x, y, facing, isJumping) {
     ctx.restore();
 }
 
+// VẼ MARIO.EXE CÓ BƯỚC CHÂN CHẠY DỒN DẬP
 function drawMarioEXESprite(ctx, x, y) {
     ctx.save();
     ctx.translate(x + 16, y + 16);
@@ -417,28 +432,54 @@ function drawMarioEXESprite(ctx, x, y) {
     ctx.fillRect(-8, 2, 16, 8);
 
     ctx.fillStyle = '#000000';
-    ctx.fillRect(-10, 10, 8, 6);
-    ctx.fillRect(2, 10, 8, 6);
+    let legOffset = Math.sin(animFrame * 0.4) * 6;
+    ctx.fillRect(-10 + legOffset, 10, 8, 6);
+    ctx.fillRect(2 - legOffset, 10, 8, 6);
 
     ctx.restore();
 }
 
+// VẼ GOOMBA / NẤM QUỶ
+function drawGoomba(ctx, g) {
+    ctx.save();
+    ctx.translate(g.x - cameraX + 16, g.y + 16);
+    let legOffset = Math.sin(animFrame * 0.2) * 3;
+
+    ctx.fillStyle = isHorrorPhase ? '#4a0000' : '#8b4513';
+    ctx.beginPath();
+    ctx.arc(0, -2, 14, Math.PI, 0, false);
+    ctx.fill();
+
+    ctx.fillStyle = isHorrorPhase ? '#ff0000' : '#ffe4c4';
+    ctx.fillRect(-10, -2, 20, 12);
+
+    ctx.fillStyle = isHorrorPhase ? '#ff0000' : '#000';
+    ctx.fillRect(-6, 0, 3, 5);
+    ctx.fillRect(3, 0, 3, 5);
+
+    ctx.fillStyle = '#000';
+    ctx.fillRect(-10 + legOffset, 10, 8, 5);
+    ctx.fillRect(2 - legOffset, 10, 8, 5);
+    ctx.restore();
+}
+
+// BẢN ĐỒ BỔ SUNG NHIỀU HỐ SÂU, CHÔNG VÀ CHƯỚNG NGẠI VẬT
 const levelLayout = [
-    "                                                                                                    ",
-    "                                                                                                    ",
-    "                                                                                                    ",
-    "                                                                                                    ",
-    "                   ?                                                                                ",
-    "               ?  ?$?                                                                               ",
-    "                                                                                                    ",
-    "                                    ---                                                        |    ",
-    "         ?  ?$?                    -----                                                       |    ",
-    "                                  -------                                                     [ ]   ",
-    "==================   ==================================   ==========================================",
-    "==================   ==================================   =========================================="
+    "                                                                                                                    ",
+    "                                                                                                                    ",
+    "                                                                                                                    ",
+    "                   ?                                        ?  ?$?                                                  ",
+    "               ?  ?$?                                      -----                                                    ",
+    "                                                                                                                    ",
+    "                                    ---       ^^^^              ---                                            |    ",
+    "         ?  ?$?                    -----     ======            -----                                           |    ",
+    "                                  -------   ========          -------                                         [ ]   ",
+    "==================   ==========   ==================   ==================   ================   =====================",
+    "==================   ==========   ==================   ==================   ================   ====================="
 ];
 
 const mapBlocks = [];
+const spikes = [];
 let flagX = 0;
 
 for (let r = 0; r < levelLayout.length; r++) {
@@ -451,6 +492,7 @@ for (let r = 0; r < levelLayout.length; r++) {
         else if (char === '?') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'question', empty: false });
         else if (char === '$') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'brick' });
         else if (char === '-') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'pipe' });
+        else if (char === '^') spikes.push({ x, y: y + 16, w: BLOCK_SIZE, h: 16 });
         else if (char === '|') {
             flagX = x;
             mapBlocks.push({ x, y, w: 10, h: BLOCK_SIZE, type: 'flagpole' });
@@ -458,12 +500,23 @@ for (let r = 0; r < levelLayout.length; r++) {
     }
 }
 
+// QUÁI VẬT DI CHUYỂN
+const goombas = [
+    { x: 400, y: 9 * BLOCK_SIZE - 28, vx: -1, minX: 320, maxX: 500 },
+    { x: 1200, y: 9 * BLOCK_SIZE - 28, vx: -1.2, minX: 1100, maxX: 1350 },
+    { x: 1800, y: 9 * BLOCK_SIZE - 28, vx: -1.5, minX: 1700, maxX: 1950 }
+];
+
 const mario = {
-    x: 50, y: 200, w: 28, h: 32, vx: 0, vy: 0, speed: 3.5, jumpPower: 11, grounded: false, facing: 'right',
+    x: 50, y: 200, w: 28, h: 32, vx: 0, vy: 0, speed: 3.5, jumpPower: 11, grounded: false, facing: 'right', moving: false,
     update() {
+        if (isStabbing) return;
+
         let currentSpeed = keys.shift ? this.speed * 1.4 : this.speed;
-        if (keys.left) { this.vx = -currentSpeed; this.facing = 'left'; }
-        else if (keys.right) { this.vx = currentSpeed; this.facing = 'right'; }
+        this.moving = false;
+
+        if (keys.left) { this.vx = -currentSpeed; this.facing = 'left'; this.moving = true; }
+        else if (keys.right) { this.vx = currentSpeed; this.facing = 'right'; this.moving = true; }
         else this.vx = 0;
 
         this.vy += GRAVITY;
@@ -498,6 +551,18 @@ const mario = {
                 }
             }
         }
+
+        // Va chạm chông sắt
+        for (let s of spikes) {
+            if (this.x < s.x + s.w && this.x + this.w > s.x && this.y < s.y + s.h && this.y + this.h > s.y) {
+                gameOver = true;
+                retryBtn.style.display = 'block';
+                playSound('scream');
+                stopHongNhanDrill();
+            }
+        }
+
+        // Rơi xuống hố
         if (this.y > canvas.height + 60) {
             gameOver = true;
             retryBtn.style.display = 'block';
@@ -505,13 +570,14 @@ const mario = {
             stopHongNhanDrill();
         }
     },
-    draw() { drawMarioSprite(ctx, this.x - cameraX, this.y, this.facing, !this.grounded); }
+    draw() { drawMarioSprite(ctx, this.x - cameraX, this.y, this.facing, !this.grounded, this.moving); }
 };
 
 const marioEXE = {
-    x: 0, y: 0, w: 32, h: 32, speed: 3.2,
+    x: 0, y: 0, w: 32, h: 32, speed: 3.1,
     update() {
-        if (!exeSpawned) return;
+        if (!exeSpawned || isStabbing) return;
+
         if (this.x < mario.x) this.x += this.speed;
         if (this.x > mario.x) this.x -= this.speed;
         if (this.y < mario.y) this.y += 1;
@@ -536,6 +602,8 @@ function resetGame() {
     exeSpawned = false;
     gameOver = false;
     gameWon = false;
+    isStabbing = false;
+    stabTimer = 0;
     flashAlpha = 0;
     shakeAmount = 0;
 
@@ -561,7 +629,9 @@ function resetGame() {
 }
 
 function gameLoop() {
+    animFrame++;
     ctx.save();
+
     if (shakeAmount > 0) {
         ctx.translate((Math.random() - 0.5) * shakeAmount, (Math.random() - 0.5) * shakeAmount);
         shakeAmount *= 0.9;
@@ -572,26 +642,36 @@ function gameLoop() {
         mario.update();
         marioEXE.update();
 
-        if (mario.x - cameraX > canvas.width / 2) cameraX = mario.x - canvas.width / 2;
+        // Cập nhật quái vật Goomba
+        for (let g of goombas) {
+            g.x += g.vx;
+            if (g.x < g.minX || g.x > g.maxX) g.vx *= -1;
+
+            if (Math.abs(mario.x - g.x) < 20 && Math.abs(mario.y - g.y) < 20 && !isStabbing) {
+                gameOver = true;
+                retryBtn.style.display = 'block';
+                playSound('scream');
+                stopHongNhanDrill();
+            }
+        }
+
+        if (mario.x - cameraX > canvas.width / 2) cameraX = mario.x - cameraX - canvas.width / 2;
         else if (mario.x - cameraX < canvas.width / 4 && cameraX > 0) cameraX = mario.x - canvas.width / 4;
 
-        /* PLOT TWIST: KHI TỚI CỔNG -> MARIO.EXE NÓI VÀ BẮT ĐẦU CHẠY ĐUỔI */
+        /* KÍCH HOẠT PLOT TWIST TẠI CỘT CỜ */
         if (!isHorrorPhase && mario.x >= flagX - 180) {
             isHorrorPhase = true;
             exeSpawned = true;
             marioEXE.x = flagX - 20;
-            marioEXE.y = 10 * BLOCK_SIZE - 32;
+            marioEXE.y = 9 * BLOCK_SIZE - 32;
 
             flashAlpha = 1.0;
             shakeAmount = 15;
             playSound('scream');
             startHongNhanDrill();
 
-            // Hiển thị hộp thoại câu nói của Mario.exe
             dialogBox.style.display = 'block';
-            setTimeout(() => {
-                dialogBox.style.display = 'none';
-            }, 5000); // Ẩn hộp thoại sau 5 giây
+            setTimeout(() => { dialogBox.style.display = 'none'; }, 5000);
 
             document.body.style.background = '#1a0000';
             document.getElementById('hud-status').innerText = "⚠️ MARIO.EXE: 'Ngươi là kẻ yếu nhất ta từng thấy! Hãy chứng tỏ ngươi là một người đàn ông để giải cứu công chúa!'";
@@ -600,14 +680,31 @@ function gameLoop() {
             document.getElementById('world-title').style.color = "#ff0000";
         }
 
-        if (isHorrorPhase && mario.x <= 20) {
-            gameWon = true;
-            retryBtn.style.display = 'block';
-            dialogBox.style.display = 'none';
-            stopHongNhanDrill();
+        /* CHẠM VÀO THANH KIẾM -> XOAY NGƯỜI ĐÂM THẲNG VÀO NGỰC MARIO.EXE */
+        if (isHorrorPhase && !isStabbing && Math.abs(mario.x - swordX) < 30 && Math.abs(mario.y - swordY) < 35) {
+            isStabbing = true;
+            stabTimer = 0;
+            playSound('slash');
+            shakeAmount = 20;
+            flashAlpha = 1.0;
+        }
+
+        // Xử lý hiệu ứng đâm kiếm
+        if (isStabbing) {
+            stabTimer++;
+            mario.facing = 'right';
+            mario.x = marioEXE.x - 22;
+            mario.y = marioEXE.y;
+
+            if (stabTimer > 60) {
+                gameWon = true;
+                retryBtn.style.display = 'block';
+                stopHongNhanDrill();
+            }
         }
     }
 
+    // Vẽ bản đồ & chướng ngại vật
     for (let b of mapBlocks) {
         if (b.x + b.w < cameraX || b.x > cameraX + canvas.width) continue;
         if (b.type === 'ground') {
@@ -636,8 +733,46 @@ function gameLoop() {
         }
     }
 
+    // Vẽ chông sắt
+    for (let s of spikes) {
+        ctx.fillStyle = isHorrorPhase ? '#ff0000' : '#888';
+        ctx.beginPath();
+        ctx.moveTo(s.x - cameraX, s.y + s.h);
+        ctx.lineTo(s.x - cameraX + s.w / 2, s.y);
+        ctx.lineTo(s.x - cameraX + s.w, s.y + s.h);
+        ctx.fill();
+    }
+
+    // Vẽ quái vật
+    for (let g of goombas) drawGoomba(ctx, g);
+
+    // VẼ THANH KIẾM THÁNH XUẤT HIỆN Ở PHA HORROR
+    if (isHorrorPhase && !isStabbing && !gameWon) {
+        ctx.save();
+        ctx.translate(swordX - cameraX + 10, swordY + Math.sin(animFrame * 0.1) * 4);
+        ctx.fillStyle = '#ffcc00';
+        ctx.shadowColor = '#ffff00';
+        ctx.shadowBlur = 12;
+        ctx.fillRect(-2, -18, 4, 22);
+        ctx.fillRect(-7, 2, 14, 4);
+        ctx.fillRect(-2, 6, 4, 6);
+        ctx.restore();
+    }
+
     mario.draw();
     marioEXE.draw();
+
+    // VẼ HÌNH ẢNH MARIO XOAY NGƯỜI ĐÂM KIẾM VÀO NGỰC MARIO.EXE
+    if (isStabbing) {
+        ctx.save();
+        ctx.translate(mario.x - cameraX + 16, mario.y + 16);
+        ctx.fillStyle = '#ffff00';
+        ctx.shadowColor = '#ff0000';
+        ctx.shadowBlur = 20;
+        ctx.fillRect(5, -2, 28, 5);
+        ctx.fillRect(2, -6, 4, 13);
+        ctx.restore();
+    }
 
     if (isHorrorPhase) {
         canvas.style.background = '#120000';
@@ -661,11 +796,14 @@ function gameLoop() {
         ctx.font = 'bold 42px monospace';
         ctx.fillText("YOU DIED", canvas.width / 2 - 100, canvas.height / 2 - 20);
     } else if (gameWon) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = '#22c55e';
-        ctx.font = 'bold 36px monospace';
-        ctx.fillText("ESCAPED!", canvas.width / 2 - 80, canvas.height / 2 - 20);
+        ctx.font = 'bold 32px monospace';
+        ctx.fillText("MARIO.EXE DESTROYED!", canvas.width / 2 - 200, canvas.height / 2 - 20);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '16px monospace';
+        ctx.fillText("Bạn đã đâm kiếm kết liễu Mario.exe và giải cứu công chúa thành công!", canvas.width / 2 - 280, canvas.height / 2 + 20);
     }
 
     ctx.restore();
