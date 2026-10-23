@@ -178,7 +178,7 @@ html_code = """
             display: flex;
             gap: 12px;
         }
-        #start-btn, #howtoplay-btn {
+        #start-btn, #howtoplay-btn, #easy-btn, #hard-btn {
             padding: 11px 24px;
             font-size: 16px;
             font-weight: bold;
@@ -193,6 +193,18 @@ html_code = """
 
         #howtoplay-btn { color: #fff; background: #22c55e; }
         #howtoplay-btn:hover { background: #16a34a; transform: scale(1.05); }
+
+        #difficulty-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        #easy-btn { color: #000; background: #22c55e; }
+        #easy-btn:hover { background: #16a34a; transform: scale(1.05); }
+
+        #hard-btn { color: #fff; background: #e52521; }
+        #hard-btn:hover { background: #ff0000; transform: scale(1.05); }
 
         #instructions-modal {
             display: none;
@@ -249,12 +261,23 @@ html_code = """
                 <span class="c-red">M</span><span class="c-green">A</span><span class="c-yellow">R</span><span class="c-blue">I</span><span class="c-green">O</span>
             </div>
             <div id="intro-desc">
-                Phiên bản Dark Drill Edition (Nhiều chướng ngại vật)!<br>
-                Vượt bẫy gai, hố sâu, ống cống để cứu công chúa Peach[cite: 5, 6].
+                Phiên bản Dark Drill Edition!<br>
+                Chọn độ khó và bắt đầu hành trình cứu công chúa Peach[cite: 5, 6].
             </div>
-            <div class="menu-buttons">
-                <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU</button>
+
+            <!-- Menu chính ban đầu -->
+            <div id="main-menu-buttons" class="menu-buttons">
+                <button id="start-btn" onclick="showDifficultyMenu()">▶️ BẮT ĐẦU</button>
                 <button id="howtoplay-btn" onclick="openHowToPlay()">📖 HƯỚNG DẪN</button>
+            </div>
+
+            <!-- Menu chọn độ khó (Dễ / Khó) -->
+            <div id="difficulty-screen">
+                <div style="font-size: 16px; font-weight: bold; color: #ffcc00; margin-bottom: 5px;">CHỌN ĐỘ KHÓ:</div>
+                <div class="menu-buttons">
+                    <button id="easy-btn" onclick="startGame('easy')">🟢 DỄ</button>
+                    <button id="hard-btn" onclick="startGame('hard')">🔴 KHÓ</button>
+                </div>
             </div>
         </div>
 
@@ -266,9 +289,9 @@ html_code = """
                 • Nhảy: Phím <b>Space</b>, <b>Z</b> hoặc mũi tên <b>Lên / W</b><br>
                 • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
                 <b>2. Mục tiêu trò chơi:</b><br>
-                • Vượt qua hệ thống bẫy gai (^), hố sâu và ống cống chằng chịt.<br>
+                • Vượt qua bẫy gai và quái vật.<br>
                 • Đội đầu vào các <b>Khối Chấm Hỏi (?)</b> để lấy xu.<br>
-                • Diệt phản diện, đưa bầu trời sáng lại và chạm cột cờ gặp Công chúa Peach[cite: 5, 6]!
+                • Tiêu diệt phản diện và chạm cột cờ gặp Công chúa Peach[cite: 5, 6]!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -304,11 +327,14 @@ const musicBtn = document.getElementById('music-btn');
 const introOverlay = document.getElementById('intro-overlay');
 const instructionsModal = document.getElementById('instructions-modal');
 const dialogBox = document.getElementById('dialog-box');
+const mainMenuButtons = document.getElementById('main-menu-buttons');
+const difficultyScreen = document.getElementById('difficulty-screen');
 
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 let isMusicMuted = false;
 let gameStarted = false;
+let currentDifficulty = 'easy';
 let bgMusicInterval = null;
 
 function initAudio() {
@@ -316,10 +342,24 @@ function initAudio() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
-function startGame() {
+function showDifficultyMenu() {
     initAudio();
+    mainMenuButtons.style.display = 'none';
+    difficultyScreen.style.display = 'flex';
+}
+
+function startGame(difficulty) {
+    initAudio();
+    currentDifficulty = difficulty;
     introOverlay.style.display = 'none';
     gameStarted = true;
+
+    // Thiết lập tốc độ phản diện dựa theo độ khó
+    if (currentDifficulty === 'hard') {
+        marioEXE.speed = 4.2; // Chế độ khó: Mario.exe rượt đuổi nhanh hơn
+    } else {
+        marioEXE.speed = 2.6; // Chế độ dễ: Mario.exe di chuyển chậm hơn
+    }
 }
 
 function openHowToPlay() {
@@ -739,7 +779,6 @@ function drawCastleAndPrincess(ctx) {
     drawPrincessPixelArt(ctx, castleX + 40, castleY + 46);
 }
 
-// BẢN ĐỒ MỚI: TĂNG CƯỜNG RẤT NHIỀU HỐ SÂU, BẪY GAI VÀ ỐNG CỐNG NHƯNG GIỮ NGUYÊN CHIỀU DÀI GỌN GÀNG
 const levelLayout = [
     "                                                                          ",
     "                                                                          ",
@@ -870,7 +909,7 @@ const mario = {
 };
 
 const marioEXE = {
-    x: 0, y: 0, w: 32, h: 32, speed: 3.1,
+    x: 0, y: 0, w: 32, h: 32, speed: 2.6,
     update() {
         if (!exeSpawned || exeDefeated || isStabbing || isCutscene || gameOver) return;
 
@@ -1163,7 +1202,7 @@ function gameLoop() {
         ctx.fillText("VICTORY! PRINCESS SAVED!", canvas.width / 2, canvas.height / 2 + 50);
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px monospace';
-        ctx.fillText("Bạn đã vượt qua bẫy thử thách, tiêu diệt Mario.exe và cứu công chúa Peach[cite: 5, 6]!", canvas.width / 2, canvas.height / 2 + 80);
+        ctx.fillText("Bạn đã vượt qua thử thách, tiêu diệt Mario.exe và cứu công chúa Peach[cite: 5, 6]!", canvas.width / 2, canvas.height / 2 + 80);
         ctx.textAlign = 'left';
     }
 
