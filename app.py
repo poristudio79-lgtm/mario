@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Super Mario Skibidi", layout="centered")
+st.set_page_config(page_title="Super Mario", layout="centered")
 
 html_code = """
 <!DOCTYPE html>
@@ -153,11 +153,11 @@ html_code = """
             z-index: 50;
         }
         .mario-logo {
-            font-size: 38px;
+            font-size: 42px;
             font-weight: 900;
             font-family: 'Arial Black', Gadget, sans-serif;
             letter-spacing: 2px;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
             text-shadow: 3px 3px #000;
             display: flex;
             gap: 4px;
@@ -257,13 +257,12 @@ html_code = """
             <div class="mario-logo">
                 <span class="c-blue">S</span><span class="c-yellow">U</span><span class="c-red">P</span><span class="c-green">E</span><span class="c-yellow">R</span>
             </div>
-            <div class="mario-logo" style="margin-top: -15px; margin-bottom: 12px;">
+            <div class="mario-logo" style="margin-top: -15px; margin-bottom: 15px;">
                 <span class="c-red">M</span><span class="c-green">A</span><span class="c-yellow">R</span><span class="c-blue">I</span><span class="c-green">O</span>
-                <span class="c-yellow" style="margin-left: 8px;">SKIBIDI</span>
             </div>
             <div id="intro-desc">
-                Super Mario Skibidi Edition!<br>
-                Thánh kiếm sẽ xuất hiện ở **vị trí ngẫu nhiên** mỗi khi Mario.exe truy đuổi.
+                Super Mario Edition!<br>
+                Thánh kiếm xuất hiện ở **vị trí ngẫu nhiên** mỗi khi Mario.exe truy đuổi.
             </div>
 
             <div id="main-menu-buttons" class="menu-buttons">
@@ -275,7 +274,7 @@ html_code = """
                 <div style="font-size: 16px; font-weight: bold; color: #ffcc00; margin-bottom: 5px;">CHỌN ĐỘ KHÓ:</div>
                 <div class="menu-buttons">
                     <button id="easy-btn" onclick="initGame('easy')">🟢 DỄ</button>
-                    <button id="hard-btn" onclick="initGame('hard')">🔴 SKIBIDI HARD</button>
+                    <button id="hard-btn" onclick="initGame('hard')">🔴 KHÓ (Cân bằng)</button>
                 </div>
             </div>
         </div>
@@ -288,8 +287,8 @@ html_code = """
                 • Nhảy: Phím <b>Space</b>, <b>Z</b> hoặc mũi tên <b>Lên / W</b><br>
                 • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
                 <b>2. Mục tiêu trò chơi:</b><br>
-                • Khi Mario.exe xuất hiện, hãy tìm kiếm thánh kiếm được giấu ở vị trí **ngẫu nhiên** trên bản đồ.<br>
-                • Chạm vào kiếm để tiêu diệt phản diện và tiến về cột cờ cứu công chúa!
+                • Khi Mario.exe xuất hiện, hãy tìm thánh kiếm ở vị trí **ngẫu nhiên** trên bản đồ.<br>
+                • Chạm vào kiếm để tiêu diệt phản diện và tiến về cột cờ cứu công chúa Peach!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -297,17 +296,17 @@ html_code = """
         <div id="ui-bar">
             <div>MARIO<br><span id="score">000000</span></div>
             <div>COINS<br>🪙 x<span id="coins">00</span></div>
-            <div>WORLD<br><span id="world-title">SKIBIDI</span></div>
+            <div>WORLD<br><span id="world-title">1-1</span></div>
         </div>
 
         <button id="music-btn" onclick="toggleMusic()">🔊 Nhạc nền: BẬT</button>
 
         <div id="dialog-box">
-            <div id="dialog-speaker">😈 SKIBIDI MARIO.EXE:</div>
-            <div id="dialog-text">"Skibidi dop dop yes yes! Ngươi không thể thoát khỏi ta đâu!"</div>
+            <div id="dialog-speaker">😈 MARIO.EXE:</div>
+            <div id="dialog-text">"Ngươi nghĩ mình có thể cứu được công chúa sao? Hãy chứng tỏ bản lĩnh đàn ông đi!"</div>
         </div>
 
-        <div id="hud-status">🌟 Chặng đường Skibidi hướng về Lâu Đài!</div>
+        <div id="hud-status">🌟 Chặng đường thử thách hướng về Lâu Đài!</div>
         <canvas id="gameCanvas" width="640" height="400"></canvas>
         
         <button id="retry-btn" onclick="resetGame()">🔄 TRY AGAIN</button>
@@ -728,7 +727,7 @@ function drawFlagpoleAndBanner(ctx, flagpole) {
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 20px monospace';
-    ctx.fillText('SKB', fx + 12, fy + 33);
+    ctx.fillText('M', fx + 18, fy + 33);
 }
 
 function drawCastleAndPrincess(ctx) {
@@ -992,9 +991,9 @@ function resetGame() {
 
     document.body.style.background = '#050505';
     canvas.style.background = '#5c94fc';
-    document.getElementById('hud-status').innerText = "🌟 Chặng đường Skibidi hướng về Lâu Đài!";
+    document.getElementById('hud-status').innerText = "🌟 Chặng đường thử thách hướng về Lâu Đài!";
     document.getElementById('hud-status').classList.remove('horror-hud');
-    document.getElementById('world-title').innerText = "SKIBIDI";
+    document.getElementById('world-title').innerText = "1-1";
     document.getElementById('world-title').style.color = "#fff";
 }
 
@@ -1031,7 +1030,6 @@ function gameLoop() {
             marioEXE.x = flagX - 20;
             marioEXE.y = 8 * BLOCK_SIZE - 32;
 
-            // THÁNH KIẾM XUẤT HIỆN Ở VỊ TRÍ NGẪU NHIÊN TRÊN MẠC (trong khoảng từ 100 đến flagX - 150)
             let minSwordX = 150;
             let maxSwordX = flagX - 150;
             swordX = Math.floor(Math.random() * (maxSwordX - minSwordX + 1)) + minSwordX;
@@ -1053,9 +1051,9 @@ function gameLoop() {
 
             document.body.style.background = '#1a0000';
             canvas.style.background = '#120000';
-            document.getElementById('hud-status').innerText = "⚠️ SKIBIDI WARNING: THÁNH KIẾM ĐÃ XUẤT HIỆN NGẪU NHIÊN TRÊN ĐƯỜNG!";
+            document.getElementById('hud-status').innerText = "⚠️ WARNING: THÁNH KIẾM ĐÃ XUẤT HIỆN NGẪU NHIÊN TRÊN ĐƯỜNG!";
             document.getElementById('hud-status').classList.add('horror-hud');
-            document.getElementById('world-title').innerText = "SKB-EXE";
+            document.getElementById('world-title').innerText = "DRILL";
             document.getElementById('world-title').style.color = "#ff0000";
         }
 
@@ -1079,9 +1077,9 @@ function gameLoop() {
                 stopBGM();
                 canvas.style.background = '#5c94fc';
                 document.body.style.background = '#050505';
-                document.getElementById('hud-status').innerText = "🚩 SKIBIDI VICTORY! HÃY CHẠY ĐẾN CỘT CỜ CỨU CÔNG CHÚA!";
+                document.getElementById('hud-status').innerText = "🚩 ĐÃ DIỆT PHẢN DIỆN! HÃY CHẠY ĐẾN CỘT CỜ GIẢI CỨU CÔNG CHÚA!";
                 document.getElementById('hud-status').classList.remove('horror-hud');
-                document.getElementById('world-title').innerText = "SKIBIDI";
+                document.getElementById('world-title').innerText = "1-1";
                 document.getElementById('world-title').style.color = "#fff";
             }
         }
@@ -1216,7 +1214,7 @@ function gameLoop() {
         ctx.textAlign = 'center';
         ctx.shadowColor = '#000';
         ctx.shadowBlur = 12;
-        ctx.fillText("SKIBIDI DIED", canvas.width / 2, 45);
+        ctx.fillText("YOU DIED", canvas.width / 2, 45);
         ctx.textAlign = 'left';
     } else if (gameWon) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
@@ -1227,10 +1225,10 @@ function gameLoop() {
         ctx.fillStyle = '#22c55e';
         ctx.font = 'bold 30px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText("SKIBIDI VICTORY!", canvas.width / 2, canvas.height / 2 + 50);
+        ctx.fillText("VICTORY! PRINCESS SAVED!", canvas.width / 2, canvas.height / 2 + 50);
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px monospace';
-        ctx.fillText("Bạn đã tìm thấy thánh kiếm ngẫu nhiên và cứu công chúa thành công!", canvas.width / 2, canvas.height / 2 + 80);
+        ctx.fillText("Bạn đã tìm thấy thánh kiếm ngẫu nhiên và cứu công chúa Peach thành công!", canvas.width / 2, canvas.height / 2 + 80);
         ctx.textAlign = 'left';
     }
 
