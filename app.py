@@ -187,7 +187,7 @@ html_code = """
             <div id="intro-title">🎬 WORLD 1-1: PEACEFUL JOURNEY</div>
             <div id="intro-desc">
                 Mario đang trên đường trở về Lâu Đài chiến thắng trong một ngày nắng đẹp bình yên.<br><br>
-                Hãy giúp Mario vượt qua các chướng ngại vật để tiến về Cột Cờ...<br>
+                Hãy giúp Mario tiến về Cột Cờ ngắn gọn phía trước...<br>
                 <b>Cho đến khi điều không ngờ xảy ra!</b>
             </div>
             <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU CHƠI</button>
@@ -341,7 +341,7 @@ let animFrame = 0;
 
 let isStabbing = false;
 let stabTimer = 0;
-let swordX = 250;
+let swordX = 220; // Vị trí thanh kiếm ở gần đầu màn chơi
 let swordY = 260;
 
 const keys = { left: false, right: false, jump: false, shift: false };
@@ -468,19 +468,19 @@ function drawGoomba(ctx, g) {
     ctx.restore();
 }
 
-// BẢN ĐỒ VỚI SỐ LƯỢNG BẪY GAI (^ ĐƯỢC GIẢM THIỂU TỐI ĐA)
+// BẢN ĐỒ ĐÃ ĐƯỢC RÚT GỌN LẠI GỌN GÀNG
 const levelLayout = [
-    "                                                                                                                                                                                        ",
-    "                                                                                                                                                                                        ",
-    "                                                                                                                                                                                        ",
-    "                   ?                                        ?  ?$?                                             ?  ?$?                                                           ",
-    "               ?  ?$?                                      -----                                              -----                                                             ",
-    "                                                                                                                                                                                        ",
-    "                                    ---       ^                   ---              ^                ---                       ^                  ---                           |    ",
-    "         ?  ?$?                    -----     ====                -----            ====             -----                     =====              -----                          |    ",
-    "                                  -------   ======              -------          ======           -------                   =======            -------                        [ ]   ",
-    "==================   ==========   ==================   ==================   ============   ===================   ====================   ================   =========================",
-    "==================   ==========   ==================   ==================   ============   ===================   ====================   ================   ========================="
+    "                                                                          ",
+    "                                                                          ",
+    "                                                                          ",
+    "                   ?                                        ?  ?$?        ",
+    "               ?  ?$?                                      -----          ",
+    "                                                                          ",
+    "                                    ---       ^                   --- |   ",
+    "         ?  ?$?                    -----     ====                ---- |   ",
+    "                                  -------   ======              ----- [ ] ",
+    "==================   ==========   ==================   ===================",
+    "==================   ==========   ==================   ==================="
 ];
 
 const mapBlocks = [];
@@ -508,11 +508,7 @@ for (let r = 0; r < levelLayout.length; r++) {
 }
 
 const goombas = [
-    { x: 380, y: 9 * BLOCK_SIZE - 28, vx: -1, minX: 300, maxX: 480, alive: true },
-    { x: 1150, y: 9 * BLOCK_SIZE - 28, vx: -1.2, minX: 1050, maxX: 1280, alive: true },
-    { x: 1750, y: 9 * BLOCK_SIZE - 28, vx: -1.5, minX: 1650, maxX: 1900, alive: true },
-    { x: 2500, y: 9 * BLOCK_SIZE - 28, vx: -1.3, minX: 2400, maxX: 2650, alive: true },
-    { x: 3300, y: 9 * BLOCK_SIZE - 28, vx: -1.6, minX: 3200, maxX: 3450, alive: true }
+    { x: 380, y: 9 * BLOCK_SIZE - 28, vx: -1, minX: 300, maxX: 480, alive: true }
 ];
 
 const mario = {
