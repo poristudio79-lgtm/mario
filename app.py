@@ -250,7 +250,7 @@ html_code = """
             </div>
             <div id="intro-desc">
                 Phiên bản Dark Drill Edition!<br>
-                Đội đầu vào khối chấm hỏi để nhận xu, tiêu diệt phản diện và cứu công chúa.
+                Cứu Công chúa Peach chuẩn phong cách Pixel Art.
             </div>
             <div class="menu-buttons">
                 <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU</button>
@@ -266,8 +266,8 @@ html_code = """
                 • Nhảy: Phím <b>Space</b>, <b>Z</b> hoặc mũi tên <b>Lên / W</b><br>
                 • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
                 <b>2. Mục tiêu trò chơi:</b><br>
-                • Nhảy đội đầu vào các <b>Khối Chấm Hỏi (?)</b> để đồng xu lòi ra và tự động cộng vào tài khoản!<br>
-                • Đánh bại phản diện, đưa bầu trời trở lại bình thường và chạm vào cột cờ cuối màn để chiến thắng.
+                • Đội đầu vào các <b>Khối Chấm Hỏi (?)</b> để nhận xu.<br>
+                • Hạ gục Mario.exe để bầu trời sáng lại, sau đó chạy đến <b>Cột Cờ</b> gặp công chúa Peach!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -450,7 +450,6 @@ let stabTimer = 0;
 let swordX = 220;
 let swordY = 260;
 
-// Mảng lưu trữ hiệu ứng đồng xu bay lên khi đội khối chấm hỏi
 let activeCoins = [];
 
 const keys = { left: false, right: false, jump: false, shift: false };
@@ -606,6 +605,61 @@ function drawMarioEXEJumpscare(ctx, cx, cy) {
     ctx.restore();
 }
 
+// VẼ CÔNG CHÚA PEACH CHUẨN PIXEL ART
+function drawPrincessPixelArt(ctx, x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Mái tóc vàng bồng bềnh sau lưng
+    ctx.fillStyle = '#ffcc00';
+    ctx.fillRect(-14, -22, 18, 24);
+    ctx.fillStyle = '#e69500';
+    ctx.fillRect(-16, -18, 4, 18);
+    ctx.fillRect(-14, 2, 14, 8);
+
+    // Vương miện hoàng gia trên đầu
+    ctx.fillStyle = '#ffcc00';
+    ctx.fillRect(-6, -30, 12, 6);
+    // Đá quý trên vương miện (xanh & hồng)
+    ctx.fillStyle = '#00cccc';
+    ctx.fillRect(-5, -28, 2, 3);
+    ctx.fillStyle = '#ff33cc';
+    ctx.fillRect(-1, -29, 2, 4);
+    ctx.fillStyle = '#00cccc';
+    ctx.fillRect(3, -28, 2, 3);
+
+    // Khuôn mặt & Tóc mái trước
+    ctx.fillStyle = '#fccc97';
+    ctx.fillRect(-6, -20, 12, 12);
+    ctx.fillStyle = '#ffcc00';
+    ctx.fillRect(-8, -24, 16, 5); // Tóc mái
+
+    // Mắt & Miệng
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(-3, -16, 2, 4);
+    ctx.fillRect(1, -16, 2, 4);
+    ctx.fillRect(-1, -10, 2, 1);
+
+    // Hoa tai ngọc xanh
+    ctx.fillStyle = '#00cccc';
+    ctx.fillRect(-8, -14, 3, 3);
+
+    // Váy hồng bồng bềnh đặc trưng
+    ctx.fillStyle = '#ff33cc';
+    ctx.fillRect(-10, -6, 20, 14);
+    // Tay áo & Găng tay trắng
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(-12, -4, 4, 8);
+    ctx.fillRect(8, -4, 4, 8);
+    // Viền váy rộng phía dưới
+    ctx.fillStyle = '#e0115f';
+    ctx.fillRect(-14, 8, 28, 14);
+    ctx.fillStyle = '#ff66cc';
+    ctx.fillRect(-12, 12, 24, 8);
+
+    ctx.restore();
+}
+
 function drawGoomba(ctx, g) {
     if (!g.alive) return;
     ctx.save();
@@ -691,16 +745,8 @@ function drawCastleAndPrincess(ctx) {
     ctx.fillRect(castleX + 32, castleY + 36, 16, 24);
     ctx.fillRect(castleX + 80, castleY + 36, 16, 24);
 
-    ctx.fillStyle = '#ffd700';
-    ctx.fillRect(castleX + 34, castleY + 38, 12, 10);
-    ctx.fillStyle = '#ff69b4';
-    ctx.fillRect(castleX + 34, castleY + 48, 12, 12);
-    
-    if (Math.floor(animFrame / 15) % 2 === 0) {
-        ctx.fillStyle = '#00ffff';
-        ctx.fillRect(castleX + 36, castleY + 46, 2, 3);
-        ctx.fillRect(castleX + 40, castleY + 46, 2, 3);
-    }
+    // CỬA SỔ LÂU ĐÀI: CÔNG CHÚA PEACH XUẤT HIỆN
+    drawPrincessPixelArt(ctx, castleX + 40, castleY + 46);
 }
 
 const levelLayout = [
@@ -787,11 +833,10 @@ const mario = {
                     this.vy = 0;
                     if (b.type === 'question' && !b.empty) {
                         b.empty = true;
-                        b.bounce = 6; // Hiệu ứng khối nảy lên
+                        b.bounce = 6;
                         coins++;
                         score += 200;
                         playSound('coin');
-                        // Thêm hiệu ứng đồng xu lòi ra bay lên từ khối
                         activeCoins.push({ x: b.x + 8, y: b.y, vy: -6, alpha: 1.0 });
                     }
                 }
@@ -984,11 +1029,9 @@ function gameLoop() {
         }
     }
 
-    // Vẽ bản đồ & khối chấm hỏi
     for (let b of mapBlocks) {
         if (b.x + b.w < cameraX || b.x > cameraX + canvas.width) continue;
         
-        // Hiệu ứng nảy khối khi đội
         let renderY = b.y;
         if (b.bounce > 0) {
             renderY -= Math.sin((b.bounce / 6) * Math.PI) * 8;
@@ -1023,11 +1066,10 @@ function gameLoop() {
         }
     }
 
-    // Vẽ hiệu ứng đồng xu lòi ra bay lên
     for (let i = activeCoins.length - 1; i >= 0; i--) {
         let ac = activeCoins[i];
         ac.y += ac.vy;
-        ac.vy += 0.4; // Trọng lực đồng xu
+        ac.vy += 0.4;
         ac.alpha -= 0.03;
 
         ctx.save();
@@ -1121,12 +1163,18 @@ function gameLoop() {
     } else if (gameWon) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // HIỂN THỊ CÔNG CHÚA PEACH PHÓNG TO KHI CHIẾN THẮNG
+        drawPrincessPixelArt(ctx, canvas.width / 2, canvas.height / 2 - 20);
+
         ctx.fillStyle = '#22c55e';
-        ctx.font = 'bold 32px monospace';
-        ctx.fillText("VICTORY! PRINCESS SAVED!", canvas.width / 2 - 210, canvas.height / 2 - 20);
+        ctx.font = 'bold 30px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText("VICTORY! PRINCESS SAVED!", canvas.width / 2, canvas.height / 2 + 50);
         ctx.fillStyle = '#ffffff';
-        ctx.font = '15px monospace';
-        ctx.fillText("Bạn đã tiêu diệt Mario.exe và chạm cột cờ giải cứu thành công công chúa!", canvas.width / 2 - 300, canvas.height / 2 + 20);
+        ctx.font = '14px monospace';
+        ctx.fillText("Bạn đã tiêu diệt Mario.exe và giải cứu thành công công chúa Peach!", canvas.width / 2, canvas.height / 2 + 80);
+        ctx.textAlign = 'left';
     }
 
     ctx.restore();
