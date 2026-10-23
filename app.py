@@ -186,8 +186,8 @@ html_code = """
         <div id="intro-overlay">
             <div id="intro-title">🎬 WORLD 1-1: PEACEFUL JOURNEY</div>
             <div id="intro-desc">
-                Mario đang trên đường trở về Lâu Đài giải cứu Công Chúa trong một ngày nắng đẹp.<br><br>
-                Hãy giúp Mario vượt qua chướng ngại vật để tới Cột Cờ...<br>
+                Mario đang trên đường đến Lâu Đài cuối màn chơi để giải cứu Công Chúa.<br><br>
+                Hãy giúp Mario tiến về Cột Cờ...<br>
                 <b>Cho đến khi điều không ngờ xảy ra!</b>
             </div>
             <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU CHƠI</button>
@@ -468,42 +468,41 @@ function drawGoomba(ctx, g) {
     ctx.restore();
 }
 
-// VẼ LÂU ĐÀI & CÔNG CHÚA ĐANG KHÓC Ở CUỐI MAP
+// VẼ LÂU ĐÀI CÔNG CHÚA ĐANG KHÓC NẰM NGAY CHỖ MARIO.EXE (GẦN CỘT CỜ)
 function drawCastleAndPrincess(ctx) {
-    let castleX = 18 * BLOCK_SIZE - cameraX;
-    let castleY = 5 * BLOCK_SIZE;
+    let castleX = flagX - 50 - cameraX;
+    let castleY = 4 * BLOCK_SIZE;
 
     // Thân lâu đài
-    ctx.fillStyle = '#c0c0c0';
-    ctx.fillRect(castleX, castleY, 128, 128);
+    ctx.fillStyle = isHorrorPhase ? '#551111' : '#c0c0c0';
+    ctx.fillRect(castleX, castleY, 110, 128);
     ctx.strokeStyle = '#000';
-    ctx.strokeRect(castleX, castleY, 128, 128);
+    ctx.strokeRect(castleX, castleY, 110, 128);
 
     // Mái ngọn tháp
-    ctx.fillStyle = '#e52521';
+    ctx.fillStyle = isHorrorPhase ? '#880000' : '#e52521';
     ctx.beginPath();
     ctx.moveTo(castleX - 10, castleY);
-    ctx.lineTo(castleX + 64, castleY - 45);
-    ctx.lineTo(castleX + 138, castleY);
+    ctx.lineTo(castleX + 55, castleY - 45);
+    ctx.lineTo(castleX + 120, castleY);
     ctx.fill();
     ctx.stroke();
 
     // Cửa sổ lâu đài
     ctx.fillStyle = '#000';
-    ctx.fillRect(castleX + 48, castleY + 30, 32, 45);
+    ctx.fillRect(castleX + 39, castleY + 28, 32, 45);
 
-    // VẼ CÔNG CHÚA PEACH ĐANG KHÓC Ở CỬA SỔ
-    // Tóc vàng
+    // CÔNG CHÚA PEACH ĐANG KHÓC Ở CỬA SỔ LÂU ĐÀI
     ctx.fillStyle = '#ffd700';
-    ctx.fillRect(castleX + 54, castleY + 35, 20, 16);
-    // Váy hồng
+    ctx.fillRect(castleX + 45, castleY + 33, 20, 16); // Tóc vàng
     ctx.fillStyle = '#ff69b4';
-    ctx.fillRect(castleX + 54, castleY + 50, 20, 22);
-    // Giọt nước mắt đang rơi (nhấp nháy)
+    ctx.fillRect(castleX + 45, castleY + 48, 20, 22); // Váy hồng
+    
+    // Nước mắt nhấp nháy
     if (Math.floor(animFrame / 15) % 2 === 0) {
         ctx.fillStyle = '#00ffff';
-        ctx.fillRect(castleX + 58, castleY + 44, 3, 5);
-        ctx.fillRect(66 + castleX - castleX, castleY + 44, 3, 5); // Đảm bảo đúng tọa độ
+        ctx.fillRect(castleX + 49, castleY + 42, 3, 5);
+        ctx.fillRect(castleX + 57, castleY + 42, 3, 5);
     }
 }
 
@@ -785,7 +784,7 @@ function gameLoop() {
         }
     }
 
-    // VẼ LÂU ĐÀI & CÔNG CHÚA KHÓC Ở CUỐI MÀN CHƠI
+    // VẼ LÂU ĐÀI CÔNG CHÚA KHÓC NGAY VỊ TRÍ CỦA MARIO.EXE
     drawCastleAndPrincess(ctx);
 
     for (let s of spikes) {
