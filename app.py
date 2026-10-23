@@ -1,16 +1,16 @@
+import streamlit as st
+import streamlit.components.v1 as components
+
+st.set_page_config(page_title="Hồng Nhan Drill Mario.exe", layout="centered")
+
+# Đóng gói toàn bộ code HTML/CSS/JS trong chuỗi Python
+html_code = """
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Mario Bros - Hồng Nhan Drill Nightmare</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body {
             background-color: #050505;
             color: #fff;
@@ -29,11 +29,7 @@
             border-radius: 6px;
             overflow: hidden;
         }
-        canvas {
-            display: block;
-            background: #5c94fc;
-            transition: filter 0.5s ease;
-        }
+        canvas { display: block; background: #5c94fc; }
         #ui-bar {
             position: absolute;
             top: 10px;
@@ -58,7 +54,6 @@
             border-radius: 20px;
             text-shadow: 1px 1px #000;
             z-index: 10;
-            transition: all 0.3s ease;
         }
         .horror-hud {
             color: #ff3333 !important;
@@ -102,7 +97,6 @@ function initAudio() {
     if (!audioCtx) audioCtx = new AudioContext();
 }
 
-// Giả lập hệ thống phát beat Hồng Nhan Drill và âm thanh game
 function playSound(type) {
     if (!audioCtx) return;
     try {
@@ -148,7 +142,6 @@ function playSound(type) {
     } catch(e){}
 }
 
-// Bắt đầu vòng lặp nhịp trống UK Drill nặng, dồn dập khi vào giai đoạn kinh dị
 function startDrillBeat() {
     if (drillInterval) return;
     drillInterval = setInterval(() => {
@@ -160,7 +153,6 @@ function startDrillBeat() {
             osc.connect(gain);
             gain.connect(audioCtx.destination);
 
-            // Nhịp bass nặng đặc trưng dòng Drill
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(110, now);
             osc.frequency.exponentialRampToValueAtTime(35, now + 0.25);
@@ -169,7 +161,7 @@ function startDrillBeat() {
             osc.start(now);
             osc.stop(now + 0.25);
         } catch(e){}
-    }, 400); // Nhịp bass dồn dập
+    }, 400);
 }
 
 const GRAVITY = 0.48;
@@ -392,7 +384,6 @@ function gameLoop() {
         if (luigi.x - cameraX > canvas.width / 2) cameraX = luigi.x - canvas.width / 2;
         else if (luigi.x - cameraX < canvas.width / 4 && cameraX > 0) cameraX = luigi.x - canvas.width / 4;
 
-        // --- KÍCH HOẠT HỒNG NHAN DRILL & MARIO.EXE ---
         if (!isHorrorPhase && luigi.x >= flagX - 180) {
             isHorrorPhase = true;
             exeSpawned = true;
@@ -403,7 +394,7 @@ function gameLoop() {
             shakeAmount = 15;
             playSound('glitch');
             playSound('scream');
-            startDrillBeat(); // Phát nhạc Hồng Nhan Drill
+            startDrillBeat();
 
             document.body.style.background = '#1a0000';
             document.getElementById('hud-status').innerText = "⚠️ HỒNG NHAN DRILL VANG LÊN! CỔNG BỊ KHOÁ, CHẠY NGAY!!";
@@ -470,18 +461,12 @@ function gameLoop() {
         ctx.fillStyle = '#ff0000';
         ctx.font = 'bold 42px monospace';
         ctx.fillText("YOU DIED", canvas.width / 2 - 100, canvas.height / 2 - 10);
-        ctx.fillStyle = '#aaa';
-        ctx.font = '16px monospace';
-        ctx.fillText("Mario.exe đã bắt được bạn trong tiếng nhạc Drill...", canvas.width / 2 - 210, canvas.height / 2 + 30);
     } else if (gameWon) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = '#22c55e';
         ctx.font = 'bold 36px monospace';
         ctx.fillText("ESCAPED!", canvas.width / 2 - 80, canvas.height / 2 - 10);
-        ctx.fillStyle = '#fff';
-        ctx.font = '16px monospace';
-        ctx.fillText("Bạn đã thoát khỏi cơn ác mộng Hồng Nhan Drill!", canvas.width / 2 - 200, canvas.height / 2 + 30);
     }
 
     ctx.restore();
@@ -492,3 +477,6 @@ requestAnimationFrame(gameLoop);
 </script>
 </body>
 </html>
+"""
+
+components.html(html_code, height=520)
