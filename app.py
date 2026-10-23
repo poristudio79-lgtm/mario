@@ -28,7 +28,7 @@ html_code = """
             border-radius: 6px;
             overflow: hidden;
         }
-        canvas { display: block; background: #5c94fc; transition: background 0.3s ease; }
+        canvas { display: block; background: #5c94fc; transition: background 0.5s ease; }
         #ui-bar {
             position: absolute;
             top: 10px;
@@ -167,7 +167,6 @@ html_code = """
         .c-red { color: #e52521; }
         .c-green { color: #22c55e; }
 
-        /* Khung hướng dẫn ở menu chính */
         #menu-instructions {
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid #555;
@@ -269,7 +268,6 @@ html_code = """
                 <span class="c-red">M</span><span class="c-green">A</span><span class="c-yellow">R</span><span class="c-blue">I</span><span class="c-green">O</span>
             </div>
             
-            <!-- Hướng dẫn điều khiển hiển thị trực tiếp ở menu -->
             <div id="menu-instructions">
                 🎮 <b>HƯỚNG DẪN ĐIỀU KHIỂN:</b><br>
                 • Di chuyển: Phím mũi tên <b>Trái / Phải</b> (hoặc <b>A / D</b>)<br>
@@ -296,9 +294,9 @@ html_code = """
             <div class="instruction-content">
                 <b>1. Mẹo thu thập xu:</b><br>
                 • Nhảy đội trán từ dưới lên các khối chứa dấu <b>(?)</b> để nhận xu và điểm số.<br><br>
-                <b>2. Giai đoạn truy đuổi (Boss):</b><br>
-                • Khi đến gần cuối đường, Mario.exe sẽ xuất hiện. Phông nền chuyển đỏ rực cùng với các **tia sét đánh qua** liên tục!<br>
-                • Hãy tìm kiếm **thánh kiếm ngẫu nhiên** trên bản đồ, chạm vào nó để tiêu diệt phản diện và giải cứu công chúa Peach!
+                <b>2. Giải cứu công chúa:</b><br>
+                • Khi phản diện xuất hiện, bầu trời đỏ rực và có sấm chớp. Hãy tìm thánh kiếm ngẫu nhiên để tiêu diệt hắn!<br>
+                • Khi phản diện bị tiêu diệt, trời sẽ quang mây tạnh, công chúa sẽ mỉm cười vui vẻ chờ bạn đến giải cứu.
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -484,7 +482,6 @@ let stabTimer = 0;
 let swordX = 220;
 let swordY = 260;
 
-// Hệ thống tia sét đánh qua
 let lightningTimer = 0;
 let lightningActive = false;
 let lightningFlash = 0;
@@ -648,7 +645,8 @@ function drawMarioEXEJumpscare(ctx, cx, cy) {
     ctx.restore();
 }
 
-function drawPrincessPixelArt(ctx, x, y) {
+// Hàm vẽ công chúa với biểu cảm (vui vẻ khi đã tiêu diệt phản diện, hoặc bình thường)
+function drawPrincessPixelArt(ctx, x, y, happy) {
     ctx.save();
     ctx.translate(x, y);
 
@@ -672,10 +670,21 @@ function drawPrincessPixelArt(ctx, x, y) {
     ctx.fillStyle = '#ffcc00';
     ctx.fillRect(-8, -24, 16, 5);
 
+    // Mắt công chúa
     ctx.fillStyle = '#000000';
     ctx.fillRect(-3, -16, 2, 4);
     ctx.fillRect(1, -16, 2, 4);
-    ctx.fillRect(-1, -10, 2, 1);
+
+    // Miệng: nếu happy (đã diệt phản diện) thì vẽ miệng cười uốn cong vui vẻ, ngược lại miệng thẳng
+    if (happy) {
+        ctx.fillStyle = '#ff0066';
+        ctx.fillRect(-2, -10, 4, 2);
+        ctx.fillRect(-3, -9, 1, 1);
+        ctx.fillRect(2, -9, 1, 1);
+    } else {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(-1, -10, 2, 1);
+    }
 
     ctx.fillStyle = '#00cccc';
     ctx.fillRect(-8, -14, 3, 3);
@@ -748,13 +757,13 @@ function drawCastleAndPrincess(ctx) {
     let castleX = flagX - 70 - cameraX;
     let castleY = 5 * BLOCK_SIZE;
 
-    ctx.fillStyle = isHorrorPhase ? '#4a1515' : '#b8521a';
+    ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#4a1515' : '#b8521a';
     ctx.fillRect(castleX, castleY, 128, 128);
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 2;
     ctx.strokeRect(castleX, castleY, 128, 128);
 
-    ctx.fillStyle = isHorrorPhase ? '#2d0b0b' : '#873600';
+    ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#2d0b0b' : '#873600';
     for(let gx = castleX; gx < castleX + 128; gx += 16) {
         for(let gy = castleY; gy < castleY + 128; gy += 16) {
             ctx.strokeRect(gx, gy, 16, 16);
@@ -778,7 +787,8 @@ function drawCastleAndPrincess(ctx) {
     ctx.fillRect(castleX + 32, castleY + 36, 16, 24);
     ctx.fillRect(castleX + 80, castleY + 36, 16, 24);
 
-    drawPrincessPixelArt(ctx, castleX + 40, castleY + 46);
+    // Truyền trạng thái exeDefeated vào để quyết định công chúa vui vẻ hay không
+    drawPrincessPixelArt(ctx, castleX + 40, castleY + 46, exeDefeated);
 }
 
 function loadLevel(difficulty) {
@@ -864,7 +874,7 @@ const mario = {
         if (this.x < 0) this.x = 0;
 
         for (let b of mapBlocks) {
-            if (b.type === 'air' || (isHorrorPhase && b.type === 'flagpole')) continue;
+            if (b.type === 'air' || (isHorrorPhase && !exeDefeated && b.type === 'flagpole')) continue;
             if (this.x < b.x + b.w && this.x + this.w > b.x && this.y < b.y + b.h && this.y + this.h > b.y) {
                 if (this.vx > 0) this.x = b.x - this.w;
                 else if (this.vx < 0) this.x = b.x + b.w;
@@ -874,7 +884,7 @@ const mario = {
         this.y += this.vy;
         this.grounded = false;
         for (let b of mapBlocks) {
-            if (b.type === 'air' || (isHorrorPhase && b.type === 'flagpole')) continue;
+            if (b.type === 'air' || (isHorrorPhase && !exeDefeated && b.type === 'flagpole')) continue;
             if (this.x < b.x + b.w && this.x + this.w > b.x && this.y < b.y + b.h && this.y + this.h > b.y) {
                 if (this.vy > 0) {
                     this.y = b.y - this.h;
@@ -1056,19 +1066,18 @@ function gameLoop() {
             }, 5000);
 
             document.body.style.background = '#1a0000';
-            canvas.style.background = '#300000'; // Phông nền đỏ đậm kinh dị
+            canvas.style.background = '#300000';
             document.getElementById('hud-status').innerText = "⚠️ WARNING: PHẢN DIỆN XUẤT HIỆN! TÌM THÁNH KIẾM NGAY!";
             document.getElementById('hud-status').classList.add('horror-hud');
             document.getElementById('world-title').innerText = "DRILL";
             document.getElementById('world-title').style.color = "#ff0000";
         }
 
-        // Hiệu ứng tia sét đánh ngẫu nhiên trong pha kinh dị
         if (isHorrorPhase && !exeDefeated) {
             lightningTimer++;
             if (lightningTimer > Math.random() * 80 + 40) {
                 lightningActive = true;
-                lightningFlash = 15; // Thời gian chớp sáng
+                lightningFlash = 15;
                 lightningTimer = 0;
                 shakeAmount = 6;
             }
@@ -1094,9 +1103,12 @@ function gameLoop() {
                 exeDefeated = true;
                 isStabbing = false;
                 stopBGM();
+
+                // TRỜI TRỞ LẠI BÌNH THƯỜNG KHI TIÊU DIỆT XONG PHẢN DIỆN
                 canvas.style.background = '#5c94fc';
                 document.body.style.background = '#050505';
-                document.getElementById('hud-status').innerText = "🚩 ĐÃ TIÊU DIỆT PHẢN DIỆN! HÃY CHẠY ĐẾN CỘT CỜ GIẢI CỨU CÔNG CHÚA!";
+
+                document.getElementById('hud-status').innerText = "🚩 ĐÃ TIÊU DIỆT PHẢN DIỆN! TRỜI ĐÃ SÁNG LẠI, HÃY ĐẾN CỘT CỜ!";
                 document.getElementById('hud-status').classList.remove('horror-hud');
                 document.getElementById('world-title').innerText = "1-1";
                 document.getElementById('world-title').style.color = "#fff";
@@ -1104,7 +1116,6 @@ function gameLoop() {
         }
     }
 
-    // Vẽ khối block
     for (let b of mapBlocks) {
         if (b.x + b.w < cameraX || b.x > cameraX + canvas.width) continue;
         
@@ -1188,10 +1199,8 @@ function gameLoop() {
         marioEXE.draw();
     }
 
-    // Hiệu ứng tia sét đánh qua màn hình khi phản diện xuất hiện
     if (lightningActive) {
         ctx.save();
-        // Vẽ tia sét zic-zac ngẫu nhiên chớp loé
         ctx.strokeStyle = '#ffffff';
         ctx.shadowColor = '#00ffff';
         ctx.shadowBlur = 25;
@@ -1204,7 +1213,6 @@ function gameLoop() {
         ctx.lineTo(lx - 20, canvas.height);
         ctx.stroke();
 
-        // Chớp sáng màn hình màu trắng xanh
         ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.restore();
@@ -1252,7 +1260,7 @@ function gameLoop() {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        drawPrincessPixelArt(ctx, canvas.width / 2, canvas.height / 2 - 20);
+        drawPrincessPixelArt(ctx, canvas.width / 2, canvas.height / 2 - 20, true);
 
         ctx.fillStyle = '#22c55e';
         ctx.font = 'bold 30px monospace';
@@ -1260,7 +1268,7 @@ function gameLoop() {
         ctx.fillText("VICTORY! PRINCESS SAVED!", canvas.width / 2, canvas.height / 2 + 50);
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px monospace';
-        ctx.fillText("Bạn đã vượt qua giông bão, tiêu diệt phản diện và cứu công chúa thành công!", canvas.width / 2, canvas.height / 2 + 80);
+        ctx.fillText("Bạn đã tiêu diệt phản diện, làm trời sáng và cứu công chúa Peach thành công!", canvas.width / 2, canvas.height / 2 + 80);
         ctx.textAlign = 'left';
     }
 
