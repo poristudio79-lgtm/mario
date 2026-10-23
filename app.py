@@ -46,13 +46,14 @@ html_code = """
             bottom: 15px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             background: rgba(0,0,0,0.7);
             padding: 6px 16px;
             border-radius: 20px;
             text-shadow: 1px 1px #000;
             z-index: 10;
+            white-space: nowrap;
         }
         .horror-hud {
             color: #ff3333 !important;
@@ -64,6 +65,26 @@ html_code = """
             color: #aaa;
             font-size: 14px;
             text-align: center;
+        }
+
+        /* Nút Bật/Tắt nhạc */
+        #music-btn {
+            position: absolute;
+            top: 55px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #fff;
+            color: #fff;
+            padding: 6px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            z-index: 30;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        #music-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         /* Nút Try Again */
@@ -84,14 +105,10 @@ html_code = """
             cursor: pointer;
             z-index: 30;
             box-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
-            transition: transform 0.1s ease, background 0.2s ease;
         }
         #retry-btn:hover {
             background: #ff0000;
             transform: translate(-50%, -50%) scale(1.08);
-        }
-        #retry-btn:active {
-            transform: translate(-50%, -50%) scale(0.95);
         }
     </style>
 </head>
@@ -103,6 +120,9 @@ html_code = """
             <div>COINS<br>🪙 x<span id="coins">00</span></div>
             <div>WORLD<br><span id="world-title">1-1</span></div>
         </div>
+
+        <!-- Nút Bật/Tắt Nhạc -->
+        <button id="music-btn" onclick="toggleMusic()">🔊 Nhạc: BẬT</button>
 
         <div id="hud-status">🌟 Chặng đường bình yên hướng về Lâu Đài!</div>
         <canvas id="gameCanvas" width="640" height="400"></canvas>
@@ -119,17 +139,34 @@ html_code = """
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const retryBtn = document.getElementById('retry-btn');
+const musicBtn = document.getElementById('music-btn');
 
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 let drillInterval = null;
+let isMusicMuted = false;
 
 function initAudio() {
     if (!audioCtx) audioCtx = new AudioContext();
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}
+
+function toggleMusic() {
+    initAudio();
+    isMusicMuted = !isMusicMuted;
+    if (isMusicMuted) {
+        musicBtn.innerText = "🔇 Nhạc: TẮT";
+        stopDrillBeat();
+    } else {
+        musicBtn.innerText = "🔊 Nhạc: BẬT";
+        if (isHorrorPhase) startDrillBeat();
+    }
 }
 
 function playSound(type) {
-    if (!audioCtx) return;
+    if (!audioCtx || isMusicMuted) return;
     try {
         const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
@@ -174,9 +211,9 @@ function playSound(type) {
 }
 
 function startDrillBeat() {
-    if (drillInterval) return;
+    if (drillInterval || isMusicMuted) return;
     drillInterval = setInterval(() => {
-        if (!audioCtx || gameOver || gameWon) return;
+        if (!audioCtx || gameOver || gameWon || isMusicMuted) return;
         try {
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
@@ -184,6 +221,7 @@ function startDrillBeat() {
             osc.connect(gain);
             gain.connect(audioCtx.destination);
 
+            // Nhịp Bass Hồng Nhan Drill dồn dập
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(110, now);
             osc.frequency.exponentialRampToValueAtTime(35, now + 0.25);
@@ -411,7 +449,6 @@ const marioEXE = {
     draw() { if (exeSpawned) drawMarioEXESprite(ctx, this.x - cameraX, this.y); }
 };
 
-// Hàm reset toàn bộ trạng thái Game
 function resetGame() {
     score = 0;
     coins = 0;
@@ -431,7 +468,6 @@ function resetGame() {
     stopDrillBeat();
     retryBtn.style.display = 'none';
 
-    // Reset Map Blocks
     for (let b of mapBlocks) {
         if (b.type === 'question') b.empty = false;
     }
