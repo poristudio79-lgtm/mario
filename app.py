@@ -143,7 +143,7 @@ html_code = """
         #intro-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.92);
+            background: rgba(0, 0, 0, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -152,16 +152,25 @@ html_code = """
             padding: 20px;
             z-index: 50;
         }
-        #intro-title {
-            font-size: 26px;
-            color: #ffcc00;
-            margin-bottom: 15px;
-            text-shadow: 2px 2px #ff0000;
+        .mario-logo {
+            font-size: 44px;
+            font-weight: 900;
+            font-family: 'Arial Black', Gadget, sans-serif;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px #000;
+            display: flex;
+            gap: 4px;
         }
+        .c-blue { color: #002db3; }
+        .c-yellow { color: #ffcc00; }
+        .c-red { color: #e52521; }
+        .c-green { color: #22c55e; }
+
         #intro-desc {
-            font-size: 15px;
+            font-size: 14px;
             color: #ddd;
-            max-width: 500px;
+            max-width: 480px;
             line-height: 1.6;
             margin-bottom: 25px;
         }
@@ -184,11 +193,16 @@ html_code = """
 
     <div id="game-wrapper">
         <div id="intro-overlay">
-            <div id="intro-title">🎬 WORLD 1-1: PEACEFUL JOURNEY</div>
+            <div class="mario-logo">
+                <span class="c-blue">S</span><span class="c-yellow">U</span><span class="c-red">P</span><span class="c-green">E</span><span class="c-yellow">R</span>
+            </div>
+            <div class="mario-logo" style="margin-top: -15px; margin-bottom: 20px;">
+                <span class="c-red">M</span><span class="c-green">A</span><span class="c-yellow">R</span><span class="c-blue">I</span><span class="c-green">O</span>
+            </div>
             <div id="intro-desc">
-                Mario đang trên đường tiến tới Cột Cờ Chiến Thắng để giải cứu Công Chúa[cite: 2].<br><br>
-                Hãy giúp Mario vượt qua chướng ngại vật...<br>
-                <b>Cho đến khi điều không ngờ xảy ra!</b>
+                Chào mừng bạn đến với phiên bản Hồng Nhan Drill Edition!<br>
+                Hãy giúp Mario tiến về Lâu Đài gạch cổ điển cuối màn để giải cứu công chúa[cite: 5].<br>
+                <b>Nhưng hãy cẩn thận phía trước!</b>
             </div>
             <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU CHƠI</button>
         </div>
@@ -498,35 +512,57 @@ function drawFlagpoleAndBanner(ctx, flagpole) {
     ctx.fillText('M', fx + 18, fy + 33);
 }
 
+// VẼ LÂU ĐÀI GẠCH NÂU CỔ ĐIỂN CHUẨN NES VÀ CÔNG CHÚA KHÓC Ở CỬA SỔ
 function drawCastleAndPrincess(ctx) {
-    let castleX = flagX - 50 - cameraX;
-    let castleY = 4 * BLOCK_SIZE;
+    let castleX = flagX - 70 - cameraX;
+    let castleY = 5 * BLOCK_SIZE;
 
-    ctx.fillStyle = isHorrorPhase ? '#3b0a0a' : '#555555';
-    ctx.fillRect(castleX, castleY, 110, 128);
+    // Thân lâu đài gạch nâu
+    ctx.fillStyle = isHorrorPhase ? '#4a1515' : '#b8521a';
+    ctx.fillRect(castleX, castleY, 128, 128);
     ctx.strokeStyle = '#000';
-    ctx.strokeRect(castleX, castleY, 110, 128);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(castleX, castleY, 128, 128);
 
-    ctx.fillStyle = isHorrorPhase ? '#660000' : '#b22222';
+    // Đường vân gạch cổ điển trên tường
+    ctx.fillStyle = isHorrorPhase ? '#2d0b0b' : '#873600';
+    for(let gx = castleX; gx < castleX + 128; gx += 16) {
+        for(let gy = castleY; gy < castleY + 128; gy += 16) {
+            ctx.strokeRect(gx, gy, 16, 16);
+        }
+    }
+
+    // Viền đỉnh tháp răng cưa (vách tường gạch màu trắng đỉnh)
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(castleX, castleY, 24, 16);
+    ctx.fillRect(castleX + 52, castleY, 24, 16);
+    ctx.fillRect(castleX + 104, castleY, 24, 16);
+
+    ctx.fillRect(castleX, castleY + 64, 24, 16);
+    ctx.fillRect(castleX + 104, castleY + 64, 24, 16);
+
+    // Cửa vòm lớn phía dưới
+    ctx.fillStyle = '#000000';
     ctx.beginPath();
-    ctx.moveTo(castleX - 10, castleY);
-    ctx.lineTo(castleX + 55, castleY - 45);
-    ctx.lineTo(castleX + 120, castleY);
+    ctx.arc(castleX + 64, castleY + 128, 24, Math.PI, 0, false);
     ctx.fill();
-    ctx.stroke();
+    ctx.fillRect(castleX + 40, castleY + 96, 48, 32);
 
-    ctx.fillStyle = '#000';
-    ctx.fillRect(castleX + 39, castleY + 28, 32, 45);
+    // 2 cửa sổ vuông phía trên tháp
+    ctx.fillRect(castleX + 32, castleY + 36, 16, 24);
+    ctx.fillRect(castleX + 80, castleY + 36, 16, 24);
 
-    ctx.fillStyle = '#ffd700';
-    ctx.fillRect(castleX + 45, castleY + 33, 20, 16);
-    ctx.fillStyle = '#ff69b4';
-    ctx.fillRect(castleX + 45, castleY + 48, 20, 22);
+    // CÔNG CHÚA PEACH ĐANG KHÓC Ở CỬA SỔ BÊN TRÁI THÁP
+    ctx.fillStyle = '#ffd700'; // Tóc vàng
+    ctx.fillRect(castleX + 34, castleY + 38, 12, 10);
+    ctx.fillStyle = '#ff69b4'; // Váy hồng
+    ctx.fillRect(castleX + 34, castleY + 48, 12, 12);
     
+    // Nước mắt nhấp nháy
     if (Math.floor(animFrame / 15) % 2 === 0) {
         ctx.fillStyle = '#00ffff';
-        ctx.fillRect(castleX + 49, castleY + 42, 3, 5);
-        ctx.fillRect(castleX + 57, castleY + 42, 3, 5);
+        ctx.fillRect(castleX + 36, castleY + 46, 2, 3);
+        ctx.fillRect(castleX + 40, castleY + 46, 2, 3);
     }
 }
 
@@ -541,7 +577,7 @@ const levelLayout = [
     "         ?  ?$?                                                   ---- |   ",
     "                                                                 ----- [ ] ",
     "==================   ==========   ==================   ===================",
-    "==================   ==========   ==================   ==================_"
+    "==================   ==========   ==================   ==================="
 ];
 
 const mapBlocks = [];
