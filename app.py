@@ -3,7 +3,6 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Hồng Nhan Drill Mario.exe", layout="centered")
 
-# Đóng gói toàn bộ code HTML/CSS/JS trong chuỗi Python
 html_code = """
 <!DOCTYPE html>
 <html lang="vi">
@@ -66,6 +65,34 @@ html_code = """
             font-size: 14px;
             text-align: center;
         }
+
+        /* Nút Try Again */
+        #retry-btn {
+            display: none;
+            position: absolute;
+            top: 65%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 12px 28px;
+            font-size: 20px;
+            font-weight: bold;
+            font-family: 'Courier New', Courier, monospace;
+            color: #fff;
+            background: #e52521;
+            border: 3px solid #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 30;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
+            transition: transform 0.1s ease, background 0.2s ease;
+        }
+        #retry-btn:hover {
+            background: #ff0000;
+            transform: translate(-50%, -50%) scale(1.08);
+        }
+        #retry-btn:active {
+            transform: translate(-50%, -50%) scale(0.95);
+        }
     </style>
 </head>
 <body>
@@ -79,6 +106,9 @@ html_code = """
 
         <div id="hud-status">🌟 Chặng đường bình yên hướng về Lâu Đài!</div>
         <canvas id="gameCanvas" width="640" height="400"></canvas>
+        
+        <!-- Nút Try Again -->
+        <button id="retry-btn" onclick="resetGame()">🔄 TRY AGAIN</button>
     </div>
 
     <div id="controls-hint">
@@ -88,6 +118,7 @@ html_code = """
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+const retryBtn = document.getElementById('retry-btn');
 
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
@@ -162,6 +193,13 @@ function startDrillBeat() {
             osc.stop(now + 0.25);
         } catch(e){}
     }, 400);
+}
+
+function stopDrillBeat() {
+    if (drillInterval) {
+        clearInterval(drillInterval);
+        drillInterval = null;
+    }
 }
 
 const GRAVITY = 0.48;
@@ -346,7 +384,10 @@ const luigi = {
                 }
             }
         }
-        if (this.y > canvas.height + 60) gameOver = true;
+        if (this.y > canvas.height + 60) {
+            gameOver = true;
+            retryBtn.style.display = 'block';
+        }
     },
     draw() { drawLuigiSprite(ctx, this.x - cameraX, this.y, this.facing, !this.grounded); }
 };
@@ -362,12 +403,46 @@ const marioEXE = {
 
         if (Math.abs(this.x - luigi.x) < 22 && Math.abs(this.y - luigi.y) < 26) {
             gameOver = true;
+            retryBtn.style.display = 'block';
             playSound('scream');
-            if (drillInterval) clearInterval(drillInterval);
+            stopDrillBeat();
         }
     },
     draw() { if (exeSpawned) drawMarioEXESprite(ctx, this.x - cameraX, this.y); }
 };
+
+// Hàm reset toàn bộ trạng thái Game
+function resetGame() {
+    score = 0;
+    coins = 0;
+    cameraX = 0;
+    isHorrorPhase = false;
+    exeSpawned = false;
+    gameOver = false;
+    gameWon = false;
+    flashAlpha = 0;
+    shakeAmount = 0;
+
+    luigi.x = 50;
+    luigi.y = 200;
+    luigi.vx = 0;
+    luigi.vy = 0;
+
+    stopDrillBeat();
+    retryBtn.style.display = 'none';
+
+    // Reset Map Blocks
+    for (let b of mapBlocks) {
+        if (b.type === 'question') b.empty = false;
+    }
+
+    document.body.style.background = '#050505';
+    canvas.style.background = '#5c94fc';
+    document.getElementById('hud-status').innerText = "🌟 Chặng đường bình yên hướng về Lâu Đài!";
+    document.getElementById('hud-status').classList.remove('horror-hud');
+    document.getElementById('world-title').innerText = "1-1";
+    document.getElementById('world-title').style.color = "#fff";
+}
 
 function gameLoop() {
     ctx.save();
@@ -405,7 +480,8 @@ function gameLoop() {
 
         if (isHorrorPhase && luigi.x <= 20) {
             gameWon = true;
-            if (drillInterval) clearInterval(drillInterval);
+            retryBtn.style.display = 'block';
+            stopDrillBeat();
         }
     }
 
@@ -460,13 +536,13 @@ function gameLoop() {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = '#ff0000';
         ctx.font = 'bold 42px monospace';
-        ctx.fillText("YOU DIED", canvas.width / 2 - 100, canvas.height / 2 - 10);
+        ctx.fillText("YOU DIED", canvas.width / 2 - 100, canvas.height / 2 - 20);
     } else if (gameWon) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = '#22c55e';
         ctx.font = 'bold 36px monospace';
-        ctx.fillText("ESCAPED!", canvas.width / 2 - 80, canvas.height / 2 - 10);
+        ctx.fillText("ESCAPED!", canvas.width / 2 - 80, canvas.height / 2 - 20);
     }
 
     ctx.restore();
