@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Super Mario - Classic Mountains Edition", layout="centered")
+st.set_page_config(page_title="Super Mario - Epic Edition", layout="centered")
 
 html_code = """
 <!DOCTYPE html>
@@ -81,25 +81,26 @@ html_code = """
             top: 30%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(20, 0, 0, 0.95);
+            background: rgba(10, 0, 0, 0.96);
             border: 3px solid #ff0000;
             border-radius: 8px;
             padding: 16px;
-            width: 80%;
+            width: 82%;
             text-align: center;
             z-index: 40;
-            box-shadow: 0 0 20px #ff0000;
+            box-shadow: 0 0 25px #ff0000;
         }
         #dialog-speaker {
             color: #ff3333;
             font-weight: bold;
             font-size: 18px;
             margin-bottom: 8px;
+            letter-spacing: 1px;
         }
         #dialog-text {
             color: #ffffff;
-            font-size: 15px;
-            line-height: 1.5;
+            font-size: 14px;
+            line-height: 1.6;
             font-weight: bold;
         }
 
@@ -190,7 +191,7 @@ html_code = """
             font-size: 16px;
             font-weight: bold;
             font-family: 'Courier New', Courier, monospace;
-            border: none;
+            border: None;
             border-radius: 6px;
             cursor: pointer;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
@@ -244,7 +245,7 @@ html_code = """
             margin-bottom: 20px;
         }
         #back-menu-btn {
-            padding: 10px 24px;
+            path: 10px 24px;
             font-size: 15px;
             font-weight: bold;
             font-family: 'Courier New', Courier, monospace;
@@ -294,9 +295,9 @@ html_code = """
             <div class="instruction-content">
                 <b>1. Mẹo thu thập xu:</b><br>
                 • Nhảy đội trán từ dưới lên các khối chứa dấu <b>(?)</b> để nhận xu và điểm số.<br><br>
-                <b>2. Giải cứu công chúa:</b><br>
-                • Khi phản diện xuất hiện, bầu trời đổi màu và có sấm chớp. Hãy tìm thánh kiếm ngẫu nhiên để tiêu diệt hắn!<br>
-                • Khi tiêu diệt xong, bầu trời quang đãng trở lại bình thường và công chúa mỉm cười vui vẻ đợi bạn!
+                <b>2. Sinh tử chiến:</b><br>
+                • Khi phản diện xuất hiện, bầu trời đỏ rực và sấm chớp giáng xuống. Hãy tìm thánh kiếm ngẫu nhiên để hạ sát hắn!<br>
+                • Sau khi tiêu diệt xong, bầu trời lập tức quang đãng, giông bão tan biến và công chúa mỉm cười chờ bạn cứu.
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -309,9 +310,10 @@ html_code = """
 
         <button id="music-btn" onclick="toggleMusic()">🔊 Nhạc nền: BẬT</button>
 
+        <!-- Câu thoại cực chất của phản diện -->
         <div id="dialog-box">
             <div id="dialog-speaker">😈 MARIO.EXE:</div>
-            <div id="dialog-text">"Ngươi nghĩ mình có thể cứu được công chúa sao? Hãy chứng tỏ bản lĩnh đi!"</div>
+            <div id="dialog-text">"Chào đường hầm tử thần, bản sao yếu đuối ạ! Ngươi nghĩ bước qua được xác tao để cứu con công chúa đó sao? Hahaha, mạng mày tới đây là hết rồi!"</div>
         </div>
 
         <div id="hud-status">🌟 Chặng đường thử thách hướng về Lâu Đài!</div>
@@ -700,11 +702,10 @@ function drawPrincessPixelArt(ctx, x, y, happy) {
 }
 
 function drawMountains(ctx) {
-    // Vẽ những ngọn núi cổ điển ở phông nền phía sau
-    ctx.fillStyle = '#008000'; // Màu xanh lá núi
+    ctx.fillStyle = '#008000';
     let mountainPositions = [100, 350, 600, 850, 1150, 1450, 1750, 2050];
     for (let mx of mountainPositions) {
-        let drawX = mx - cameraX * 0.4; // Hiệu ứng parallax nhẹ phía sau
+        let drawX = mx - cameraX * 0.4;
         if (drawX < -150 || drawX > canvas.width + 150) continue;
         
         ctx.beginPath();
@@ -714,7 +715,6 @@ function drawMountains(ctx) {
         ctx.closePath();
         ctx.fill();
 
-        // Chóp đỉnh núi màu trắng (tuyết hoặc mây)
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
         ctx.moveTo(drawX + 70, canvas.height - 180);
@@ -1096,6 +1096,7 @@ function gameLoop() {
             document.getElementById('world-title').style.color = "#ff0000";
         }
 
+        // Chỉ sinh tia sét khi PHẢN DIỆN VẪN CÒN SỐNG
         if (isHorrorPhase && !exeDefeated) {
             lightningTimer++;
             if (lightningTimer > Math.random() * 80 + 40) {
@@ -1106,6 +1107,8 @@ function gameLoop() {
             }
             if (lightningFlash > 0) lightningFlash--;
             else lightningActive = false;
+        } else {
+            lightningActive = false; // Đã giết xong thì lập tức mất sạch sét
         }
 
         if (isHorrorPhase && !exeDefeated && !isStabbing && Math.abs(mario.x - swordX) < 45 && Math.abs(mario.y - swordY) < 50) {
@@ -1127,6 +1130,7 @@ function gameLoop() {
                 isStabbing = false;
                 stopBGM();
 
+                // KHI GIẾT XONG: SÉT MẤT HẲN, TRỜI SÁNG LẠI XANH NGÁT BÌNH THƯỜNG
                 canvas.style.background = '#5c94fc';
                 document.body.style.background = '#050505';
 
@@ -1138,7 +1142,6 @@ function gameLoop() {
         }
     }
 
-    // Vẽ núi ở phông nền trước các khối block
     drawMountains(ctx);
 
     for (let b of mapBlocks) {
@@ -1224,7 +1227,8 @@ function gameLoop() {
         marioEXE.draw();
     }
 
-    if (lightningActive) {
+    // Hiệu ứng tia sét chỉ kích hoạt khi phản diện chưa bị tiêu diệt
+    if (lightningActive && !exeDefeated) {
         ctx.save();
         ctx.strokeStyle = '#ffffff';
         ctx.shadowColor = '#00ffff';
@@ -1293,7 +1297,7 @@ function gameLoop() {
         ctx.fillText("VICTORY! PRINCESS SAVED!", canvas.width / 2, canvas.height / 2 + 50);
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px monospace';
-        ctx.fillText("Bạn đã hoàn thành xuất sắc thử thách và cứu công chúa Peach!", canvas.width / 2, canvas.height / 2 + 80);
+        ctx.fillText("Bạn đã tiêu diệt phản diện xuất sắc và giải cứu công chúa thành công!", canvas.width / 2, canvas.height / 2 + 80);
         ctx.textAlign = 'left';
     }
 
