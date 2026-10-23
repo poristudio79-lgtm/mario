@@ -262,7 +262,7 @@ html_code = """
             </div>
             <div id="intro-desc">
                 Phiên bản Dark Drill Edition!<br>
-                Chọn độ khó để bắt đầu cuộc chiến cứu công chúa Peach.
+                Chế độ Khó đã được cân bằng lại, đảm bảo có thể vượt qua.
             </div>
 
             <div id="main-menu-buttons" class="menu-buttons">
@@ -274,7 +274,7 @@ html_code = """
                 <div style="font-size: 16px; font-weight: bold; color: #ffcc00; margin-bottom: 5px;">CHỌN ĐỘ KHÓ:</div>
                 <div class="menu-buttons">
                     <button id="easy-btn" onclick="initGame('easy')">🟢 DỄ</button>
-                    <button id="hard-btn" onclick="initGame('hard')">🔴 KHÓ</button>
+                    <button id="hard-btn" onclick="initGame('hard')">🔴 KHÓ (Đã cân bằng)</button>
                 </div>
             </div>
         </div>
@@ -288,7 +288,7 @@ html_code = """
                 • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
                 <b>2. Mục tiêu trò chơi:</b><br>
                 • Đụng trán các khối (?) để nhận xu.<br>
-                • Chạm vào thánh kiếm để tiêu diệt Mario.exe khi bị rượt đuổi.<br>
+                • Chế độ Khó nay đã vừa tay hơn, có thể vượt qua và lượm kiếm dễ dàng.<br>
                 • Chạm cột cờ để giải cứu công chúa Peach thành công!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
@@ -768,6 +768,7 @@ function drawCastleAndPrincess(ctx) {
     drawPrincessPixelArt(ctx, castleX + 40, castleY + 46);
 }
 
+// KHỞI TẠO MAP THEO ĐỘ KHÓ (CHẾ ĐỘ KHÓ ĐÃ ĐƯỢC CÂN BẰNG LẠI DỄ DÀNG VƯỢT QUA HƠN)
 function loadLevel(difficulty) {
     mapBlocks = [];
     spikes = [];
@@ -789,17 +790,18 @@ function loadLevel(difficulty) {
             "===================   =============   ======================"
         ];
     } else {
+        // CHẾ ĐỘ KHÓ CÂN BẰNG: Giảm bớt hố sâu liên hoàn, giãn khoảng cách bẫy gai hợp lý hơn
         layout = [
             "                                                                          ",
             "                                                                          ",
             "                   ?  $?                                 ?  ?$?           ",
-            "               ^  ------                 ^               -----            ",
+            "               ^  ------                                 -----            ",
             "                                                                          ",
-            "         ?  ?$?             -----       -----                        |   ",
-            "                            -----       -----                        |   ",
-            "        ---     ^                        ^                          [ ]  ",
-            "=== == ===   === === ===   === === ===   === === ===   === === === === ===",
-            "=== == ===   === === ===   === === ===   === === ===   === === === === ==="
+            "         ?  ?$?             -----                   -----            |   ",
+            "                            -----                   -----            |   ",
+            "        ---     ^                                                   [ ]  ",
+            "=== == ===   === === === === === === === ===   === === === === === === ===",
+            "=== == ===   === === === === === === === ===   === === === === === === ==="
         ];
     }
 
@@ -829,7 +831,7 @@ function loadLevel(difficulty) {
     } else {
         goombas.push(
             { x: 260, y: 8 * BLOCK_SIZE - 28, vx: -1, minX: 200, maxX: 340, alive: true },
-            { x: 480, y: 8 * BLOCK_SIZE - 28, vx: -1, minX: 420, maxX: 560, alive: true }
+            { x: 500, y: 8 * BLOCK_SIZE - 28, vx: -1, minX: 440, maxX: 580, alive: true }
         );
     }
 }
@@ -942,7 +944,7 @@ function initGame(difficulty) {
     loadLevel(currentDifficulty);
 
     if (currentDifficulty === 'hard') {
-        marioEXE.speed = 3.2;
+        marioEXE.speed = 2.9; // Giảm tốc độ Mario.exe ở chế độ khó để người chơi đủ sức phản xạ và chiến thắng
     } else {
         marioEXE.speed = 2.4;
     }
@@ -1031,7 +1033,6 @@ function gameLoop() {
             marioEXE.x = flagX - 20;
             marioEXE.y = 8 * BLOCK_SIZE - 32;
 
-            // Đặt vị trí xuất hiện thánh kiếm cố định trước mặt Mario để dễ thấy và dễ lượm
             swordX = mario.x + 120;
             swordY = 8 * BLOCK_SIZE - 24;
 
@@ -1057,7 +1058,6 @@ function gameLoop() {
             document.getElementById('world-title').style.color = "#ff0000";
         }
 
-        // ĐÃ MỞ RỘNG VÙNG VA CHẠM ĐỂ DỄ DÀNG LƯỢM KIẾM NGAY KHI CHẠM VÀO
         if (isHorrorPhase && !exeDefeated && !isStabbing && Math.abs(mario.x - swordX) < 45 && Math.abs(mario.y - swordY) < 50) {
             isStabbing = true;
             stabTimer = 0;
@@ -1229,7 +1229,7 @@ function gameLoop() {
         ctx.fillText("VICTORY! PRINCESS SAVED!", canvas.width / 2, canvas.height / 2 + 50);
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px monospace';
-        ctx.fillText("Bạn đã rút thánh kiếm thành công, tiêu diệt Mario.exe và cứu công chúa Peach!", canvas.width / 2, canvas.height / 2 + 80);
+        ctx.fillText("Bạn đã vượt qua chế độ Khó, tiêu diệt Mario.exe và cứu công chúa Peach!", canvas.width / 2, canvas.height / 2 + 80);
         ctx.textAlign = 'left';
     }
 
