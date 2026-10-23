@@ -498,7 +498,6 @@ function drawFlagpoleAndBanner(ctx, flagpole) {
     ctx.fillText('M', fx + 18, fy + 33);
 }
 
-// LÂU ĐÀI VÀ CÔNG CHÚA KHÓC VỚI NỀN ĐỒNG BỘ U ÁM
 function drawCastleAndPrincess(ctx) {
     let castleX = flagX - 50 - cameraX;
     let castleY = 4 * BLOCK_SIZE;
@@ -519,7 +518,6 @@ function drawCastleAndPrincess(ctx) {
     ctx.fillStyle = '#000';
     ctx.fillRect(castleX + 39, castleY + 28, 32, 45);
 
-    // Công chúa Peach đang khóc
     ctx.fillStyle = '#ffd700';
     ctx.fillRect(castleX + 45, castleY + 33, 20, 16);
     ctx.fillStyle = '#ff69b4';
