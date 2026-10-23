@@ -262,21 +262,19 @@ html_code = """
             </div>
             <div id="intro-desc">
                 Phiên bản Dark Drill Edition!<br>
-                Chọn độ khó và bắt đầu hành trình cứu công chúa Peach.
+                Chọn độ khó để trải nghiệm bản đồ Dễ hoặc Khó riêng biệt.
             </div>
 
-            <!-- Menu chính ban đầu -->
             <div id="main-menu-buttons" class="menu-buttons">
                 <button id="start-btn" onclick="showDifficultyMenu()">▶️ BẮT ĐẦU</button>
                 <button id="howtoplay-btn" onclick="openHowToPlay()">📖 HƯỚNG DẪN</button>
             </div>
 
-            <!-- Menu chọn độ khó (Dễ / Khó) -->
             <div id="difficulty-screen">
                 <div style="font-size: 16px; font-weight: bold; color: #ffcc00; margin-bottom: 5px;">CHỌN ĐỘ KHÓ:</div>
                 <div class="menu-buttons">
-                    <button id="easy-btn" onclick="startGame('easy')">🟢 DỄ</button>
-                    <button id="hard-btn" onclick="startGame('hard')">🔴 KHÓ</button>
+                    <button id="easy-btn" onclick="initGame('easy')">🟢 DỄ</button>
+                    <button id="hard-btn" onclick="initGame('hard')">🔴 KHÓ</button>
                 </div>
             </div>
         </div>
@@ -289,8 +287,8 @@ html_code = """
                 • Nhảy: Phím <b>Space</b>, <b>Z</b> hoặc mũi tên <b>Lên / W</b><br>
                 • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
                 <b>2. Mục tiêu trò chơi:</b><br>
-                • Vượt qua bẫy gai và quái vật.<br>
-                • Đội đầu vào các <b>Khối Chấm Hỏi (?)</b> để lấy xu.<br>
+                • Chế độ Dễ: Bản đồ thoáng, ít bẫy, thích hợp thư giãn.<br>
+                • Chế độ Khó: Bản đồ dày đặc bẫy gai và hố sâu hiểm trở.<br>
                 • Tiêu diệt phản diện và chạm cột cờ gặp Công chúa Peach!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
@@ -346,20 +344,6 @@ function showDifficultyMenu() {
     initAudio();
     mainMenuButtons.style.display = 'none';
     difficultyScreen.style.display = 'flex';
-}
-
-function startGame(difficulty) {
-    initAudio();
-    currentDifficulty = difficulty;
-    introOverlay.style.display = 'none';
-    gameStarted = true;
-
-    // Tốc độ phản diện tùy thuộc vào độ khó đã chọn
-    if (currentDifficulty === 'hard') {
-        marioEXE.speed = 4.3;
-    } else {
-        marioEXE.speed = 2.5;
-    }
 }
 
 function openHowToPlay() {
@@ -492,6 +476,11 @@ let swordX = 220;
 let swordY = 260;
 
 let activeCoins = [];
+let mapBlocks = [];
+let spikes = [];
+let goombas = [];
+let flagpoleObj = null;
+let flagX = 0;
 
 const keys = { left: false, right: false, jump: false, shift: false };
 
@@ -779,49 +768,74 @@ function drawCastleAndPrincess(ctx) {
     drawPrincessPixelArt(ctx, castleX + 40, castleY + 46);
 }
 
-const levelLayout = [
-    "                                                                          ",
-    "                                                                          ",
-    "                   ?  $?                                 ?  ?$?           ",
-    "               ^  ------     ^   ^   ^                   -----            ",
-    "                                                                          ",
-    "         ?  ?$?             -----   -----                             |   ",
-    "                            -----   -----                             |   ",
-    "        ---     ^    ^                            ^    ^             [ ]  ",
-    "=== == ===   === === ===   === === === === === === === === === === === ===",
-    "=== == ===   === === ===   === === === === === === === === === === === ==="
-];
+// KHỞI TẠO MAP THEO ĐỘ KHÓ
+function loadLevel(difficulty) {
+    mapBlocks = [];
+    spikes = [];
+    goombas = [];
+    flagpoleObj = null;
 
-const mapBlocks = [];
-const spikes = [];
-let flagpoleObj = null;
-let flagX = 0;
+    let layout = [];
+    if (difficulty === 'easy') {
+        // MAP DỄ: Thoáng, ít hố sâu, ít bẫy gai
+        layout = [
+            "                                                            ",
+            "                                                            ",
+            "                   ?  $?                 ?  ?$?             ",
+            "               ---------                 -----              ",
+            "                                                            ",
+            "         ?  ?$?                         -----            |  ",
+            "                                        -----            |  ",
+            "        ---                                             [ ] ",
+            "===================   =============   ======================",
+            "===================   =============   ======================"
+        ];
+    } else {
+        // MAP KHÓ: Dày đặc hố sâu, bẫy gai nguy hiểm, ống cống liên hoàn
+        layout = [
+            "                                                                          ",
+            "                                                                          ",
+            "                   ?  $?                                 ?  ?$?           ",
+            "               ^  ------     ^   ^   ^                   -----            ",
+            "                                                                          ",
+            "         ?  ?$?             -----   -----                             |   ",
+            "                            -----   -----                             |   ",
+            "        ---     ^    ^                            ^    ^             [ ]  ",
+            "=== == ===   === === ===   === === === === === === === === === === === ===",
+            "=== == ===   === === ===   === === === === === === === === === === === ==="
+        ];
+    }
 
-maxMapWidth = levelLayout[0].length * BLOCK_SIZE;
+    maxMapWidth = layout[0].length * BLOCK_SIZE;
 
-for (let r = 0; r < levelLayout.length; r++) {
-    for (let c = 0; c < levelLayout[r].length; c++) {
-        const char = levelLayout[r][c];
-        const x = c * BLOCK_SIZE;
-        const y = r * BLOCK_SIZE;
+    for (let r = 0; r < layout.length; r++) {
+        for (let c = 0; c < layout[r].length; c++) {
+            const char = layout[r][c];
+            const x = c * BLOCK_SIZE;
+            const y = r * BLOCK_SIZE;
 
-        if (char === '=') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'ground' });
-        else if (char === '?') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'question', empty: false, bounce: 0 });
-        else if (char === '$') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'brick' });
-        else if (char === '-') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'pipe' });
-        else if (char === '^') spikes.push({ x, y: y + 16, w: BLOCK_SIZE, h: 16 });
-        else if (char === '|') {
-            flagX = x;
-            flagpoleObj = { x, y: y - 2 * BLOCK_SIZE, w: 10, h: 3 * BLOCK_SIZE };
-            mapBlocks.push({ x, y, w: 10, h: BLOCK_SIZE, type: 'flagpole' });
+            if (char === '=') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'ground' });
+            else if (char === '?') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'question', empty: false, bounce: 0 });
+            else if (char === '$') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'brick' });
+            else if (char === '-') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'pipe' });
+            else if (char === '^') spikes.push({ x, y: y + 16, w: BLOCK_SIZE, h: 16 });
+            else if (char === '|') {
+                flagX = x;
+                flagpoleObj = { x, y: y - 2 * BLOCK_SIZE, w: 10, h: 3 * BLOCK_SIZE };
+                mapBlocks.push({ x, y, w: 10, h: BLOCK_SIZE, type: 'flagpole' });
+            }
         }
     }
-}
 
-const goombas = [
-    { x: 260, y: 8 * BLOCK_SIZE - 28, vx: -1, minX: 200, maxX: 340, alive: true },
-    { x: 480, y: 8 * BLOCK_SIZE - 28, vx: -1, minX: 420, maxX: 560, alive: true }
-];
+    if (difficulty === 'easy') {
+        goombas.push({ x: 300, y: 8 * BLOCK_SIZE - 28, vx: -1, minX: 250, maxX: 400, alive: true });
+    } else {
+        goombas.push(
+            { x: 260, y: 8 * BLOCK_SIZE - 28, vx: -1, minX: 200, maxX: 340, alive: true },
+            { x: 480, y: 8 * BLOCK_SIZE - 28, vx: -1, minX: 420, maxX: 560, alive: true }
+        );
+    }
+}
 
 const mario = {
     x: 50, y: 200, w: 28, h: 32, vx: 0, vy: 0, speed: 3.5, jumpPower: 11, grounded: false, facing: 'right', moving: false,
@@ -925,6 +939,21 @@ const marioEXE = {
     draw() { if (exeSpawned && !exeDefeated) drawMarioEXESprite(ctx, this.x - cameraX, this.y); }
 };
 
+function initGame(difficulty) {
+    initAudio();
+    currentDifficulty = difficulty;
+    loadLevel(currentDifficulty);
+
+    if (currentDifficulty === 'hard') {
+        marioEXE.speed = 4.3;
+    } else {
+        marioEXE.speed = 2.4;
+    }
+
+    introOverlay.style.display = 'none';
+    gameStarted = true;
+}
+
 function triggerGameOver() {
     if (gameOver) return;
     gameOver = true;
@@ -955,20 +984,10 @@ function resetGame() {
     mario.vx = 0;
     mario.vy = 0;
 
-    for (let g of goombas) g.alive = true;
-
     stopBGM();
     retryBtn.style.display = 'none';
     dialogBox.style.display = 'none';
 
-    for (let b of mapBlocks) {
-        if (b.type === 'question') {
-            b.empty = false;
-            b.bounce = 0;
-        }
-    }
-
-    // Khi bấm try again, đưa người chơi quay trở lại màn hình chọn độ khó
     gameStarted = false;
     introOverlay.style.display = 'flex';
     mainMenuButtons.style.display = 'none';
@@ -1208,7 +1227,7 @@ function gameLoop() {
         ctx.fillText("VICTORY! PRINCESS SAVED!", canvas.width / 2, canvas.height / 2 + 50);
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px monospace';
-        ctx.fillText("Bạn đã vượt qua thử thách, tiêu diệt Mario.exe và cứu công chúa Peach!", canvas.width / 2, canvas.height / 2 + 80);
+        ctx.fillText("Bạn đã vượt qua thử thách thành công, tiêu diệt Mario.exe và cứu công chúa Peach!", canvas.width / 2, canvas.height / 2 + 80);
         ctx.textAlign = 'left';
     }
 
