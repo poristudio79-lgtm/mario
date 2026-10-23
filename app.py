@@ -67,6 +67,7 @@ html_code = """
             text-align: center;
         }
 
+        /* Nút Bật/Tắt Nhạc */
         #music-btn {
             position: absolute;
             top: 55px;
@@ -84,6 +85,7 @@ html_code = """
         }
         #music-btn:hover { background: rgba(255, 255, 255, 0.3); }
 
+        /* Nút Try Again */
         #retry-btn {
             display: none;
             position: absolute;
@@ -103,11 +105,62 @@ html_code = """
             box-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
         }
         #retry-btn:hover { background: #ff0000; transform: translate(-50%, -50%) scale(1.08); }
+
+        /* INTRO OVERLAY */
+        #intro-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            z-index: 50;
+        }
+        #intro-title {
+            font-size: 26px;
+            color: #ffcc00;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px #ff0000;
+        }
+        #intro-desc {
+            font-size: 15px;
+            color: #ddd;
+            max-width: 500px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        #start-btn {
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            font-family: 'Courier New', Courier, monospace;
+            color: #000;
+            background: #ffcc00;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 0 10px #ffcc00;
+        }
+        #start-btn:hover { background: #fff; transform: scale(1.05); }
     </style>
 </head>
 <body>
 
     <div id="game-wrapper">
+        <!-- INTRO OVERLAY -->
+        <div id="intro-overlay">
+            <div id="intro-title">🎬 WORLD 1-1: PEACEFUL JOURNEY</div>
+            <div id="intro-desc">
+                Luigi đang trên đường trở về Lâu Đài chiến thắng trong một ngày nắng đẹp bình yên.<br><br>
+                Hãy giúp Luigi thu thập xu và tiến về phía Cột Cờ Victory...<br>
+                <b>Cho đến khi điều không ngờ xảy ra!</b>
+            </div>
+            <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU CHƠI</button>
+        </div>
+
         <div id="ui-bar">
             <div>LUIGI<br><span id="score">000000</span></div>
             <div>COINS<br>🪙 x<span id="coins">00</span></div>
@@ -126,7 +179,7 @@ html_code = """
         🎮 <b>Di chuyển:</b> ⬅️ ➡️ | <b>Nhảy:</b> Space / Z / ⬆️ | <b>Chạy nhanh:</b> Shift
     </div>
 
-    <!-- Nguồn nhạc Hồng Nhan Drill -->
+    <!-- Nhạc Hồng Nhan Drill -->
     <audio id="drillAudio" loop preload="auto">
         <source src="https://files.catbox.moe/k3t2p4.mp3" type="audio/mpeg">
     </audio>
@@ -137,14 +190,22 @@ const ctx = canvas.getContext('2d');
 const retryBtn = document.getElementById('retry-btn');
 const musicBtn = document.getElementById('music-btn');
 const drillAudio = document.getElementById('drillAudio');
+const introOverlay = document.getElementById('intro-overlay');
 
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 let isMusicMuted = false;
+let gameStarted = false;
 
 function initAudio() {
     if (!audioCtx) audioCtx = new AudioContext();
     if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function startGame() {
+    initAudio();
+    introOverlay.style.display = 'none';
+    gameStarted = true;
 }
 
 function toggleMusic() {
@@ -226,6 +287,7 @@ let shakeAmount = 0;
 const keys = { left: false, right: false, jump: false, shift: false };
 
 window.addEventListener('keydown', e => {
+    if (!gameStarted) return;
     initAudio();
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
@@ -459,7 +521,7 @@ function gameLoop() {
     }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (!gameOver && !gameWon) {
+    if (gameStarted && !gameOver && !gameWon) {
         luigi.update();
         marioEXE.update();
 
