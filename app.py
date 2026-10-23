@@ -262,7 +262,7 @@ html_code = """
             </div>
             <div id="intro-desc">
                 Phiên bản Dark Drill Edition!<br>
-                Chọn độ khó và bắt đầu hành trình cứu công chúa Peach[cite: 5, 6].
+                Chọn độ khó và bắt đầu hành trình cứu công chúa Peach.
             </div>
 
             <!-- Menu chính ban đầu -->
@@ -291,7 +291,7 @@ html_code = """
                 <b>2. Mục tiêu trò chơi:</b><br>
                 • Vượt qua bẫy gai và quái vật.<br>
                 • Đội đầu vào các <b>Khối Chấm Hỏi (?)</b> để lấy xu.<br>
-                • Tiêu diệt phản diện và chạm cột cờ gặp Công chúa Peach[cite: 5, 6]!
+                • Tiêu diệt phản diện và chạm cột cờ gặp Công chúa Peach!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -354,11 +354,11 @@ function startGame(difficulty) {
     introOverlay.style.display = 'none';
     gameStarted = true;
 
-    // Thiết lập tốc độ phản diện dựa theo độ khó
+    // Tốc độ phản diện tùy thuộc vào độ khó đã chọn
     if (currentDifficulty === 'hard') {
-        marioEXE.speed = 4.2; // Chế độ khó: Mario.exe rượt đuổi nhanh hơn
+        marioEXE.speed = 4.3;
     } else {
-        marioEXE.speed = 2.6; // Chế độ dễ: Mario.exe di chuyển chậm hơn
+        marioEXE.speed = 2.5;
     }
 }
 
@@ -909,7 +909,7 @@ const mario = {
 };
 
 const marioEXE = {
-    x: 0, y: 0, w: 32, h: 32, speed: 2.6,
+    x: 0, y: 0, w: 32, h: 32, speed: 2.5,
     update() {
         if (!exeSpawned || exeDefeated || isStabbing || isCutscene || gameOver) return;
 
@@ -967,6 +967,12 @@ function resetGame() {
             b.bounce = 0;
         }
     }
+
+    // Khi bấm try again, đưa người chơi quay trở lại màn hình chọn độ khó
+    gameStarted = false;
+    introOverlay.style.display = 'flex';
+    mainMenuButtons.style.display = 'none';
+    difficultyScreen.style.display = 'flex';
 
     document.body.style.background = '#050505';
     canvas.style.background = '#5c94fc';
@@ -1202,7 +1208,7 @@ function gameLoop() {
         ctx.fillText("VICTORY! PRINCESS SAVED!", canvas.width / 2, canvas.height / 2 + 50);
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px monospace';
-        ctx.fillText("Bạn đã vượt qua thử thách, tiêu diệt Mario.exe và cứu công chúa Peach[cite: 5, 6]!", canvas.width / 2, canvas.height / 2 + 80);
+        ctx.fillText("Bạn đã vượt qua thử thách, tiêu diệt Mario.exe và cứu công chúa Peach!", canvas.width / 2, canvas.height / 2 + 80);
         ctx.textAlign = 'left';
     }
 
