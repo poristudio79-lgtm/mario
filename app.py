@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Super Mario - Final Edition", layout="centered")
+st.set_page_config(page_title="Super Mario - Classic Mountains Edition", layout="centered")
 
 html_code = """
 <!DOCTYPE html>
@@ -295,8 +295,8 @@ html_code = """
                 <b>1. Mẹo thu thập xu:</b><br>
                 • Nhảy đội trán từ dưới lên các khối chứa dấu <b>(?)</b> để nhận xu và điểm số.<br><br>
                 <b>2. Giải cứu công chúa:</b><br>
-                • Khi phản diện xuất hiện, bầu trời đỏ rực và có sấm chớp. Hãy tìm thánh kiếm ngẫu nhiên để tiêu diệt hắn!<br>
-                • Khi phản diện bị tiêu diệt, trời sẽ quang mây tạnh, công chúa sẽ mỉm cười vui vẻ chờ bạn đến giải cứu.
+                • Khi phản diện xuất hiện, bầu trời đổi màu và có sấm chớp. Hãy tìm thánh kiếm ngẫu nhiên để tiêu diệt hắn!<br>
+                • Khi tiêu diệt xong, bầu trời quang đãng trở lại bình thường và công chúa mỉm cười vui vẻ đợi bạn!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -645,7 +645,6 @@ function drawMarioEXEJumpscare(ctx, cx, cy) {
     ctx.restore();
 }
 
-// Hàm vẽ công chúa với biểu cảm (vui vẻ khi đã tiêu diệt phản diện, hoặc bình thường)
 function drawPrincessPixelArt(ctx, x, y, happy) {
     ctx.save();
     ctx.translate(x, y);
@@ -670,12 +669,10 @@ function drawPrincessPixelArt(ctx, x, y, happy) {
     ctx.fillStyle = '#ffcc00';
     ctx.fillRect(-8, -24, 16, 5);
 
-    // Mắt công chúa
     ctx.fillStyle = '#000000';
     ctx.fillRect(-3, -16, 2, 4);
     ctx.fillRect(1, -16, 2, 4);
 
-    // Miệng: nếu happy (đã diệt phản diện) thì vẽ miệng cười uốn cong vui vẻ, ngược lại miệng thẳng
     if (happy) {
         ctx.fillStyle = '#ff0066';
         ctx.fillRect(-2, -10, 4, 2);
@@ -700,6 +697,33 @@ function drawPrincessPixelArt(ctx, x, y, happy) {
     ctx.fillRect(-12, 12, 24, 8);
 
     ctx.restore();
+}
+
+function drawMountains(ctx) {
+    // Vẽ những ngọn núi cổ điển ở phông nền phía sau
+    ctx.fillStyle = '#008000'; // Màu xanh lá núi
+    let mountainPositions = [100, 350, 600, 850, 1150, 1450, 1750, 2050];
+    for (let mx of mountainPositions) {
+        let drawX = mx - cameraX * 0.4; // Hiệu ứng parallax nhẹ phía sau
+        if (drawX < -150 || drawX > canvas.width + 150) continue;
+        
+        ctx.beginPath();
+        ctx.moveTo(drawX, canvas.height - 64);
+        ctx.lineTo(drawX + 70, canvas.height - 180);
+        ctx.lineTo(drawX + 140, canvas.height - 64);
+        ctx.closePath();
+        ctx.fill();
+
+        // Chóp đỉnh núi màu trắng (tuyết hoặc mây)
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(drawX + 70, canvas.height - 180);
+        ctx.lineTo(drawX + 55, canvas.height - 150);
+        ctx.lineTo(drawX + 85, canvas.height - 150);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#008000';
+    }
 }
 
 function drawGoomba(ctx, g) {
@@ -787,7 +811,6 @@ function drawCastleAndPrincess(ctx) {
     ctx.fillRect(castleX + 32, castleY + 36, 16, 24);
     ctx.fillRect(castleX + 80, castleY + 36, 16, 24);
 
-    // Truyền trạng thái exeDefeated vào để quyết định công chúa vui vẻ hay không
     drawPrincessPixelArt(ctx, castleX + 40, castleY + 46, exeDefeated);
 }
 
@@ -1104,7 +1127,6 @@ function gameLoop() {
                 isStabbing = false;
                 stopBGM();
 
-                // TRỜI TRỞ LẠI BÌNH THƯỜNG KHI TIÊU DIỆT XONG PHẢN DIỆN
                 canvas.style.background = '#5c94fc';
                 document.body.style.background = '#050505';
 
@@ -1115,6 +1137,9 @@ function gameLoop() {
             }
         }
     }
+
+    // Vẽ núi ở phông nền trước các khối block
+    drawMountains(ctx);
 
     for (let b of mapBlocks) {
         if (b.x + b.w < cameraX || b.x > cameraX + canvas.width) continue;
@@ -1268,7 +1293,7 @@ function gameLoop() {
         ctx.fillText("VICTORY! PRINCESS SAVED!", canvas.width / 2, canvas.height / 2 + 50);
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px monospace';
-        ctx.fillText("Bạn đã tiêu diệt phản diện, làm trời sáng và cứu công chúa Peach thành công!", canvas.width / 2, canvas.height / 2 + 80);
+        ctx.fillText("Bạn đã hoàn thành xuất sắc thử thách và cứu công chúa Peach!", canvas.width / 2, canvas.height / 2 + 80);
         ctx.textAlign = 'left';
     }
 
