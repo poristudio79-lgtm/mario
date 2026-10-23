@@ -1,16 +1,16 @@
-import streamlit as st
-import streamlit.components.v1 as components
-
-st.set_page_config(page_title="Mario.exe Nightmare", layout="centered")
-
-# Toàn bộ HTML/JS/CSS được bọc gọn trong chuỗi Python
-html_code = """
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Mario Bros - Hồng Nhan Drill Nightmare</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
         body {
             background-color: #050505;
             color: #fff;
@@ -29,7 +29,11 @@ html_code = """
             border-radius: 6px;
             overflow: hidden;
         }
-        canvas { display: block; background: #5c94fc; }
+        canvas {
+            display: block;
+            background: #5c94fc;
+            transition: filter 0.5s ease;
+        }
         #ui-bar {
             position: absolute;
             top: 10px;
@@ -49,16 +53,17 @@ html_code = """
             transform: translateX(-50%);
             font-size: 15px;
             font-weight: bold;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.7);
             padding: 6px 16px;
             border-radius: 20px;
             text-shadow: 1px 1px #000;
             z-index: 10;
+            transition: all 0.3s ease;
         }
         .horror-hud {
             color: #ff3333 !important;
             border: 1px solid #ff3333;
-            box-shadow: 0 0 10px #ff0000;
+            box-shadow: 0 0 12px #ff0000;
         }
         #controls-hint {
             margin-top: 12px;
@@ -91,11 +96,13 @@ const ctx = canvas.getContext('2d');
 
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
+let drillInterval = null;
 
 function initAudio() {
     if (!audioCtx) audioCtx = new AudioContext();
 }
 
+// Giả lập hệ thống phát beat Hồng Nhan Drill và âm thanh game
 function playSound(type) {
     if (!audioCtx) return;
     try {
@@ -125,20 +132,44 @@ function playSound(type) {
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(80, now);
             osc.frequency.linearRampToValueAtTime(800, now + 0.3);
-            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.setValueAtTime(0.3, now);
             gain.gain.linearRampToValueAtTime(0, now + 0.4);
             osc.start(now);
             osc.stop(now + 0.4);
         } else if (type === 'scream') {
             osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(700, now);
-            osc.frequency.exponentialRampToValueAtTime(100, now + 0.8);
-            gain.gain.setValueAtTime(0.3, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.8);
+            osc.frequency.setValueAtTime(650, now);
+            osc.frequency.exponentialRampToValueAtTime(90, now + 0.9);
+            gain.gain.setValueAtTime(0.35, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.9);
             osc.start(now);
-            osc.stop(now + 0.8);
+            osc.stop(now + 0.9);
         }
     } catch(e){}
+}
+
+// Bắt đầu vòng lặp nhịp trống UK Drill nặng, dồn dập khi vào giai đoạn kinh dị
+function startDrillBeat() {
+    if (drillInterval) return;
+    drillInterval = setInterval(() => {
+        if (!audioCtx || gameOver || gameWon) return;
+        try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            // Nhịp bass nặng đặc trưng dòng Drill
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(110, now);
+            osc.frequency.exponentialRampToValueAtTime(35, now + 0.25);
+            gain.gain.setValueAtTime(0.4, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.25);
+            osc.start(now);
+            osc.stop(now + 0.25);
+        } catch(e){}
+    }, 400); // Nhịp bass dồn dập
 }
 
 const GRAVITY = 0.48;
@@ -340,6 +371,7 @@ const marioEXE = {
         if (Math.abs(this.x - luigi.x) < 22 && Math.abs(this.y - luigi.y) < 26) {
             gameOver = true;
             playSound('scream');
+            if (drillInterval) clearInterval(drillInterval);
         }
     },
     draw() { if (exeSpawned) drawMarioEXESprite(ctx, this.x - cameraX, this.y); }
@@ -360,6 +392,7 @@ function gameLoop() {
         if (luigi.x - cameraX > canvas.width / 2) cameraX = luigi.x - canvas.width / 2;
         else if (luigi.x - cameraX < canvas.width / 4 && cameraX > 0) cameraX = luigi.x - canvas.width / 4;
 
+        // --- KÍCH HOẠT HỒNG NHAN DRILL & MARIO.EXE ---
         if (!isHorrorPhase && luigi.x >= flagX - 180) {
             isHorrorPhase = true;
             exeSpawned = true;
@@ -370,15 +403,19 @@ function gameLoop() {
             shakeAmount = 15;
             playSound('glitch');
             playSound('scream');
+            startDrillBeat(); // Phát nhạc Hồng Nhan Drill
 
             document.body.style.background = '#1a0000';
-            document.getElementById('hud-status').innerText = "⚠️ CỔNG ĐÃ BỊ KHOÁ! CHẠY NGƯỢC LẠI NGÀY!!";
+            document.getElementById('hud-status').innerText = "⚠️ HỒNG NHAN DRILL VANG LÊN! CỔNG BỊ KHOÁ, CHẠY NGAY!!";
             document.getElementById('hud-status').classList.add('horror-hud');
-            document.getElementById('world-title').innerText = "666";
+            document.getElementById('world-title').innerText = "DRILL";
             document.getElementById('world-title').style.color = "#ff0000";
         }
 
-        if (isHorrorPhase && luigi.x <= 20) gameWon = true;
+        if (isHorrorPhase && luigi.x <= 20) {
+            gameWon = true;
+            if (drillInterval) clearInterval(drillInterval);
+        }
     }
 
     for (let b of mapBlocks) {
@@ -435,13 +472,16 @@ function gameLoop() {
         ctx.fillText("YOU DIED", canvas.width / 2 - 100, canvas.height / 2 - 10);
         ctx.fillStyle = '#aaa';
         ctx.font = '16px monospace';
-        ctx.fillText("Mario.exe đã bắt được bạn...", canvas.width / 2 - 130, canvas.height / 2 + 30);
+        ctx.fillText("Mario.exe đã bắt được bạn trong tiếng nhạc Drill...", canvas.width / 2 - 210, canvas.height / 2 + 30);
     } else if (gameWon) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = '#22c55e';
         ctx.font = 'bold 36px monospace';
         ctx.fillText("ESCAPED!", canvas.width / 2 - 80, canvas.height / 2 - 10);
+        ctx.fillStyle = '#fff';
+        ctx.font = '16px monospace';
+        ctx.fillText("Bạn đã thoát khỏi cơn ác mộng Hồng Nhan Drill!", canvas.width / 2 - 200, canvas.height / 2 + 30);
     }
 
     ctx.restore();
@@ -452,7 +492,3 @@ requestAnimationFrame(gameLoop);
 </script>
 </body>
 </html>
-"""
-
-# Render HTML vào Streamlit
-components.html(html_code, height=520)
