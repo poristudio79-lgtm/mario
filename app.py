@@ -187,7 +187,7 @@ html_code = """
             <div id="intro-title">🎬 WORLD 1-1: PEACEFUL JOURNEY</div>
             <div id="intro-desc">
                 Mario đang trên đường trở về Lâu Đài chiến thắng trong một ngày nắng đẹp bình yên.<br><br>
-                Hãy giúp Mario nhảy dẫm đè bẹp các con nấm, vượt qua hố sâu để tiến về Cột Cờ...<br>
+                Hãy giúp Mario vượt qua dãy chướng ngại vật liên tiếp để tới Cột Cờ...<br>
                 <b>Cho đến khi điều không ngờ xảy ra!</b>
             </div>
             <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU CHƠI</button>
@@ -330,6 +330,7 @@ const BLOCK_SIZE = 32;
 let score = 0;
 let coins = 0;
 let cameraX = 0;
+let maxMapWidth = 0;
 let isHorrorPhase = false;
 let exeSpawned = false;
 let gameOver = false;
@@ -340,7 +341,7 @@ let animFrame = 0;
 
 let isStabbing = false;
 let stabTimer = 0;
-let swordX = 320;
+let swordX = 250;
 let swordY = 260;
 
 const keys = { left: false, right: false, jump: false, shift: false };
@@ -467,23 +468,26 @@ function drawGoomba(ctx, g) {
     ctx.restore();
 }
 
+// BẢN ĐỒ DÀI MỞ RỘNG VỚI HỆ THỐNG CHƯỚNG NGẠI VẬT LIÊN TIẾP
 const levelLayout = [
-    "                                                                                                                    ",
-    "                                                                                                                    ",
-    "                                                                                                                    ",
-    "                   ?                                        ?  ?$?                                                  ",
-    "               ?  ?$?                                      -----                                                    ",
-    "                                                                                                                    ",
-    "                                    ---       ^^^^              ---                                            |    ",
-    "         ?  ?$?                    -----     ======            -----                                           |    ",
-    "                                  -------   ========          -------                                         [ ]   ",
-    "==================   ==========   ==================   ==================   ================   =====================",
-    "==================   ==========   ==================   ==================   ================   ====================="
+    "                                                                                                                                                                                        ",
+    "                                                                                                                                                                                        ",
+    "                                                                                                                                                                                        ",
+    "                   ?                                        ?  ?$?                                             ?  ?$?                                                           ",
+    "               ?  ?$?                                      -----                                              -----                                                             ",
+    "                                                                                                                                                                                        ",
+    "                                    ---       ^^^^              ---             ^^^^             ---                      ^^^^^              ---                           |    ",
+    "         ?  ?$?                    -----     ======            -----           ======           -----                    =======            -----                          |    ",
+    "                                  -------   ========          -------         ========         -------                  =========          -------                        [ ]   ",
+    "==================   ==========   ==================   ==================   ============   ===================   ====================   ================   =========================",
+    "==================   ==========   ==================   ==================   ============   ===================   ====================   ================   ========================="
 ];
 
 const mapBlocks = [];
 const spikes = [];
 let flagX = 0;
+
+maxMapWidth = levelLayout[0].length * BLOCK_SIZE;
 
 for (let r = 0; r < levelLayout.length; r++) {
     for (let c = 0; c < levelLayout[r].length; c++) {
@@ -503,10 +507,13 @@ for (let r = 0; r < levelLayout.length; r++) {
     }
 }
 
+// QUÁI VẬT NẤM RẢI RÁC TOÀN MÀN CHƠI
 const goombas = [
-    { x: 400, y: 9 * BLOCK_SIZE - 28, vx: -1, minX: 320, maxX: 500, alive: true },
-    { x: 1200, y: 9 * BLOCK_SIZE - 28, vx: -1.2, minX: 1100, maxX: 1350, alive: true },
-    { x: 1800, y: 9 * BLOCK_SIZE - 28, vx: -1.5, minX: 1700, maxX: 1950, alive: true }
+    { x: 380, y: 9 * BLOCK_SIZE - 28, vx: -1, minX: 300, maxX: 480, alive: true },
+    { x: 1150, y: 9 * BLOCK_SIZE - 28, vx: -1.2, minX: 1050, maxX: 1280, alive: true },
+    { x: 1750, y: 9 * BLOCK_SIZE - 28, vx: -1.5, minX: 1650, maxX: 1900, alive: true },
+    { x: 2500, y: 9 * BLOCK_SIZE - 28, vx: -1.3, minX: 2400, maxX: 2650, alive: true },
+    { x: 3300, y: 9 * BLOCK_SIZE - 28, vx: -1.6, minX: 3200, maxX: 3450, alive: true }
 ];
 
 const mario = {
@@ -525,6 +532,8 @@ const mario = {
         this.vy += GRAVITY;
 
         this.x += this.vx;
+        if (this.x < 0) this.x = 0;
+
         for (let b of mapBlocks) {
             if (b.type === 'air' || (isHorrorPhase && b.type === 'flagpole')) continue;
             if (this.x < b.x + b.w && this.x + this.w > b.x && this.y < b.y + b.h && this.y + this.h > b.y) {
@@ -555,18 +564,16 @@ const mario = {
             }
         }
 
-        // KIỂM TRA VA CHẠM VỚI GOOMBA (DẪM ĐẦU VS VA CHẠM NGANG)
+        // DẪM TRÚNG ĐẦU NẤM -> ĐÈ BẸP NẤM VÀ TƯNG NẢY LÊN
         for (let g of goombas) {
             if (!g.alive) continue;
             if (this.x < g.x + 28 && this.x + this.w > g.x && this.y < g.y + 28 && this.y + this.h > g.y) {
-                // Nếu Mario đang rơi xuống từ trên cao và nằm phía trên nấm -> DẪM ĐỀ BẸP NẤM & TƯNG LÊN
                 if (this.vy > 0 && prevY + this.h <= g.y + 12) {
                     g.alive = false;
-                    this.vy = -7.5; // Tưng nảy vọt lên trên!
+                    this.vy = -7.5;
                     score += 100;
                     playSound('stomp');
                 } else {
-                    // Ngược lại nếu va hông -> Mario chết
                     gameOver = true;
                     retryBtn.style.display = 'block';
                     playSound('scream');
@@ -671,9 +678,12 @@ function gameLoop() {
             if (g.x < g.minX || g.x > g.maxX) g.vx *= -1;
         }
 
-        if (mario.x - cameraX > canvas.width / 2) cameraX = mario.x - cameraX - canvas.width / 2;
-        else if (mario.x - cameraX < canvas.width / 4 && cameraX > 0) cameraX = mario.x - canvas.width / 4;
+        // HỆ THỐNG CAMERA CUỘN MƯỢT MÀ THEO BẢN ĐỒ
+        cameraX = mario.x - canvas.width / 3;
+        if (cameraX < 0) cameraX = 0;
+        if (cameraX > maxMapWidth - canvas.width) cameraX = maxMapWidth - canvas.width;
 
+        /* CÚ TWIST TẠI CỘT CỜ VICTORY */
         if (!isHorrorPhase && mario.x >= flagX - 180) {
             isHorrorPhase = true;
             exeSpawned = true;
@@ -695,6 +705,7 @@ function gameLoop() {
             document.getElementById('world-title').style.color = "#ff0000";
         }
 
+        /* CHẠM VÀO THANH KIẾM THÁNH -> ĐÂM KẾT LIỄU MARIO.EXE */
         if (isHorrorPhase && !isStabbing && Math.abs(mario.x - swordX) < 30 && Math.abs(mario.y - swordY) < 35) {
             isStabbing = true;
             stabTimer = 0;
@@ -746,6 +757,7 @@ function gameLoop() {
     }
 
     for (let s of spikes) {
+        if (s.x + s.w < cameraX || s.x > cameraX + canvas.width) continue;
         ctx.fillStyle = isHorrorPhase ? '#ff0000' : '#888';
         ctx.beginPath();
         ctx.moveTo(s.x - cameraX, s.y + s.h);
