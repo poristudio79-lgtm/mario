@@ -67,16 +67,16 @@ html_code = """
             text-align: center;
         }
 
-        /* Nút Bật/Tắt nhạc */
+        /* Nút Bật/Tắt Nhạc */
         #music-btn {
             position: absolute;
             top: 55px;
             right: 20px;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             border: 2px solid #fff;
             color: #fff;
-            padding: 6px 12px;
-            font-size: 14px;
+            padding: 6px 14px;
+            font-size: 13px;
             font-weight: bold;
             border-radius: 6px;
             cursor: pointer;
@@ -122,7 +122,7 @@ html_code = """
         </div>
 
         <!-- Nút Bật/Tắt Nhạc -->
-        <button id="music-btn" onclick="toggleMusic()">🔊 Nhạc: BẬT</button>
+        <button id="music-btn" onclick="toggleMusic()">🔊 Nhạc Drill: BẬT</button>
 
         <div id="hud-status">🌟 Chặng đường bình yên hướng về Lâu Đài!</div>
         <canvas id="gameCanvas" width="640" height="400"></canvas>
@@ -135,15 +135,20 @@ html_code = """
         🎮 <b>Di chuyển:</b> ⬅️ ➡️ | <b>Nhảy:</b> Space / Z / ⬆️ | <b>Chạy nhanh:</b> Shift
     </div>
 
+    <!-- Nhạc nền Hồng Nhan Drill -->
+    <audio id="drillAudio" loop preload="auto">
+        <source src="https://files.catbox.moe/k3t2p4.mp3" type="audio/mpeg">
+    </audio>
+
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const retryBtn = document.getElementById('retry-btn');
 const musicBtn = document.getElementById('music-btn');
+const drillAudio = document.getElementById('drillAudio');
 
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
-let drillInterval = null;
 let isMusicMuted = false;
 
 function initAudio() {
@@ -153,20 +158,37 @@ function initAudio() {
     }
 }
 
+// Hàm Bật / Tắt Nhạc khi người dùng bấm nút
 function toggleMusic() {
     initAudio();
     isMusicMuted = !isMusicMuted;
     if (isMusicMuted) {
-        musicBtn.innerText = "🔇 Nhạc: TẮT";
-        stopDrillBeat();
+        musicBtn.innerText = "🔇 Nhạc Drill: TẮT";
+        drillAudio.pause();
     } else {
-        musicBtn.innerText = "🔊 Nhạc: BẬT";
-        if (isHorrorPhase) startDrillBeat();
+        musicBtn.innerText = "🔊 Nhạc Drill: BẬT";
+        if (isHorrorPhase && !gameOver && !gameWon) {
+            drillAudio.play().catch(e => {});
+        }
     }
 }
 
+// Bắt đầu phát bản nhạc Hồng Nhan Drill
+function startHongNhanDrill() {
+    if (!isMusicMuted) {
+        drillAudio.currentTime = 0;
+        drillAudio.play().catch(e => console.log("Cần tương tác người dùng để phát âm thanh"));
+    }
+}
+
+// Dừng nhạc
+function stopHongNhanDrill() {
+    drillAudio.pause();
+    drillAudio.currentTime = 0;
+}
+
 function playSound(type) {
-    if (!audioCtx || isMusicMuted) return;
+    if (!audioCtx) return;
     try {
         const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
@@ -190,14 +212,6 @@ function playSound(type) {
             gain.gain.linearRampToValueAtTime(0, now + 0.25);
             osc.start(now);
             osc.stop(now + 0.25);
-        } else if (type === 'glitch') {
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(80, now);
-            osc.frequency.linearRampToValueAtTime(800, now + 0.3);
-            gain.gain.setValueAtTime(0.3, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.4);
-            osc.start(now);
-            osc.stop(now + 0.4);
         } else if (type === 'scream') {
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(650, now);
@@ -208,36 +222,6 @@ function playSound(type) {
             osc.stop(now + 0.9);
         }
     } catch(e){}
-}
-
-function startDrillBeat() {
-    if (drillInterval || isMusicMuted) return;
-    drillInterval = setInterval(() => {
-        if (!audioCtx || gameOver || gameWon || isMusicMuted) return;
-        try {
-            const now = audioCtx.currentTime;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            // Nhịp Bass Hồng Nhan Drill dồn dập
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(110, now);
-            osc.frequency.exponentialRampToValueAtTime(35, now + 0.25);
-            gain.gain.setValueAtTime(0.4, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.25);
-            osc.start(now);
-            osc.stop(now + 0.25);
-        } catch(e){}
-    }, 400);
-}
-
-function stopDrillBeat() {
-    if (drillInterval) {
-        clearInterval(drillInterval);
-        drillInterval = null;
-    }
 }
 
 const GRAVITY = 0.48;
@@ -425,6 +409,7 @@ const luigi = {
         if (this.y > canvas.height + 60) {
             gameOver = true;
             retryBtn.style.display = 'block';
+            stopHongNhanDrill();
         }
     },
     draw() { drawLuigiSprite(ctx, this.x - cameraX, this.y, this.facing, !this.grounded); }
@@ -443,7 +428,7 @@ const marioEXE = {
             gameOver = true;
             retryBtn.style.display = 'block';
             playSound('scream');
-            stopDrillBeat();
+            stopHongNhanDrill();
         }
     },
     draw() { if (exeSpawned) drawMarioEXESprite(ctx, this.x - cameraX, this.y); }
@@ -465,7 +450,7 @@ function resetGame() {
     luigi.vx = 0;
     luigi.vy = 0;
 
-    stopDrillBeat();
+    stopHongNhanDrill();
     retryBtn.style.display = 'none';
 
     for (let b of mapBlocks) {
@@ -495,6 +480,7 @@ function gameLoop() {
         if (luigi.x - cameraX > canvas.width / 2) cameraX = luigi.x - canvas.width / 2;
         else if (luigi.x - cameraX < canvas.width / 4 && cameraX > 0) cameraX = luigi.x - canvas.width / 4;
 
+        // KHI SẮP ĐẾN CỔNG VICTORY -> PHÁT NHẠC HỒNG NHAN DRILL VÀ MARIO.EXE XUẤT HIỆN
         if (!isHorrorPhase && luigi.x >= flagX - 180) {
             isHorrorPhase = true;
             exeSpawned = true;
@@ -503,12 +489,11 @@ function gameLoop() {
 
             flashAlpha = 1.0;
             shakeAmount = 15;
-            playSound('glitch');
             playSound('scream');
-            startDrillBeat();
+            startHongNhanDrill(); // PHÁT BẢN NHẠC HỒNG NHAN DRILL!
 
             document.body.style.background = '#1a0000';
-            document.getElementById('hud-status').innerText = "⚠️ HỒNG NHAN DRILL VANG LÊN! CỔNG BỊ KHOÁ, CHẠY NGAY!!";
+            document.getElementById('hud-status').innerText = "🎶 HỒNG NHAN DRILL VANG LÊN! CỔNG BỊ KHOÁ, CHẠY NGAY!!";
             document.getElementById('hud-status').classList.add('horror-hud');
             document.getElementById('world-title').innerText = "DRILL";
             document.getElementById('world-title').style.color = "#ff0000";
@@ -517,7 +502,7 @@ function gameLoop() {
         if (isHorrorPhase && luigi.x <= 20) {
             gameWon = true;
             retryBtn.style.display = 'block';
-            stopDrillBeat();
+            stopHongNhanDrill();
         }
     }
 
