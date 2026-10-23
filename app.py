@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Mario vs Mario.exe - Hồng Nhan Drill", layout="centered")
+st.set_page_config(page_title="Mario vs Mario.exe - layout="centered")
 
 html_code = """
 <!DOCTYPE html>
@@ -123,9 +123,9 @@ html_code = """
         #retry-btn {
             display: none;
             position: absolute;
-            top: 72%;
+            bottom: 30px;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translateX(-50%);
             padding: 12px 28px;
             font-size: 20px;
             font-weight: bold;
@@ -135,10 +135,10 @@ html_code = """
             border: 3px solid #fff;
             border-radius: 8px;
             cursor: pointer;
-            z-index: 30;
+            z-index: 50;
             box-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
         }
-        #retry-btn:hover { background: #ff0000; transform: translate(-50%, -50%) scale(1.08); }
+        #retry-btn:hover { background: #ff0000; transform: translateX(-50%) scale(1.08); }
 
         #intro-overlay {
             position: absolute;
@@ -437,7 +437,7 @@ let swordY = 260;
 const keys = { left: false, right: false, jump: false, shift: false };
 
 window.addEventListener('keydown', e => {
-    if (!gameStarted || isStabbing || isCutscene || instructionsModal.style.display === 'flex') return;
+    if (!gameStarted || isStabbing || isCutscene || instructionsModal.style.display === 'flex' || gameOver) return;
     initAudio();
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
@@ -529,6 +529,63 @@ function drawMarioEXESprite(ctx, x, y) {
     let legOffset = Math.sin(animFrame * 0.4) * 5;
     ctx.fillRect(-10 + legOffset, 12, 8, 4);
     ctx.fillRect(2 - legOffset, 12, 8, 4);
+
+    ctx.restore();
+}
+
+// HÀM VẼ KHUÔN MẶT MARIO.EXE PHÓNG TO KINH DỊ CHO MÀN HÌNH THUA (GAME OVER)[cite: 8]
+function drawMarioEXEJumpscare(ctx, cx, cy) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(3.2, 3.2); // Phóng to khuôn mặt
+
+    // Mũ đỏ sẫm trùm trên cùng
+    ctx.fillStyle = '#6e0a0a';
+    ctx.fillRect(-25, -45, 50, 16);
+    ctx.fillRect(-30, -32, 60, 14);
+    // Logo chữ M trên mũ (màu trắng ngà)
+    ctx.fillStyle = '#fce8e6';
+    ctx.fillRect(-6, -42, 12, 10);
+
+    // Khuôn mặt đen kịt (nền tối thẳm)
+    ctx.fillStyle = '#0f0505';
+    ctx.fillRect(-32, -18, 64, 45);
+
+    // Mắt đỏ ngầu quỷ dị phát sáng
+    ctx.fillStyle = '#ff0000';
+    ctx.fillRect(-18, -12, 10, 10);
+    ctx.fillRect(8, -12, 10, 10);
+    ctx.fillStyle = '#ffffff'; // Tâm mắt trắng
+    ctx.fillRect(-14, -10, 3, 4);
+    ctx.fillRect(11, -10, 3, 4);
+
+    // Mũi to tròn màu trắng ngà đặc trưng
+    ctx.fillStyle = '#fce8e6';
+    ctx.beginPath();
+    ctx.arc(0, -2, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bộ ria mép đen bản lớn
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(-24, 6, 48, 10);
+
+    // MIỆNG RỘNG TO VỚI HÀNG RĂNG SẮC NHỌN TRẮNG DÀI (ĐÚNG MẪU ẢNH)[cite: 8]
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(-22, 16, 44, 38);
+
+    ctx.strokeStyle = '#fce8e6';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-22, 16, 44, 38);
+
+    // Răng trên
+    ctx.fillStyle = '#fce8e6';
+    for (let rx = -18; rx < 18; rx += 7) {
+        ctx.fillRect(rx, 16, 5, 10);
+    }
+    // Răng dưới
+    for (let rx = -18; rx < 18; rx += 7) {
+        ctx.fillRect(rx, 44, 5, 10);
+    }
 
     ctx.restore();
 }
@@ -974,49 +1031,23 @@ function gameLoop() {
     document.getElementById('score').innerText = String(score).padStart(6, '0');
     document.getElementById('coins').innerText = String(coins).padStart(2, '0');
 
-    // HIỂN THỊ CẢNH BỊ BẮT KINH DỊ KHI GAME OVER (MÔ PHỎNG HÌNH ẢNH MẪU)
+    // HIỂN THỊ JUMPSCARE KHUÔN MẶT MARIO.EXE KHI GAME OVER[cite: 8]
     if (gameOver) {
-        ctx.fillStyle = '#0a0202';
+        // Nền tối mờ ám
+        ctx.fillStyle = '#080101';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Vẽ nền hang động tăm tối (các nhũ đá vàng rực/cam)
-        ctx.fillStyle = '#d48806';
-        ctx.beginPath();
-        ctx.moveTo(120, 400); ctx.lineTo(220, 180); ctx.lineTo(320, 400); ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(420, 400); ctx.lineTo(560, 60); ctx.lineTo(640, 400); ctx.fill();
+        // Vẽ khuôn mặt Mario.exe phóng to ở chính giữa màn hình
+        drawMarioEXEJumpscare(ctx, canvas.width / 2, canvas.height / 2 - 20);
 
-        // Vẽ Mario.exe đang giơ tay tóm cổ Mario
-        // Mario.exe đứng bên phải
-        drawMarioEXESprite(ctx, canvas.width / 2 + 10, canvas.height / 2 - 20);
-
-        // Mario bị tóm cổ treo lơ lửng trên tay Mario.exe
-        ctx.save();
-        ctx.translate(canvas.width / 2 - 10, canvas.height / 2 - 10);
-        // Vẽ thân Mario gục ngã / bị tóm
+        // Dòng chữ thông báo Game Over phong cách kinh dị
         ctx.fillStyle = '#ff0000';
-        ctx.fillRect(-8, -10, 16, 12);
-        ctx.fillStyle = '#fccc97';
-        ctx.fillRect(-8, -16, 14, 8);
-        ctx.fillStyle = '#0020c2';
-        ctx.fillRect(-6, 2, 12, 10);
-        ctx.restore();
-
-        // Xác nhân vật thứ 2 nằm dưới đất (tím/tối)
-        ctx.save();
-        ctx.translate(canvas.width / 2 - 110, canvas.height / 2 + 50);
-        ctx.fillStyle = '#5c2288';
-        ctx.fillRect(-12, -8, 24, 16);
-        ctx.fillStyle = '#ff0000';
-        ctx.fillRect(-14, -14, 16, 8);
-        ctx.restore();
-
-        // Chữ YOU DIED phong cách kinh dị
-        ctx.fillStyle = '#ff0000';
-        ctx.font = 'bold 38px monospace';
+        ctx.font = 'bold 28px monospace';
+        ctx.textAlign = 'center';
         ctx.shadowColor = '#000';
-        ctx.shadowBlur = 10;
-        ctx.fillText("YOU DIED", canvas.width / 2 - 95, 60);
+        ctx.shadowBlur = 12;
+        ctx.fillText("YOU DIED", canvas.width / 2, 45);
+        ctx.textAlign = 'left'; // reset
     } else if (gameWon) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
