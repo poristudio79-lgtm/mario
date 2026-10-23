@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Mario vs Mario.exe - Hồng Nhan Drill", layout="centered")
+st.set_page_config(page_title="Mario vs Mario.exe - Dark Drill Edition", layout="centered")
 
 html_code = """
 <!DOCTYPE html>
@@ -249,8 +249,8 @@ html_code = """
                 <span class="c-red">M</span><span class="c-green">A</span><span class="c-yellow">R</span><span class="c-blue">I</span><span class="c-green">O</span>
             </div>
             <div id="intro-desc">
-                Phiên bản Hồng Nhan Drill Edition!<br>
-                Tiêu diệt phản diện, chạy tới cột cờ và giải cứu công chúa[cite: 2, 5].
+                Phiên bản Dark Drill Edition!<br>
+                Tiêu diệt phản diện, chạy tới cột cờ và giải cứu công chúa.
             </div>
             <div class="menu-buttons">
                 <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU</button>
@@ -267,8 +267,8 @@ html_code = """
                 • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
                 <b>2. Mục tiêu trò chơi:</b><br>
                 • Thu thập tiền vàng 🪙, vượt qua chướng ngại vật.<br>
-                • Khi chạm mặt phản diện, âm nhạc <b>Hồng Nhan Drill</b> sẽ nổi lên[cite: 2, 5]!<br>
-                • Nhặt kiếm thánh đâm phản diện[cite: 2, 5], sau đó chạy tiếp đến <b>Cột Cờ</b> để cứu công chúa[cite: 2, 5]!
+                • Khi chạm mặt phản diện, âm nhạc nền kịch tính sẽ nổi lên!<br>
+                • Nhặt kiếm thánh đâm phản diện, sau đó chạy tiếp đến <b>Cột Cờ</b> để cứu công chúa!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -279,7 +279,7 @@ html_code = """
             <div>WORLD<br><span id="world-title">1-1</span></div>
         </div>
 
-        <button id="music-btn" onclick="toggleMusic()">🔊 Hồng Nhan Drill: BẬT</button>
+        <button id="music-btn" onclick="toggleMusic()">🔊 Nhạc nền: BẬT</button>
 
         <div id="dialog-box">
             <div id="dialog-speaker">😈 MARIO.EXE:</div>
@@ -296,16 +296,11 @@ html_code = """
         🎮 <b>Di chuyển:</b> ⬅️ ➡️ | <b>Nhảy:</b> Space / Z / ⬆️ | <b>Chạy nhanh:</b> Shift
     </div>
 
-    <audio id="drillAudio" loop preload="auto">
-        <source src="https://files.catbox.moe/k3t2p4.mp3" type="audio/mpeg">
-    </audio>
-
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const retryBtn = document.getElementById('retry-btn');
 const musicBtn = document.getElementById('music-btn');
-const drillAudio = document.getElementById('drillAudio');
 const introOverlay = document.getElementById('intro-overlay');
 const instructionsModal = document.getElementById('instructions-modal');
 const dialogBox = document.getElementById('dialog-box');
@@ -314,6 +309,7 @@ const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 let isMusicMuted = false;
 let gameStarted = false;
+let bgMusicInterval = null;
 
 function initAudio() {
     if (!audioCtx) audioCtx = new AudioContext();
@@ -338,26 +334,47 @@ function toggleMusic() {
     initAudio();
     isMusicMuted = !isMusicMuted;
     if (isMusicMuted) {
-        musicBtn.innerText = "🔇 Hồng Nhan Drill: TẮT";
-        drillAudio.pause();
+        musicBtn.innerText = "🔇 Nhạc nền: TẮT";
+        stopBGM();
     } else {
-        musicBtn.innerText = "🔊 Hồng Nhan Drill: BẬT";
+        musicBtn.innerText = "🔊 Nhạc nền: BẬT";
         if (isHorrorPhase && !gameOver && !gameWon) {
-            drillAudio.play().catch(e => {});
+            startBGM();
         }
     }
 }
 
-function startHongNhanDrill() {
-    if (!isMusicMuted) {
-        drillAudio.currentTime = 0;
-        drillAudio.play().catch(e => {});
-    }
+// HỆ THỐNG TẠO NHẠC NỀN ĐIỆN TỬ KỊCH TÍNH (SYNTHESIZER BGM)
+function startBGM() {
+    if (isMusicMuted || bgMusicInterval) return;
+    const notes = [130.81, 155.56, 174.61, 196.00, 220.00, 261.63, 311.13];
+    let step = 0;
+    bgMusicInterval = setInterval(() => {
+        if (!audioCtx || isMusicMuted || gameOver || gameWon) return;
+        try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.type = 'sawtooth';
+            let freq = notes[step % notes.length];
+            osc.frequency.setValueAtTime(freq, now);
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.18);
+            osc.start(now);
+            osc.stop(now + 0.18);
+            step++;
+        } catch(e){}
+    }, 200);
 }
 
-function stopHongNhanDrill() {
-    drillAudio.pause();
-    drillAudio.currentTime = 0;
+function stopBGM() {
+    if (bgMusicInterval) {
+        clearInterval(bgMusicInterval);
+        bgMusicInterval = null;
+    }
 }
 
 function playSound(type) {
@@ -775,7 +792,7 @@ const mario = {
             if (this.x + this.w >= flagpoleObj.x && this.x <= flagpoleObj.x + flagpoleObj.w + 20) {
                 gameWon = true;
                 retryBtn.style.display = 'block';
-                stopHongNhanDrill();
+                stopBGM();
             }
         }
 
@@ -829,7 +846,7 @@ function triggerGameOver() {
     retryBtn.style.display = 'block';
     dialogBox.style.display = 'none';
     playSound('scream');
-    stopHongNhanDrill();
+    stopBGM();
 }
 
 function resetGame() {
@@ -854,7 +871,7 @@ function resetGame() {
 
     for (let g of goombas) g.alive = true;
 
-    stopHongNhanDrill();
+    stopBGM();
     retryBtn.style.display = 'none';
     dialogBox.style.display = 'none';
 
@@ -908,7 +925,7 @@ function gameLoop() {
             flashAlpha = 1.0;
             shakeAmount = 18;
             playSound('scream');
-            startHongNhanDrill();
+            startBGM();
 
             dialogBox.style.display = 'block';
 
