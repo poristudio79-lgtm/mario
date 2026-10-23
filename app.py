@@ -186,8 +186,8 @@ html_code = """
         <div id="intro-overlay">
             <div id="intro-title">🎬 WORLD 1-1: PEACEFUL JOURNEY</div>
             <div id="intro-desc">
-                Mario đang trên đường trở về Lâu Đài chiến thắng trong một ngày nắng đẹp bình yên.<br><br>
-                Hãy giúp Mario tiến về Cột Cờ ngắn gọn phía trước...<br>
+                Mario đang trên đường trở về Lâu Đài giải cứu Công Chúa trong một ngày nắng đẹp.<br><br>
+                Hãy giúp Mario vượt qua chướng ngại vật để tới Cột Cờ...<br>
                 <b>Cho đến khi điều không ngờ xảy ra!</b>
             </div>
             <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU CHƠI</button>
@@ -341,7 +341,7 @@ let animFrame = 0;
 
 let isStabbing = false;
 let stabTimer = 0;
-let swordX = 220; // Vị trí thanh kiếm ở gần đầu màn chơi
+let swordX = 220;
 let swordY = 260;
 
 const keys = { left: false, right: false, jump: false, shift: false };
@@ -468,7 +468,45 @@ function drawGoomba(ctx, g) {
     ctx.restore();
 }
 
-// BẢN ĐỒ ĐÃ ĐƯỢC RÚT GỌN LẠI GỌN GÀNG
+// VẼ LÂU ĐÀI & CÔNG CHÚA ĐANG KHÓC Ở CUỐI MAP
+function drawCastleAndPrincess(ctx) {
+    let castleX = 18 * BLOCK_SIZE - cameraX;
+    let castleY = 5 * BLOCK_SIZE;
+
+    // Thân lâu đài
+    ctx.fillStyle = '#c0c0c0';
+    ctx.fillRect(castleX, castleY, 128, 128);
+    ctx.strokeStyle = '#000';
+    ctx.strokeRect(castleX, castleY, 128, 128);
+
+    // Mái ngọn tháp
+    ctx.fillStyle = '#e52521';
+    ctx.beginPath();
+    ctx.moveTo(castleX - 10, castleY);
+    ctx.lineTo(castleX + 64, castleY - 45);
+    ctx.lineTo(castleX + 138, castleY);
+    ctx.fill();
+    ctx.stroke();
+
+    // Cửa sổ lâu đài
+    ctx.fillStyle = '#000';
+    ctx.fillRect(castleX + 48, castleY + 30, 32, 45);
+
+    // VẼ CÔNG CHÚA PEACH ĐANG KHÓC Ở CỬA SỔ
+    // Tóc vàng
+    ctx.fillStyle = '#ffd700';
+    ctx.fillRect(castleX + 54, castleY + 35, 20, 16);
+    // Váy hồng
+    ctx.fillStyle = '#ff69b4';
+    ctx.fillRect(castleX + 54, castleY + 50, 20, 22);
+    // Giọt nước mắt đang rơi (nhấp nháy)
+    if (Math.floor(animFrame / 15) % 2 === 0) {
+        ctx.fillStyle = '#00ffff';
+        ctx.fillRect(castleX + 58, castleY + 44, 3, 5);
+        ctx.fillRect(66 + castleX - castleX, castleY + 44, 3, 5); // Đảm bảo đúng tọa độ
+    }
+}
+
 const levelLayout = [
     "                                                                          ",
     "                                                                          ",
@@ -746,6 +784,9 @@ function gameLoop() {
             ctx.fillRect(b.x - cameraX, b.y, 6, b.h);
         }
     }
+
+    // VẼ LÂU ĐÀI & CÔNG CHÚA KHÓC Ở CUỐI MÀN CHƠI
+    drawCastleAndPrincess(ctx);
 
     for (let s of spikes) {
         if (s.x + s.w < cameraX || s.x > cameraX + canvas.width) continue;
