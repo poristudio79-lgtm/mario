@@ -28,7 +28,7 @@ html_code = """
             border-radius: 6px;
             overflow: hidden;
         }
-        canvas { display: block; background: #5c94fc; }
+        canvas { display: block; background: #5c94fc; transition: background 0.8s ease; }
         #ui-bar {
             position: absolute;
             top: 10px;
@@ -250,7 +250,7 @@ html_code = """
             </div>
             <div id="intro-desc">
                 Phiên bản Dark Drill Edition!<br>
-                Tiêu diệt phản diện, chạy tới cột cờ và giải cứu công chúa.
+                Đội khối chấm hỏi, diệt phản diện, chạm cột cờ cứu công chúa.
             </div>
             <div class="menu-buttons">
                 <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU</button>
@@ -266,9 +266,9 @@ html_code = """
                 • Nhảy: Phím <b>Space</b>, <b>Z</b> hoặc mũi tên <b>Lên / W</b><br>
                 • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
                 <b>2. Mục tiêu trò chơi:</b><br>
-                • Thu thập tiền vàng 🪙, vượt qua chướng ngại vật.<br>
-                • Khi chạm mặt phản diện, âm nhạc nền kịch tính sẽ nổi lên!<br>
-                • Nhặt kiếm thánh đâm phản diện, sau đó chạy tiếp đến <b>Cột Cờ</b> để cứu công chúa!
+                • Đội đầu vào các <b>Khối Chấm Hỏi (?)</b> để nhận xu và điểm!<br>
+                • Khi gặp phản diện, chiến đấu bằng kiếm thánh để hạ gục hắn, bầu trời sẽ sáng trở lại.<br>
+                • Cuối cùng, chạy đến chạm vào <b>Cột Cờ</b> để giải cứu công chúa thành công!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -344,7 +344,6 @@ function toggleMusic() {
     }
 }
 
-// HỆ THỐNG TẠO NHẠC NỀN ĐIỆN TỬ KỊCH TÍNH (SYNTHESIZER BGM)
 function startBGM() {
     if (isMusicMuted || bgMusicInterval) return;
     const notes = [130.81, 155.56, 174.61, 196.00, 220.00, 261.63, 311.13];
@@ -477,28 +476,35 @@ window.addEventListener('keyup', e => {
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ' || e.key === 'z' || e.key === 'Z') keys.jump = false;
 });
 
+// VẼ MARIO KÈM TAY CHI TIẾT
 function drawMarioSprite(ctx, x, y, facing, isJumping, moving) {
     ctx.save();
     ctx.translate(x + 16, y + 16);
     if (facing === 'left') ctx.scale(-1, 1);
 
+    // Mũ & Đầu
     ctx.fillStyle = '#ff0000';
     ctx.fillRect(-10, -16, 18, 6);
     ctx.fillRect(-8, -6, 14, 10);
-
     ctx.fillStyle = '#fccc97';
     ctx.fillRect(-10, -10, 16, 6);
-
     ctx.fillStyle = '#000';
     ctx.fillRect(2, -10, 3, 4);
     ctx.fillRect(-4, -6, 12, 3);
 
+    // Áo & Quần yếm xanh + Tay trắng
     ctx.fillStyle = '#0020c2';
     ctx.fillRect(-8, 2, 16, 8);
     ctx.fillStyle = '#ffff00';
     ctx.fillRect(-6, 3, 3, 3);
     ctx.fillRect(3, 3, 3, 3);
 
+    // Bàn tay Mario
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(-12, 3, 4, 5);
+    ctx.fillRect(8, 3, 4, 5);
+
+    // Giày / Chân
     ctx.fillStyle = '#8b4513';
     if (isJumping) {
         ctx.fillRect(-12, 8, 8, 6);
@@ -514,6 +520,7 @@ function drawMarioSprite(ctx, x, y, facing, isJumping, moving) {
     ctx.restore();
 }
 
+// VẼ MARIO.EXE KÈM TAY ĐÁNG SỢ
 function drawMarioEXESprite(ctx, x, y) {
     if (exeDefeated) return;
     ctx.save();
@@ -543,6 +550,11 @@ function drawMarioEXESprite(ctx, x, y) {
     ctx.fillStyle = '#ffcc00';
     ctx.fillRect(-5, 7, 2, 2);
     ctx.fillRect(3, 7, 2, 2);
+
+    // Bàn tay Mario.exe (vũ khí/vuốt)
+    ctx.fillStyle = '#ff3333';
+    ctx.fillRect(-14, 4, 5, 5);
+    ctx.fillRect(9, 4, 5, 5);
 
     ctx.fillStyle = '#3a3a22';
     let legOffset = Math.sin(animFrame * 0.4) * 5;
@@ -623,20 +635,24 @@ function drawGoomba(ctx, g) {
     ctx.restore();
 }
 
+// CỘT CỜ CHI TIẾT
 function drawFlagpoleAndBanner(ctx, flagpole) {
     let fx = flagpole.x - cameraX;
     let fy = flagpole.y;
 
+    // Trụ cờ màu bạc xám
     ctx.fillStyle = '#d0d0d0';
     ctx.fillRect(fx, fy, 8, flagpole.h);
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(fx, fy, 3, flagpole.h);
 
+    // Quả cầu vàng trên đỉnh
     ctx.fillStyle = '#ffcc00';
     ctx.beginPath();
     ctx.arc(fx + 4, fy, 8, 0, Math.PI * 2);
     ctx.fill();
 
+    // Lá cờ tam giác đỏ chữ M
     ctx.fillStyle = '#e52521';
     ctx.beginPath();
     ctx.moveTo(fx + 8, fy + 8);
@@ -692,7 +708,7 @@ function drawCastleAndPrincess(ctx) {
     if (Math.floor(animFrame / 15) % 2 === 0) {
         ctx.fillStyle = '#00ffff';
         ctx.fillRect(castleX + 36, castleY + 46, 2, 3);
-        ctx.fillRect(castleX + 40, castleY + 46, 2, 3);
+        ctx.fillRect(castleX + 40, canvas.height ? (castleY + 46) : 0, 2, 3);
     }
 }
 
@@ -778,7 +794,7 @@ const mario = {
                 } else if (this.vy < 0) {
                     this.y = b.y + b.h;
                     this.vy = 0;
-                    if (b.type === 'question' && !b.empty && !isHorrorPhase) {
+                    if (b.type === 'question' && !b.empty) {
                         b.empty = true;
                         coins++;
                         score += 200;
@@ -935,7 +951,8 @@ function gameLoop() {
             }, 5000);
 
             document.body.style.background = '#1a0000';
-            document.getElementById('hud-status').innerText = "⚠️ CINEMATIC: MARIO.EXE ĐÃ XUẤT HIỆN! HÃY TÌM KIẾM THANH KIẾM THÁNH!";
+            canvas.style.background = '#120000';
+            document.getElementById('hud-status').innerText = "⚠️ CINEMATIC: MARIO.EXE ĐÃ XUẤT HIỆN! HÃY TÌM KIẾM THÁNH KIẾM!";
             document.getElementById('hud-status').classList.add('horror-hud');
             document.getElementById('world-title').innerText = "DRILL";
             document.getElementById('world-title').style.color = "#ff0000";
@@ -958,7 +975,14 @@ function gameLoop() {
             if (stabTimer > 60) {
                 exeDefeated = true;
                 isStabbing = false;
-                document.getElementById('hud-status').innerText = "🚩 MARIO.EXE ĐÃ BỊ TIÊU DIỆT! HÃY CHẠY ĐẾN CỘT CỜ CUỐI MÀN!";
+                stopBGM();
+                // BẦU TRỜI ĐỔI LẠI BÌNH THƯỜNG SAU KHI TIÊU DIỆT PHẢN DIỆN
+                canvas.style.background = '#5c94fc';
+                document.body.style.background = '#050505';
+                document.getElementById('hud-status').innerText = "🚩 ĐÃ DIỆT PHẢN DIỆN! HÃY CHẠY ĐẾN CỘT CỜ GIẢI CỨU CÔNG CHÚA!";
+                document.getElementById('hud-status').classList.remove('horror-hud');
+                document.getElementById('world-title').innerText = "1-1";
+                document.getElementById('world-title').style.color = "#fff";
             }
         }
     }
@@ -966,22 +990,27 @@ function gameLoop() {
     for (let b of mapBlocks) {
         if (b.x + b.w < cameraX || b.x > cameraX + canvas.width) continue;
         if (b.type === 'ground') {
-            ctx.fillStyle = isHorrorPhase ? '#3a0d0d' : '#d86818';
+            ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#3a0d0d' : '#d86818';
             ctx.fillRect(b.x - cameraX, b.y, b.w, b.h);
             ctx.strokeStyle = '#000';
             ctx.strokeRect(b.x - cameraX, b.y, b.w, b.h);
         } else if (b.type === 'question') {
-            ctx.fillStyle = isHorrorPhase ? '#2a1100' : (b.empty ? '#b87040' : '#fcb040');
+            ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#2a1100' : (b.empty ? '#b87040' : '#fcb040');
             ctx.fillRect(b.x - cameraX, b.y, b.w, b.h);
             ctx.strokeStyle = '#000';
             ctx.strokeRect(b.x - cameraX, b.y, b.w, b.h);
+            if (!b.empty) {
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 18px monospace';
+                ctx.fillText('?', b.x - cameraX + 10, b.y + 22);
+            }
         } else if (b.type === 'brick') {
-            ctx.fillStyle = isHorrorPhase ? '#550000' : '#b84418';
+            ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#550000' : '#b84418';
             ctx.fillRect(b.x - cameraX, b.y, b.w, b.h);
             ctx.strokeStyle = '#000';
             ctx.strokeRect(b.x - cameraX, b.y, b.w, b.h);
         } else if (b.type === 'pipe') {
-            ctx.fillStyle = isHorrorPhase ? '#1c3a1c' : '#00a800';
+            ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#1c3a1c' : '#00a800';
             ctx.fillRect(b.x - cameraX, b.y, b.w, b.h);
             ctx.strokeStyle = '#000';
             ctx.strokeRect(b.x - cameraX, b.y, b.w, b.h);
@@ -996,7 +1025,7 @@ function gameLoop() {
 
     for (let s of spikes) {
         if (s.x + s.w < cameraX || s.x > cameraX + canvas.width) continue;
-        ctx.fillStyle = isHorrorPhase ? '#ff0000' : '#888';
+        ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#ff0000' : '#888';
         ctx.beginPath();
         ctx.moveTo(s.x - cameraX, s.y + s.h);
         ctx.lineTo(s.x - cameraX + s.w / 2, s.y);
@@ -1034,8 +1063,7 @@ function gameLoop() {
         ctx.restore();
     }
 
-    if (isHorrorPhase) {
-        canvas.style.background = '#120000';
+    if (isHorrorPhase && !exeDefeated) {
         ctx.fillStyle = 'rgba(150, 0, 0, 0.15)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
