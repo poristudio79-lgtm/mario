@@ -187,7 +187,7 @@ html_code = """
             <div id="intro-title">🎬 WORLD 1-1: PEACEFUL JOURNEY</div>
             <div id="intro-desc">
                 Mario đang trên đường trở về Lâu Đài chiến thắng trong một ngày nắng đẹp bình yên.<br><br>
-                Hãy giúp Mario vượt qua dãy chướng ngại vật liên tiếp để tới Cột Cờ...<br>
+                Hãy giúp Mario vượt qua các chướng ngại vật để tiến về Cột Cờ...<br>
                 <b>Cho đến khi điều không ngờ xảy ra!</b>
             </div>
             <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU CHƠI</button>
@@ -468,7 +468,7 @@ function drawGoomba(ctx, g) {
     ctx.restore();
 }
 
-// BẢN ĐỒ DÀI MỞ RỘNG VỚI HỆ THỐNG CHƯỚNG NGẠI VẬT LIÊN TIẾP
+// BẢN ĐỒ VỚI SỐ LƯỢNG BẪY GAI (^ ĐƯỢC GIẢM THIỂU TỐI ĐA)
 const levelLayout = [
     "                                                                                                                                                                                        ",
     "                                                                                                                                                                                        ",
@@ -476,9 +476,9 @@ const levelLayout = [
     "                   ?                                        ?  ?$?                                             ?  ?$?                                                           ",
     "               ?  ?$?                                      -----                                              -----                                                             ",
     "                                                                                                                                                                                        ",
-    "                                    ---       ^^^^              ---             ^^^^             ---                      ^^^^^              ---                           |    ",
-    "         ?  ?$?                    -----     ======            -----           ======           -----                    =======            -----                          |    ",
-    "                                  -------   ========          -------         ========         -------                  =========          -------                        [ ]   ",
+    "                                    ---       ^                   ---              ^                ---                       ^                  ---                           |    ",
+    "         ?  ?$?                    -----     ====                -----            ====             -----                     =====              -----                          |    ",
+    "                                  -------   ======              -------          ======           -------                   =======            -------                        [ ]   ",
     "==================   ==========   ==================   ==================   ============   ===================   ====================   ================   =========================",
     "==================   ==========   ==================   ==================   ============   ===================   ====================   ================   ========================="
 ];
@@ -507,7 +507,6 @@ for (let r = 0; r < levelLayout.length; r++) {
     }
 }
 
-// QUÁI VẬT NẤM RẢI RÁC TOÀN MÀN CHƠI
 const goombas = [
     { x: 380, y: 9 * BLOCK_SIZE - 28, vx: -1, minX: 300, maxX: 480, alive: true },
     { x: 1150, y: 9 * BLOCK_SIZE - 28, vx: -1.2, minX: 1050, maxX: 1280, alive: true },
@@ -564,7 +563,6 @@ const mario = {
             }
         }
 
-        // DẪM TRÚNG ĐẦU NẤM -> ĐÈ BẸP NẤM VÀ TƯNG NẢY LÊN
         for (let g of goombas) {
             if (!g.alive) continue;
             if (this.x < g.x + 28 && this.x + this.w > g.x && this.y < g.y + 28 && this.y + this.h > g.y) {
@@ -678,12 +676,10 @@ function gameLoop() {
             if (g.x < g.minX || g.x > g.maxX) g.vx *= -1;
         }
 
-        // HỆ THỐNG CAMERA CUỘN MƯỢT MÀ THEO BẢN ĐỒ
         cameraX = mario.x - canvas.width / 3;
         if (cameraX < 0) cameraX = 0;
         if (cameraX > maxMapWidth - canvas.width) cameraX = maxMapWidth - canvas.width;
 
-        /* CÚ TWIST TẠI CỘT CỜ VICTORY */
         if (!isHorrorPhase && mario.x >= flagX - 180) {
             isHorrorPhase = true;
             exeSpawned = true;
@@ -705,7 +701,6 @@ function gameLoop() {
             document.getElementById('world-title').style.color = "#ff0000";
         }
 
-        /* CHẠM VÀO THANH KIẾM THÁNH -> ĐÂM KẾT LIỄU MARIO.EXE */
         if (isHorrorPhase && !isStabbing && Math.abs(mario.x - swordX) < 30 && Math.abs(mario.y - swordY) < 35) {
             isStabbing = true;
             stabTimer = 0;
