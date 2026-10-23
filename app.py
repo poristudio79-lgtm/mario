@@ -103,6 +103,23 @@ html_code = """
             font-weight: bold;
         }
 
+        #music-btn {
+            position: absolute;
+            top: 55px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #fff;
+            color: #fff;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            z-index: 30;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        #music-btn:hover { background: rgba(255, 255, 255, 0.3); }
+
         #retry-btn {
             display: none;
             position: absolute;
@@ -232,8 +249,8 @@ html_code = """
                 <span class="c-red">M</span><span class="c-green">A</span><span class="c-yellow">R</span><span class="c-blue">I</span><span class="c-green">O</span>
             </div>
             <div id="intro-desc">
-                Phiên bản Không Gian Im Lặng!<br>
-                Tiêu diệt phản diện, chạy tới cột cờ và giải cứu công chúa.
+                Phiên bản Hồng Nhan Drill Edition!<br>
+                Tiêu diệt phản diện, chạy tới cột cờ và giải cứu công chúa[cite: 2, 5].
             </div>
             <div class="menu-buttons">
                 <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU</button>
@@ -250,8 +267,8 @@ html_code = """
                 • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
                 <b>2. Mục tiêu trò chơi:</b><br>
                 • Thu thập tiền vàng 🪙, vượt qua chướng ngại vật.<br>
-                • Khi gần cuối màn, chạm vào <b>Thanh Kiếm Thánh</b> để đâm tiêu diệt Mario.exe[cite: 2, 5].<br>
-                • Sau khi tiêu diệt phản diện, hãy chạy tiếp tới <b>Cột Cờ cuối màn</b> để chiến thắng[cite: 2, 5]!
+                • Khi chạm mặt phản diện, âm nhạc <b>Hồng Nhan Drill</b> sẽ nổi lên[cite: 2, 5]!<br>
+                • Nhặt kiếm thánh đâm phản diện[cite: 2, 5], sau đó chạy tiếp đến <b>Cột Cờ</b> để cứu công chúa[cite: 2, 5]!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -261,6 +278,8 @@ html_code = """
             <div>COINS<br>🪙 x<span id="coins">00</span></div>
             <div>WORLD<br><span id="world-title">1-1</span></div>
         </div>
+
+        <button id="music-btn" onclick="toggleMusic()">🔊 Hồng Nhan Drill: BẬT</button>
 
         <div id="dialog-box">
             <div id="dialog-speaker">😈 MARIO.EXE:</div>
@@ -277,17 +296,32 @@ html_code = """
         🎮 <b>Di chuyển:</b> ⬅️ ➡️ | <b>Nhảy:</b> Space / Z / ⬆️ | <b>Chạy nhanh:</b> Shift
     </div>
 
+    <audio id="drillAudio" loop preload="auto">
+        <source src="https://files.catbox.moe/k3t2p4.mp3" type="audio/mpeg">
+    </audio>
+
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const retryBtn = document.getElementById('retry-btn');
+const musicBtn = document.getElementById('music-btn');
+const drillAudio = document.getElementById('drillAudio');
 const introOverlay = document.getElementById('intro-overlay');
 const instructionsModal = document.getElementById('instructions-modal');
 const dialogBox = document.getElementById('dialog-box');
 
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+let isMusicMuted = false;
 let gameStarted = false;
 
+function initAudio() {
+    if (!audioCtx) audioCtx = new AudioContext();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
 function startGame() {
+    initAudio();
     introOverlay.style.display = 'none';
     gameStarted = true;
 }
@@ -300,6 +334,85 @@ function closeHowToPlay() {
     instructionsModal.style.display = 'none';
 }
 
+function toggleMusic() {
+    initAudio();
+    isMusicMuted = !isMusicMuted;
+    if (isMusicMuted) {
+        musicBtn.innerText = "🔇 Hồng Nhan Drill: TẮT";
+        drillAudio.pause();
+    } else {
+        musicBtn.innerText = "🔊 Hồng Nhan Drill: BẬT";
+        if (isHorrorPhase && !gameOver && !gameWon) {
+            drillAudio.play().catch(e => {});
+        }
+    }
+}
+
+function startHongNhanDrill() {
+    if (!isMusicMuted) {
+        drillAudio.currentTime = 0;
+        drillAudio.play().catch(e => {});
+    }
+}
+
+function stopHongNhanDrill() {
+    drillAudio.pause();
+    drillAudio.currentTime = 0;
+}
+
+function playSound(type) {
+    if (!audioCtx) return;
+    try {
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'jump') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(160, now);
+            osc.frequency.exponentialRampToValueAtTime(550, now + 0.15);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.15);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } else if (type === 'coin') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(987.77, now);
+            osc.frequency.setValueAtTime(1318.51, now + 0.08);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.25);
+            osc.start(now);
+            osc.stop(now + 0.25);
+        } else if (type === 'stomp') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.linearRampToValueAtTime(80, now + 0.12);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.12);
+            osc.start(now);
+            osc.stop(now + 0.12);
+        } else if (type === 'scream') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(650, now);
+            osc.frequency.exponentialRampToValueAtTime(90, now + 0.9);
+            gain.gain.setValueAtTime(0.35, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.9);
+            osc.start(now);
+            osc.stop(now + 0.9);
+        } else if (type === 'slash') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(1200, now);
+            osc.frequency.exponentialRampToValueAtTime(100, now + 0.4);
+            gain.gain.setValueAtTime(0.4, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.4);
+            osc.start(now);
+            osc.stop(now + 0.4);
+        }
+    } catch(e){}
+}
+
 const GRAVITY = 0.48;
 const BLOCK_SIZE = 32;
 
@@ -310,7 +423,7 @@ let maxMapWidth = 0;
 let isHorrorPhase = false;
 let isCutscene = false;
 let exeSpawned = false;
-let exeDefeated = false; // Trạng thái phản diện đã bị tiêu diệt
+let exeDefeated = false;
 let gameOver = false;
 let gameWon = false;
 let flashAlpha = 0;
@@ -326,6 +439,7 @@ const keys = { left: false, right: false, jump: false, shift: false };
 
 window.addEventListener('keydown', e => {
     if (!gameStarted || isStabbing || isCutscene || instructionsModal.style.display === 'flex' || gameOver || gameWon) return;
+    initAudio();
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
     if (e.key === 'Shift') keys.shift = true;
@@ -333,6 +447,7 @@ window.addEventListener('keydown', e => {
         if (!keys.jump && mario.grounded) {
             mario.vy = -mario.jumpPower;
             mario.grounded = false;
+            playSound('jump');
         }
         keys.jump = true;
     }
@@ -650,16 +765,17 @@ const mario = {
                         b.empty = true;
                         coins++;
                         score += 200;
+                        playSound('coin');
                     }
                 }
             }
         }
 
-        // KIỂM TRA CHẠM CỘT CỜ ĐỂ CHIẾN THẮNG SAU KHI ĐÃ GIẾT PHẢN DIỆN
         if (exeDefeated && flagpoleObj) {
             if (this.x + this.w >= flagpoleObj.x && this.x <= flagpoleObj.x + flagpoleObj.w + 20) {
                 gameWon = true;
                 retryBtn.style.display = 'block';
+                stopHongNhanDrill();
             }
         }
 
@@ -670,6 +786,7 @@ const mario = {
                     g.alive = false;
                     this.vy = -7.5;
                     score += 100;
+                    playSound('stomp');
                 } else {
                     triggerGameOver();
                 }
@@ -711,6 +828,8 @@ function triggerGameOver() {
     gameOver = true;
     retryBtn.style.display = 'block';
     dialogBox.style.display = 'none';
+    playSound('scream');
+    stopHongNhanDrill();
 }
 
 function resetGame() {
@@ -735,6 +854,7 @@ function resetGame() {
 
     for (let g of goombas) g.alive = true;
 
+    stopHongNhanDrill();
     retryBtn.style.display = 'none';
     dialogBox.style.display = 'none';
 
@@ -787,6 +907,8 @@ function gameLoop() {
 
             flashAlpha = 1.0;
             shakeAmount = 18;
+            playSound('scream');
+            startHongNhanDrill();
 
             dialogBox.style.display = 'block';
 
@@ -802,10 +924,10 @@ function gameLoop() {
             document.getElementById('world-title').style.color = "#ff0000";
         }
 
-        // Nhặt kiếm đâm chết phản diện nhưng game CHƯA THẮNG NGAY
         if (isHorrorPhase && !exeDefeated && !isStabbing && Math.abs(mario.x - swordX) < 30 && Math.abs(mario.y - swordY) < 35) {
             isStabbing = true;
             stabTimer = 0;
+            playSound('slash');
             shakeAmount = 20;
             flashAlpha = 1.0;
         }
@@ -817,9 +939,9 @@ function gameLoop() {
             mario.y = marioEXE.y;
 
             if (stabTimer > 60) {
-                exeDefeated = true; // Tiêu diệt xong phản diện
+                exeDefeated = true;
                 isStabbing = false;
-                document.getElementById('hud-status').innerText = "🚩 MARIO.EXE ĐÃ TIÊU DIỆT! HÃY CHẠY ĐẾN CỘT CỜ CUỐI MÀN!";
+                document.getElementById('hud-status').innerText = "🚩 MARIO.EXE ĐÃ BỊ TIÊU DIỆT! HÃY CHẠY ĐẾN CỘT CỜ CUỐI MÀN!";
             }
         }
     }
