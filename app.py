@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Super Mario", layout="centered")
+st.set_page_config(page_title="Super Mario - Dark Drill Edition", layout="centered")
 
 html_code = """
 <!DOCTYPE html>
@@ -261,8 +261,8 @@ html_code = """
                 <span class="c-red">M</span><span class="c-green">A</span><span class="c-yellow">R</span><span class="c-blue">I</span><span class="c-green">O</span>
             </div>
             <div id="intro-desc">
-                Super Mario Edition!<br>
-                Đã gỡ bỏ toàn bộ bẫy gai trên trời. Nhảy đội đầu khối (?) để nhận xu thoải mái!
+                Phiên bản hoàn thiện tối ưu!<br>
+                Thánh kiếm xuất hiện ngẫu nhiên, không còn bẫy gai, nhận xu mượt mà từ khối (?).
             </div>
 
             <div id="main-menu-buttons" class="menu-buttons">
@@ -274,7 +274,7 @@ html_code = """
                 <div style="font-size: 16px; font-weight: bold; color: #ffcc00; margin-bottom: 5px;">CHỌN ĐỘ KHÓ:</div>
                 <div class="menu-buttons">
                     <button id="easy-btn" onclick="initGame('easy')">🟢 DỄ</button>
-                    <button id="hard-btn" onclick="initGame('hard')">🔴 KHÓ</button>
+                    <button id="hard-btn" onclick="initGame('hard')">🔴 KHÓ (Cân bằng)</button>
                 </div>
             </div>
         </div>
@@ -288,8 +288,8 @@ html_code = """
                 • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
                 <b>2. Mục tiêu trò chơi:</b><br>
                 • Nhảy đội trán từ dưới lên các khối (?) để nhận xu.<br>
-                • Lượm thánh kiếm ngẫu nhiên khi Mario.exe xuất hiện.<br>
-                • Tiến về cột cờ giải cứu công chúa Peach thành công!
+                • Khi Mario.exe xuất hiện, hãy tìm kiếm thánh kiếm ở vị trí **ngẫu nhiên** trên bản đồ.<br>
+                • Chạm vào kiếm để tiêu diệt phản diện và tiến về cột cờ cứu công chúa Peach!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
