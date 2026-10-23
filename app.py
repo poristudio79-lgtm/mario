@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Super Mario - Epic Edition", layout="centered")
+st.set_page_config(page_title="Super Mario - Final Edition", layout="centered")
 
 html_code = """
 <!DOCTYPE html>
@@ -191,7 +191,7 @@ html_code = """
             font-size: 16px;
             font-weight: bold;
             font-family: 'Courier New', Courier, monospace;
-            border: None;
+            border: none;
             border-radius: 6px;
             cursor: pointer;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
@@ -245,7 +245,7 @@ html_code = """
             margin-bottom: 20px;
         }
         #back-menu-btn {
-            path: 10px 24px;
+            padding: 10px 24px;
             font-size: 15px;
             font-weight: bold;
             font-family: 'Courier New', Courier, monospace;
@@ -294,10 +294,9 @@ html_code = """
             <h2>📖 LUẬT CHƠI CHI TIẾT</h2>
             <div class="instruction-content">
                 <b>1. Mẹo thu thập xu:</b><br>
-                • Nhảy đội trán từ dưới lên các khối chứa dấu <b>(?)</b> để nhận xu và điểm số.<br><br>
+                • Nhảy đội trán lên khối `(?)` để khối xẹp xuống và đồng xu văng ra nhận xu.<br><br>
                 <b>2. Sinh tử chiến:</b><br>
-                • Khi phản diện xuất hiện, bầu trời đỏ rực và sấm chớp giáng xuống. Hãy tìm thánh kiếm ngẫu nhiên để hạ sát hắn!<br>
-                • Sau khi tiêu diệt xong, bầu trời lập tức quang đãng, giông bão tan biến và công chúa mỉm cười chờ bạn cứu.
+                • Tìm thánh kiếm ngẫu nhiên khi phản diện xuất hiện để tiêu diệt hắn và cứu công chúa!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -310,7 +309,6 @@ html_code = """
 
         <button id="music-btn" onclick="toggleMusic()">🔊 Nhạc nền: BẬT</button>
 
-        <!-- Câu thoại cực chất của phản diện -->
         <div id="dialog-box">
             <div id="dialog-speaker">😈 MARIO.EXE:</div>
             <div id="dialog-text">"Chào đường hầm tử thần, bản sao yếu đuối ạ! Ngươi nghĩ bước qua được xác tao để cứu con công chúa đó sao? Hahaha, mạng mày tới đây là hết rồi!"</div>
@@ -918,11 +916,11 @@ const mario = {
                     this.vy = 0;
                     if (b.type === 'question' && !b.empty) {
                         b.empty = true;
-                        b.bounce = 6;
+                        b.bounce = 8; // Tăng biên độ nảy giúp hiệu ứng khối xẹp/nẩy rõ ràng hơn
                         coins++;
                         score += 200;
                         playSound('coin');
-                        activeCoins.push({ x: b.x + 8, y: b.y, vy: -6, alpha: 1.0 });
+                        activeCoins.push({ x: b.x + 8, y: b.y, vy: -7, alpha: 1.0 });
                     }
                 }
             }
@@ -1096,7 +1094,6 @@ function gameLoop() {
             document.getElementById('world-title').style.color = "#ff0000";
         }
 
-        // Chỉ sinh tia sét khi PHẢN DIỆN VẪN CÒN SỐNG
         if (isHorrorPhase && !exeDefeated) {
             lightningTimer++;
             if (lightningTimer > Math.random() * 80 + 40) {
@@ -1108,7 +1105,7 @@ function gameLoop() {
             if (lightningFlash > 0) lightningFlash--;
             else lightningActive = false;
         } else {
-            lightningActive = false; // Đã giết xong thì lập tức mất sạch sét
+            lightningActive = false;
         }
 
         if (isHorrorPhase && !exeDefeated && !isStabbing && Math.abs(mario.x - swordX) < 45 && Math.abs(mario.y - swordY) < 50) {
@@ -1130,7 +1127,6 @@ function gameLoop() {
                 isStabbing = false;
                 stopBGM();
 
-                // KHI GIẾT XONG: SÉT MẤT HẲN, TRỜI SÁNG LẠI XANH NGÁT BÌNH THƯỜNG
                 canvas.style.background = '#5c94fc';
                 document.body.style.background = '#050505';
 
@@ -1148,21 +1144,31 @@ function gameLoop() {
         if (b.x + b.w < cameraX || b.x > cameraX + canvas.width) continue;
         
         let renderY = b.y;
+        let renderH = b.h;
+        let renderW = b.w;
+
+        // HIỆU ỨNG KHỐI (?) XẸP XUỐNG VÀ NẢY LÊN KHI ĐƯỢC KÍCH HOẠT
         if (b.bounce > 0) {
-            renderY -= Math.sin((b.bounce / 6) * Math.PI) * 8;
+            let bounceVal = Math.sin((b.bounce / 8) * Math.PI);
+            renderY -= bounceVal * 10;
+            if (b.type === 'question') {
+                // Xẹp chiều cao và bè chiều rộng xuống một chút tạo độ nhún đàn hồi
+                renderH = BLOCK_SIZE - (bounceVal * 12);
+                renderW = BLOCK_SIZE + (bounceVal * 4);
+            }
             b.bounce--;
         }
 
         if (b.type === 'ground') {
             ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#3a0d0d' : '#d86818';
-            ctx.fillRect(b.x - cameraX, renderY, b.w, b.h);
+            ctx.fillRect(b.x - cameraX, renderY, renderW, renderH);
             ctx.strokeStyle = '#000';
-            ctx.strokeRect(b.x - cameraX, renderY, b.w, b.h);
+            ctx.strokeRect(b.x - cameraX, renderY, renderW, renderH);
         } else if (b.type === 'question') {
             ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#2a1100' : (b.empty ? '#b87040' : '#fcb040');
-            ctx.fillRect(b.x - cameraX, renderY, b.w, b.h);
+            ctx.fillRect(b.x - cameraX + (BLOCK_SIZE - renderW)/2, renderY, renderW, renderH);
             ctx.strokeStyle = '#000';
-            ctx.strokeRect(b.x - cameraX, renderY, b.w, b.h);
+            ctx.strokeRect(b.x - cameraX + (BLOCK_SIZE - renderW)/2, renderY, renderW, renderH);
             if (!b.empty) {
                 ctx.fillStyle = '#000';
                 ctx.font = 'bold 18px monospace';
@@ -1170,29 +1176,29 @@ function gameLoop() {
             }
         } else if (b.type === 'brick') {
             ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#550000' : '#b84418';
-            ctx.fillRect(b.x - cameraX, renderY, b.w, b.h);
+            ctx.fillRect(b.x - cameraX, renderY, renderW, renderH);
             ctx.strokeStyle = '#000';
-            ctx.strokeRect(b.x - cameraX, renderY, b.w, b.h);
+            ctx.strokeRect(b.x - cameraX, renderY, renderW, renderH);
         } else if (b.type === 'pipe') {
             ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#1c3a1c' : '#00a800';
-            ctx.fillRect(b.x - cameraX, renderY, b.w, b.h);
+            ctx.fillRect(b.x - cameraX, renderY, renderW, renderH);
             ctx.strokeStyle = '#000';
-            ctx.strokeRect(b.x - cameraX, renderY, b.w, b.h);
+            ctx.strokeRect(b.x - cameraX, renderY, renderW, renderH);
         }
     }
 
     for (let i = activeCoins.length - 1; i >= 0; i--) {
         let ac = activeCoins[i];
         ac.y += ac.vy;
-        ac.vy += 0.4;
-        ac.alpha -= 0.03;
+        ac.vy += 0.45;
+        ac.alpha -= 0.025;
 
         ctx.save();
         ctx.globalAlpha = Math.max(0, ac.alpha);
         ctx.fillStyle = '#ffcc00';
         ctx.strokeStyle = '#b8860b';
         ctx.beginPath();
-        ctx.ellipse(ac.x - cameraX, ac.y, 6, 10, 0, 0, Math.PI * 2);
+        ctx.ellipse(ac.x - cameraX, ac.y, 7, 12, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
         ctx.restore();
@@ -1227,7 +1233,6 @@ function gameLoop() {
         marioEXE.draw();
     }
 
-    // Hiệu ứng tia sét chỉ kích hoạt khi phản diện chưa bị tiêu diệt
     if (lightningActive && !exeDefeated) {
         ctx.save();
         ctx.strokeStyle = '#ffffff';
