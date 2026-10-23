@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Hồng Nhan Drill Mario.exe", layout="centered")
+st.set_page_config(page_title="Mario vs Mario.exe - Hồng Nhan Drill", layout="centered")
 
 html_code = """
 <!DOCTYPE html>
@@ -154,15 +154,15 @@ html_code = """
         <div id="intro-overlay">
             <div id="intro-title">🎬 WORLD 1-1: PEACEFUL JOURNEY</div>
             <div id="intro-desc">
-                Luigi đang trên đường trở về Lâu Đài chiến thắng trong một ngày nắng đẹp bình yên.<br><br>
-                Hãy giúp Luigi thu thập xu và tiến về phía Cột Cờ Victory...<br>
+                Mario đang trên đường trở về Lâu Đài chiến thắng trong một ngày nắng đẹp bình yên.<br><br>
+                Hãy giúp Mario thu thập xu và tiến về phía Cột Cờ Victory...<br>
                 <b>Cho đến khi điều không ngờ xảy ra!</b>
             </div>
             <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU CHƠI</button>
         </div>
 
         <div id="ui-bar">
-            <div>LUIGI<br><span id="score">000000</span></div>
+            <div>MARIO<br><span id="score">000000</span></div>
             <div>COINS<br>🪙 x<span id="coins">00</span></div>
             <div>WORLD<br><span id="world-title">1-1</span></div>
         </div>
@@ -293,9 +293,9 @@ window.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
     if (e.key === 'Shift') keys.shift = true;
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ' || e.key === 'z' || e.key === 'Z') {
-        if (!keys.jump && luigi.grounded) {
-            luigi.vy = -luigi.jumpPower;
-            luigi.grounded = false;
+        if (!keys.jump && mario.grounded) {
+            mario.vy = -mario.jumpPower;
+            mario.grounded = false;
             playSound('jump');
         }
         keys.jump = true;
@@ -309,25 +309,31 @@ window.addEventListener('keyup', e => {
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ' || e.key === 'z' || e.key === 'Z') keys.jump = false;
 });
 
-function drawLuigiSprite(ctx, x, y, facing, isJumping) {
+// VẼ MARIO THƯỜNG (MŨ ĐỎ, ÁO ĐỎ, QUẦN XANH DƯƠNG)
+function drawMarioSprite(ctx, x, y, facing, isJumping) {
     ctx.save();
     ctx.translate(x + 16, y + 16);
     if (facing === 'left') ctx.scale(-1, 1);
 
-    ctx.fillStyle = '#00aa00';
+    // Mũ & Áo Đỏ tươi Classic
+    ctx.fillStyle = '#ff0000';
     ctx.fillRect(-10, -16, 18, 6);
     ctx.fillRect(-8, -6, 14, 10);
 
+    // Mặt màu da
     ctx.fillStyle = '#fccc97';
     ctx.fillRect(-10, -10, 16, 6);
 
+    // Mắt & Râu
     ctx.fillStyle = '#000';
     ctx.fillRect(2, -10, 3, 4);
     ctx.fillRect(-4, -6, 12, 3);
 
+    // Quần Yếm Xanh Dương
     ctx.fillStyle = '#0020c2';
     ctx.fillRect(-8, 2, 16, 8);
 
+    // Giày Nâu
     ctx.fillStyle = '#8b4513';
     if (isJumping) {
         ctx.fillRect(-12, 8, 8, 6);
@@ -339,6 +345,7 @@ function drawLuigiSprite(ctx, x, y, facing, isJumping) {
     ctx.restore();
 }
 
+// VẼ MARIO.EXE (MẮT ĐEN CHẢY MÁU, NỤ CƯỜI RỘNG, ÁO ĐỎ SẪM)
 function drawMarioEXESprite(ctx, x, y) {
     ctx.save();
     ctx.translate(x + 16, y + 16);
@@ -414,7 +421,7 @@ for (let r = 0; r < levelLayout.length; r++) {
     }
 }
 
-const luigi = {
+const mario = {
     x: 50, y: 200, w: 28, h: 32, vx: 0, vy: 0, speed: 3.5, jumpPower: 11, grounded: false, facing: 'right',
     update() {
         let currentSpeed = keys.shift ? this.speed * 1.4 : this.speed;
@@ -460,19 +467,19 @@ const luigi = {
             stopHongNhanDrill();
         }
     },
-    draw() { drawLuigiSprite(ctx, this.x - cameraX, this.y, this.facing, !this.grounded); }
+    draw() { drawMarioSprite(ctx, this.x - cameraX, this.y, this.facing, !this.grounded); }
 };
 
 const marioEXE = {
     x: 0, y: 0, w: 32, h: 32, speed: 3.2,
     update() {
         if (!exeSpawned) return;
-        if (this.x < luigi.x) this.x += this.speed;
-        if (this.x > luigi.x) this.x -= this.speed;
-        if (this.y < luigi.y) this.y += 1;
-        if (this.y > luigi.y) this.y -= 1;
+        if (this.x < mario.x) this.x += this.speed;
+        if (this.x > mario.x) this.x -= this.speed;
+        if (this.y < mario.y) this.y += 1;
+        if (this.y > mario.y) this.y -= 1;
 
-        if (Math.abs(this.x - luigi.x) < 22 && Math.abs(this.y - luigi.y) < 26) {
+        if (Math.abs(this.x - mario.x) < 22 && Math.abs(this.y - mario.y) < 26) {
             gameOver = true;
             retryBtn.style.display = 'block';
             playSound('scream');
@@ -493,10 +500,10 @@ function resetGame() {
     flashAlpha = 0;
     shakeAmount = 0;
 
-    luigi.x = 50;
-    luigi.y = 200;
-    luigi.vx = 0;
-    luigi.vy = 0;
+    mario.x = 50;
+    mario.y = 200;
+    mario.vx = 0;
+    mario.vy = 0;
 
     stopHongNhanDrill();
     retryBtn.style.display = 'none';
@@ -522,13 +529,13 @@ function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (gameStarted && !gameOver && !gameWon) {
-        luigi.update();
+        mario.update();
         marioEXE.update();
 
-        if (luigi.x - cameraX > canvas.width / 2) cameraX = luigi.x - canvas.width / 2;
-        else if (luigi.x - cameraX < canvas.width / 4 && cameraX > 0) cameraX = luigi.x - canvas.width / 4;
+        if (mario.x - cameraX > canvas.width / 2) cameraX = mario.x - canvas.width / 2;
+        else if (mario.x - cameraX < canvas.width / 4 && cameraX > 0) cameraX = mario.x - canvas.width / 4;
 
-        if (!isHorrorPhase && luigi.x >= flagX - 180) {
+        if (!isHorrorPhase && mario.x >= flagX - 180) {
             isHorrorPhase = true;
             exeSpawned = true;
             marioEXE.x = flagX - 20;
@@ -546,7 +553,7 @@ function gameLoop() {
             document.getElementById('world-title').style.color = "#ff0000";
         }
 
-        if (isHorrorPhase && luigi.x <= 20) {
+        if (isHorrorPhase && mario.x <= 20) {
             gameWon = true;
             retryBtn.style.display = 'block';
             stopHongNhanDrill();
@@ -581,7 +588,7 @@ function gameLoop() {
         }
     }
 
-    luigi.draw();
+    mario.draw();
     marioEXE.draw();
 
     if (isHorrorPhase) {
