@@ -262,7 +262,7 @@ html_code = """
             </div>
             <div id="intro-desc">
                 Phiên bản Dark Drill Edition!<br>
-                Chọn độ khó để trải nghiệm bản đồ Dễ hoặc Khó riêng biệt.
+                Chọn độ khó (Chế độ Khó đã được tinh chỉnh lại vừa tay hơn).
             </div>
 
             <div id="main-menu-buttons" class="menu-buttons">
@@ -287,8 +287,8 @@ html_code = """
                 • Nhảy: Phím <b>Space</b>, <b>Z</b> hoặc mũi tên <b>Lên / W</b><br>
                 • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
                 <b>2. Mục tiêu trò chơi:</b><br>
-                • Chế độ Dễ: Bản đồ thoáng, ít bẫy, thích hợp thư giãn.<br>
-                • Chế độ Khó: Bản đồ dày đặc bẫy gai và hố sâu hiểm trở.<br>
+                • Chế độ Dễ: Thoải mái, ít cản trở.<br>
+                • Chế độ Khó: Đã được cân bằng lại, thử thách vừa phải.<br>
                 • Tiêu diệt phản diện và chạm cột cờ gặp Công chúa Peach!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
@@ -768,7 +768,7 @@ function drawCastleAndPrincess(ctx) {
     drawPrincessPixelArt(ctx, castleX + 40, castleY + 46);
 }
 
-// KHỞI TẠO MAP THEO ĐỘ KHÓ
+// KHỞI TẠO MAP THEO ĐỘ KHÓ (CHẾ ĐỘ KHÓ ĐÃ ĐƯỢC GIẢM BỚT ĐỘ GẮT CHO VỪA TAY)
 function loadLevel(difficulty) {
     mapBlocks = [];
     spikes = [];
@@ -777,7 +777,6 @@ function loadLevel(difficulty) {
 
     let layout = [];
     if (difficulty === 'easy') {
-        // MAP DỄ: Thoáng, ít hố sâu, ít bẫy gai
         layout = [
             "                                                            ",
             "                                                            ",
@@ -791,18 +790,18 @@ function loadLevel(difficulty) {
             "===================   =============   ======================"
         ];
     } else {
-        // MAP KHÓ: Dày đặc hố sâu, bẫy gai nguy hiểm, ống cống liên hoàn
+        // CHẾ ĐỘ KHÓ: Đã tinh chỉnh bớt gai hiểm và giãn khoảng cách hố sâu cho vừa tay hơn
         layout = [
             "                                                                          ",
             "                                                                          ",
             "                   ?  $?                                 ?  ?$?           ",
-            "               ^  ------     ^   ^   ^                   -----            ",
+            "               ^  ------                 ^               -----            ",
             "                                                                          ",
-            "         ?  ?$?             -----   -----                             |   ",
-            "                            -----   -----                             |   ",
-            "        ---     ^    ^                            ^    ^             [ ]  ",
-            "=== == ===   === === ===   === === === === === === === === === === === ===",
-            "=== == ===   === === ===   === === === === === === === === === === === ==="
+            "         ?  ?$?             -----       -----                        |   ",
+            "                            -----       -----                        |   ",
+            "        ---     ^                        ^                          [ ]  ",
+            "=== == ===   === === ===   === === ===   === === ===   === === === === ===",
+            "=== == ===   === === ===   === === ===   === === ===   === === === === ==="
         ];
     }
 
@@ -945,7 +944,7 @@ function initGame(difficulty) {
     loadLevel(currentDifficulty);
 
     if (currentDifficulty === 'hard') {
-        marioEXE.speed = 4.3;
+        marioEXE.speed = 3.2; // Đã giảm tốc độ rượt đuổi của Mario.exe ở chế độ khó cho vừa tay hơn
     } else {
         marioEXE.speed = 2.4;
     }
