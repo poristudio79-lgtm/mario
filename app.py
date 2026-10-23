@@ -202,7 +202,7 @@ html_code = """
             <div id="intro-desc">
                 Chào mừng bạn đến với phiên bản Hồng Nhan Drill Edition!<br>
                 Hãy giúp Mario tiến về Lâu Đài gạch cổ điển cuối màn để giải cứu công chúa[cite: 2, 5].<br>
-                <b>Nhưng hãy chuẩn bị tinh thần cho đoạn chuyển cảnh kinh hoàng phía trước!</b>
+                <b>Đón chờ phân cảnh đối đầu kịch tính với Mario.exe!</b>
             </div>
             <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU CHƠI</button>
         </div>
@@ -346,7 +346,7 @@ let coins = 0;
 let cameraX = 0;
 let maxMapWidth = 0;
 let isHorrorPhase = false;
-let isCutscene = false; // Biến kiểm soát phân cảnh Cinematic
+let isCutscene = false;
 let exeSpawned = false;
 let gameOver = false;
 let gameWon = false;
@@ -421,43 +421,46 @@ function drawMarioSprite(ctx, x, y, facing, isJumping, moving) {
     ctx.restore();
 }
 
+// HỆ THỐNG VẼ MARIO.EXE CHUẨN TỪ ẢNH PIXEL GỐC (MŨ ĐỎ SẪM, MẶT ĐEN, MẮT ĐỎ QUỶ DỊ)[cite: 6]
 function drawMarioEXESprite(ctx, x, y) {
     ctx.save();
     ctx.translate(x + 16, y + 16);
 
-    ctx.fillStyle = '#800000';
+    // Mũ đỏ sẫm đặc trưng của Mario.exe
+    ctx.fillStyle = '#8b0000';
     ctx.fillRect(-10, -16, 18, 6);
-    ctx.fillRect(-8, -6, 14, 10);
+    ctx.fillRect(-12, -12, 20, 6);
 
-    ctx.fillStyle = '#cfc0b0';
-    ctx.fillRect(-10, -10, 16, 6);
+    // Khuôn mặt đen kịt đáng sợ
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(-10, -8, 16, 10);
 
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(-8, -10, 6, 5);
-    ctx.fillRect(2, -10, 6, 5);
-
+    // Mắt đỏ phát sáng quỷ dị
     ctx.fillStyle = '#ff0000';
-    ctx.fillRect(-6, -8, 2, 2);
-    ctx.fillRect(4, -8, 2, 2);
+    ctx.fillRect(-6, -7, 3, 4);
+    ctx.fillRect(2, -7, 3, 4);
+    ctx.fillStyle = '#ffffff'; // Tâm mắt trắng
+    ctx.fillRect(-5, -6, 1, 2);
+    ctx.fillRect(3, -6, 1, 2);
 
-    ctx.fillStyle = '#990000';
-    ctx.fillRect(-6, -5, 2, 6);
-    ctx.fillRect(4, -5, 2, 6);
-
+    // Bộ ria mép đen bản lớn
     ctx.fillStyle = '#000000';
     ctx.fillRect(-8, -3, 16, 4);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(-6, -3, 2, 2);
-    ctx.fillRect(-2, -3, 2, 2);
-    ctx.fillRect(2, -3, 2, 2);
 
-    ctx.fillStyle = '#111111';
-    ctx.fillRect(-8, 2, 16, 8);
+    // Áo đỏ sẫm & Quần xanh đậm ám ảnh
+    ctx.fillStyle = '#7a0000';
+    ctx.fillRect(-10, 2, 20, 8);
+    ctx.fillStyle = '#1b4d8a';
+    ctx.fillRect(-8, 6, 16, 6);
+    ctx.fillStyle = '#ffcc00'; // Cúc áo vàng
+    ctx.fillRect(-5, 7, 2, 2);
+    ctx.fillRect(3, 7, 2, 2);
 
-    ctx.fillStyle = '#000000';
-    let legOffset = Math.sin(animFrame * 0.4) * 6;
-    ctx.fillRect(-10 + legOffset, 10, 8, 6);
-    ctx.fillRect(2 - legOffset, 10, 8, 6);
+    // Giày đen rêu độc đáo
+    ctx.fillStyle = '#3a3a22';
+    let legOffset = Math.sin(animFrame * 0.4) * 5;
+    ctx.fillRect(-10 + legOffset, 12, 8, 4);
+    ctx.fillRect(2 - legOffset, 12, 8, 4);
 
     ctx.restore();
 }
@@ -771,7 +774,6 @@ function gameLoop() {
             if (cameraX > maxMapWidth - canvas.width) cameraX = maxMapWidth - canvas.width;
         }
 
-        // KÍCH HOẠT CINEMATIC CUTSCENE KHI TIẾN TỚI KHU VỰC PHẢN DIỆN
         if (!isHorrorPhase && mario.x >= flagX - 180) {
             isHorrorPhase = true;
             isCutscene = true;
@@ -779,7 +781,6 @@ function gameLoop() {
             marioEXE.x = flagX - 20;
             marioEXE.y = 9 * BLOCK_SIZE - 32;
 
-            // Khóa camera tập trung thẳng vào phản diện và công chúa
             cameraX = flagX - canvas.width / 2 + 50;
 
             flashAlpha = 1.0;
@@ -789,7 +790,6 @@ function gameLoop() {
 
             dialogBox.style.display = 'block';
 
-            // Sau 5 giây, kết thúc cutscene và cho phép người chơi tiếp tục hành động (đi nhặt kiếm)
             setTimeout(() => {
                 dialogBox.style.display = 'none';
                 isCutscene = false;
