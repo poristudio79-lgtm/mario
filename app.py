@@ -186,7 +186,7 @@ html_code = """
         <div id="intro-overlay">
             <div id="intro-title">🎬 WORLD 1-1: PEACEFUL JOURNEY</div>
             <div id="intro-desc">
-                Mario đang trên đường tiến tới Cột Cờ Chiến Thắng để giải cứu Công Chúa.<br><br>
+                Mario đang trên đường tiến tới Cột Cờ Chiến Thắng để giải cứu Công Chúa[cite: 2].<br><br>
                 Hãy giúp Mario vượt qua chướng ngại vật...<br>
                 <b>Cho đến khi điều không ngờ xảy ra!</b>
             </div>
@@ -369,34 +369,28 @@ window.addEventListener('keyup', e => {
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ' || e.key === 'z' || e.key === 'Z') keys.jump = false;
 });
 
-// VẼ MARIO 8-BIT CHUẨN XÁC THEO HÌNH 1 (CÓ HOẠT HÌNH BƯỚC CHÂN)
 function drawMarioSprite(ctx, x, y, facing, isJumping, moving) {
     ctx.save();
     ctx.translate(x + 16, y + 16);
     if (facing === 'left') ctx.scale(-1, 1);
 
-    // Mũ đỏ
     ctx.fillStyle = '#ff0000';
     ctx.fillRect(-10, -16, 18, 6);
     ctx.fillRect(-8, -6, 14, 10);
 
-    // Khuôn mặt
     ctx.fillStyle = '#fccc97';
     ctx.fillRect(-10, -10, 16, 6);
 
-    // Mắt & Râu
     ctx.fillStyle = '#000';
     ctx.fillRect(2, -10, 3, 4);
     ctx.fillRect(-4, -6, 12, 3);
 
-    // Quần yếm xanh dương kèm cúc áo vàng
     ctx.fillStyle = '#0020c2';
     ctx.fillRect(-8, 2, 16, 8);
     ctx.fillStyle = '#ffff00';
     ctx.fillRect(-6, 3, 3, 3);
     ctx.fillRect(3, 3, 3, 3);
 
-    // Giày nâu
     ctx.fillStyle = '#8b4513';
     if (isJumping) {
         ctx.fillRect(-12, 8, 8, 6);
@@ -412,7 +406,6 @@ function drawMarioSprite(ctx, x, y, facing, isJumping, moving) {
     ctx.restore();
 }
 
-// VẼ MARIO.EXE KINH DỊ
 function drawMarioEXESprite(ctx, x, y) {
     ctx.save();
     ctx.translate(x + 16, y + 16);
@@ -478,24 +471,20 @@ function drawGoomba(ctx, g) {
     ctx.restore();
 }
 
-// VẼ CỘT CỜ CHIẾN THẮNG & LÁ CỜ ĐỎ CHỮ "M" GIỐNG HÌNH 2
 function drawFlagpoleAndBanner(ctx, flagpole) {
     let fx = flagpole.x - cameraX;
     let fy = flagpole.y;
 
-    // Cột cờ màu trắng xám
     ctx.fillStyle = '#d0d0d0';
     ctx.fillRect(fx, fy, 8, flagpole.h);
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(fx, fy, 3, flagpole.h);
 
-    // Củ tròn trên đỉnh cột cờ
     ctx.fillStyle = '#ffcc00';
     ctx.beginPath();
     ctx.arc(fx + 4, fy, 8, 0, Math.PI * 2);
     ctx.fill();
 
-    // Lá cờ đỏ hình tam giác gắn chữ M trắng giống hình 2
     ctx.fillStyle = '#e52521';
     ctx.beginPath();
     ctx.moveTo(fx + 8, fy + 8);
@@ -504,23 +493,22 @@ function drawFlagpoleAndBanner(ctx, flagpole) {
     ctx.closePath();
     ctx.fill();
 
-    // Chữ M màu trắng bên trong lá cờ
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 20px monospace';
     ctx.fillText('M', fx + 18, fy + 33);
 }
 
-// LÂU ĐÀI VÀ CÔNG CHÚA KHÓC NẰM Ở CUỐI MÀN CHƠI
+// LÂU ĐÀI VÀ CÔNG CHÚA KHÓC VỚI NỀN ĐỒNG BỘ U ÁM
 function drawCastleAndPrincess(ctx) {
     let castleX = flagX - 50 - cameraX;
     let castleY = 4 * BLOCK_SIZE;
 
-    ctx.fillStyle = isHorrorPhase ? '#551111' : '#c0c0c0';
+    ctx.fillStyle = isHorrorPhase ? '#3b0a0a' : '#555555';
     ctx.fillRect(castleX, castleY, 110, 128);
     ctx.strokeStyle = '#000';
     ctx.strokeRect(castleX, castleY, 110, 128);
 
-    ctx.fillStyle = isHorrorPhase ? '#880000' : '#e52521';
+    ctx.fillStyle = isHorrorPhase ? '#660000' : '#b22222';
     ctx.beginPath();
     ctx.moveTo(castleX - 10, castleY);
     ctx.lineTo(castleX + 55, castleY - 45);
@@ -821,7 +809,6 @@ function gameLoop() {
         }
     }
 
-    // Vẽ cột cờ & lá cờ đỏ chữ M trước khi xảy ra horror phase
     if (!isHorrorPhase && flagpoleObj) {
         drawFlagpoleAndBanner(ctx, flagpoleObj);
     }
