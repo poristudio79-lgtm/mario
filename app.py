@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Super Mario - Dark Drill Edition", layout="centered")
+st.set_page_config(page_title="Super Mario - Final Edition", layout="centered")
 
 html_code = """
 <!DOCTYPE html>
@@ -28,7 +28,7 @@ html_code = """
             border-radius: 6px;
             overflow: hidden;
         }
-        canvas { display: block; background: #5c94fc; transition: background 0.8s ease; }
+        canvas { display: block; background: #5c94fc; transition: background 0.3s ease; }
         #ui-bar {
             position: absolute;
             top: 10px;
@@ -157,7 +157,7 @@ html_code = """
             font-weight: 900;
             font-family: 'Arial Black', Gadget, sans-serif;
             letter-spacing: 2px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             text-shadow: 3px 3px #000;
             display: flex;
             gap: 4px;
@@ -167,13 +167,21 @@ html_code = """
         .c-red { color: #e52521; }
         .c-green { color: #22c55e; }
 
-        #intro-desc {
-            font-size: 13px;
-            color: #ddd;
-            max-width: 480px;
-            line-height: 1.5;
+        /* Khung hướng dẫn ở menu chính */
+        #menu-instructions {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid #555;
+            border-radius: 8px;
+            padding: 12px 20px;
             margin-bottom: 20px;
+            max-width: 440px;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #e2e8f0;
         }
+        #menu-instructions b { color: #ffcc00; }
+
         .menu-buttons {
             display: flex;
             gap: 12px;
@@ -257,17 +265,21 @@ html_code = """
             <div class="mario-logo">
                 <span class="c-blue">S</span><span class="c-yellow">U</span><span class="c-red">P</span><span class="c-green">E</span><span class="c-yellow">R</span>
             </div>
-            <div class="mario-logo" style="margin-top: -15px; margin-bottom: 15px;">
+            <div class="mario-logo" style="margin-top: -15px; margin-bottom: 12px;">
                 <span class="c-red">M</span><span class="c-green">A</span><span class="c-yellow">R</span><span class="c-blue">I</span><span class="c-green">O</span>
             </div>
-            <div id="intro-desc">
-                Phiên bản hoàn thiện tối ưu!<br>
-                Thánh kiếm xuất hiện ngẫu nhiên, không còn bẫy gai, nhận xu mượt mà từ khối (?).
+            
+            <!-- Hướng dẫn điều khiển hiển thị trực tiếp ở menu -->
+            <div id="menu-instructions">
+                🎮 <b>HƯỚNG DẪN ĐIỀU KHIỂN:</b><br>
+                • Di chuyển: Phím mũi tên <b>Trái / Phải</b> (hoặc <b>A / D</b>)<br>
+                • Nhảy: Phím <b>Space</b>, <b>Z</b> hoặc mũi tên <b>Lên / W</b><br>
+                • Chạy nhanh: Giữ phím <b>Shift</b>
             </div>
 
             <div id="main-menu-buttons" class="menu-buttons">
                 <button id="start-btn" onclick="showDifficultyMenu()">▶️ BẮT ĐẦU</button>
-                <button id="howtoplay-btn" onclick="openHowToPlay()">📖 HƯỚNG DẪN</button>
+                <button id="howtoplay-btn" onclick="openHowToPlay()">📖 LUẬT CHƠI</button>
             </div>
 
             <div id="difficulty-screen">
@@ -280,16 +292,13 @@ html_code = """
         </div>
 
         <div id="instructions-modal">
-            <h2>📖 HƯỚNG DẪN CÁCH CHƠI</h2>
+            <h2>📖 LUẬT CHƠI CHI TIẾT</h2>
             <div class="instruction-content">
-                <b>1. Điều khiển cơ bản:</b><br>
-                • Di chuyển: Phím mũi tên <b>Trái / Phải</b> (hoặc <b>A / D</b>)<br>
-                • Nhảy: Phím <b>Space</b>, <b>Z</b> hoặc mũi tên <b>Lên / W</b><br>
-                • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
-                <b>2. Mục tiêu trò chơi:</b><br>
-                • Nhảy đội trán từ dưới lên các khối (?) để nhận xu.<br>
-                • Khi Mario.exe xuất hiện, hãy tìm kiếm thánh kiếm ở vị trí **ngẫu nhiên** trên bản đồ.<br>
-                • Chạm vào kiếm để tiêu diệt phản diện và tiến về cột cờ cứu công chúa Peach!
+                <b>1. Mẹo thu thập xu:</b><br>
+                • Nhảy đội trán từ dưới lên các khối chứa dấu <b>(?)</b> để nhận xu và điểm số.<br><br>
+                <b>2. Giai đoạn truy đuổi (Boss):</b><br>
+                • Khi đến gần cuối đường, Mario.exe sẽ xuất hiện. Phông nền chuyển đỏ rực cùng với các **tia sét đánh qua** liên tục!<br>
+                • Hãy tìm kiếm **thánh kiếm ngẫu nhiên** trên bản đồ, chạm vào nó để tiêu diệt phản diện và giải cứu công chúa Peach!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -304,7 +313,7 @@ html_code = """
 
         <div id="dialog-box">
             <div id="dialog-speaker">😈 MARIO.EXE:</div>
-            <div id="dialog-text">"Ngươi nghĩ mình có thể cứu được công chúa sao? Hãy chứng tỏ bản lĩnh đàn ông đi!"</div>
+            <div id="dialog-text">"Ngươi nghĩ mình có thể cứu được công chúa sao? Hãy chứng tỏ bản lĩnh đi!"</div>
         </div>
 
         <div id="hud-status">🌟 Chặng đường thử thách hướng về Lâu Đài!</div>
@@ -474,6 +483,11 @@ let isStabbing = false;
 let stabTimer = 0;
 let swordX = 220;
 let swordY = 260;
+
+// Hệ thống tia sét đánh qua
+let lightningTimer = 0;
+let lightningActive = false;
+let lightningFlash = 0;
 
 let activeCoins = [];
 let mapBlocks = [];
@@ -1042,11 +1056,24 @@ function gameLoop() {
             }, 5000);
 
             document.body.style.background = '#1a0000';
-            canvas.style.background = '#120000';
-            document.getElementById('hud-status').innerText = "⚠️ WARNING: THÁNH KIẾM ĐÃ XUẤT HIỆN NGẪU NHIÊN TRÊN ĐƯỜNG!";
+            canvas.style.background = '#300000'; // Phông nền đỏ đậm kinh dị
+            document.getElementById('hud-status').innerText = "⚠️ WARNING: PHẢN DIỆN XUẤT HIỆN! TÌM THÁNH KIẾM NGAY!";
             document.getElementById('hud-status').classList.add('horror-hud');
             document.getElementById('world-title').innerText = "DRILL";
             document.getElementById('world-title').style.color = "#ff0000";
+        }
+
+        // Hiệu ứng tia sét đánh ngẫu nhiên trong pha kinh dị
+        if (isHorrorPhase && !exeDefeated) {
+            lightningTimer++;
+            if (lightningTimer > Math.random() * 80 + 40) {
+                lightningActive = true;
+                lightningFlash = 15; // Thời gian chớp sáng
+                lightningTimer = 0;
+                shakeAmount = 6;
+            }
+            if (lightningFlash > 0) lightningFlash--;
+            else lightningActive = false;
         }
 
         if (isHorrorPhase && !exeDefeated && !isStabbing && Math.abs(mario.x - swordX) < 45 && Math.abs(mario.y - swordY) < 50) {
@@ -1069,7 +1096,7 @@ function gameLoop() {
                 stopBGM();
                 canvas.style.background = '#5c94fc';
                 document.body.style.background = '#050505';
-                document.getElementById('hud-status').innerText = "🚩 ĐÃ DIỆT PHẢN DIỆN! HÃY CHẠY ĐẾN CỘT CỜ GIẢI CỨU CÔNG CHÚA!";
+                document.getElementById('hud-status').innerText = "🚩 ĐÃ TIÊU DIỆT PHẢN DIỆN! HÃY CHẠY ĐẾN CỘT CỜ GIẢI CỨU CÔNG CHÚA!";
                 document.getElementById('hud-status').classList.remove('horror-hud');
                 document.getElementById('world-title').innerText = "1-1";
                 document.getElementById('world-title').style.color = "#fff";
@@ -1077,6 +1104,7 @@ function gameLoop() {
         }
     }
 
+    // Vẽ khối block
     for (let b of mapBlocks) {
         if (b.x + b.w < cameraX || b.x > cameraX + canvas.width) continue;
         
@@ -1160,6 +1188,28 @@ function gameLoop() {
         marioEXE.draw();
     }
 
+    // Hiệu ứng tia sét đánh qua màn hình khi phản diện xuất hiện
+    if (lightningActive) {
+        ctx.save();
+        // Vẽ tia sét zic-zac ngẫu nhiên chớp loé
+        ctx.strokeStyle = '#ffffff';
+        ctx.shadowColor = '#00ffff';
+        ctx.shadowBlur = 25;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        let lx = Math.random() * canvas.width;
+        ctx.moveTo(lx, 0);
+        ctx.lineTo(lx - 40, canvas.height * 0.3);
+        ctx.lineTo(lx + 30, canvas.height * 0.6);
+        ctx.lineTo(lx - 20, canvas.height);
+        ctx.stroke();
+
+        // Chớp sáng màn hình màu trắng xanh
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+    }
+
     if (isStabbing) {
         ctx.save();
         ctx.translate(mario.x - cameraX + 16, mario.y + 16);
@@ -1210,7 +1260,7 @@ function gameLoop() {
         ctx.fillText("VICTORY! PRINCESS SAVED!", canvas.width / 2, canvas.height / 2 + 50);
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px monospace';
-        ctx.fillText("Bạn đã tìm thấy thánh kiếm ngẫu nhiên và cứu công chúa Peach thành công!", canvas.width / 2, canvas.height / 2 + 80);
+        ctx.fillText("Bạn đã vượt qua giông bão, tiêu diệt phản diện và cứu công chúa thành công!", canvas.width / 2, canvas.height / 2 + 80);
         ctx.textAlign = 'left';
     }
 
