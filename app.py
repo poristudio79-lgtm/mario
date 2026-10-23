@@ -201,8 +201,8 @@ html_code = """
             </div>
             <div id="intro-desc">
                 Chào mừng bạn đến với phiên bản Hồng Nhan Drill Edition!<br>
-                Hãy giúp Mario tiến về Lâu Đài gạch cổ điển cuối màn để giải cứu công chúa[cite: 5].<br>
-                <b>Nhưng hãy cẩn thận phía trước!</b>
+                Hãy giúp Mario tiến về Lâu Đài gạch cổ điển cuối màn để giải cứu công chúa[cite: 2, 5].<br>
+                <b>Nhưng hãy chuẩn bị tinh thần cho đoạn chuyển cảnh kinh hoàng phía trước!</b>
             </div>
             <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU CHƠI</button>
         </div>
@@ -217,7 +217,7 @@ html_code = """
 
         <div id="dialog-box">
             <div id="dialog-speaker">😈 MARIO.EXE:</div>
-            <div id="dialog-text">"Ngươi là kẻ yếu nhất ta từng thấy! Hãy chứng tỏ ngươi là một người đàn ông để giải cứu công chúa!"</div>
+            <div id="dialog-text">"Ngươi nghĩ mình có thể cứu được công chúa sao? Hãy chứng tỏ bản lĩnh đàn ông đi!"</div>
         </div>
 
         <div id="hud-status">🌟 Chặng đường bình yên hướng về Lâu Đài!</div>
@@ -346,6 +346,7 @@ let coins = 0;
 let cameraX = 0;
 let maxMapWidth = 0;
 let isHorrorPhase = false;
+let isCutscene = false; // Biến kiểm soát phân cảnh Cinematic
 let exeSpawned = false;
 let gameOver = false;
 let gameWon = false;
@@ -361,7 +362,7 @@ let swordY = 260;
 const keys = { left: false, right: false, jump: false, shift: false };
 
 window.addEventListener('keydown', e => {
-    if (!gameStarted || isStabbing) return;
+    if (!gameStarted || isStabbing || isCutscene) return;
     initAudio();
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
@@ -512,19 +513,16 @@ function drawFlagpoleAndBanner(ctx, flagpole) {
     ctx.fillText('M', fx + 18, fy + 33);
 }
 
-// VẼ LÂU ĐÀI GẠCH NÂU CỔ ĐIỂN CHUẨN NES VÀ CÔNG CHÚA KHÓC Ở CỬA SỔ
 function drawCastleAndPrincess(ctx) {
     let castleX = flagX - 70 - cameraX;
     let castleY = 5 * BLOCK_SIZE;
 
-    // Thân lâu đài gạch nâu
     ctx.fillStyle = isHorrorPhase ? '#4a1515' : '#b8521a';
     ctx.fillRect(castleX, castleY, 128, 128);
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 2;
     ctx.strokeRect(castleX, castleY, 128, 128);
 
-    // Đường vân gạch cổ điển trên tường
     ctx.fillStyle = isHorrorPhase ? '#2d0b0b' : '#873600';
     for(let gx = castleX; gx < castleX + 128; gx += 16) {
         for(let gy = castleY; gy < castleY + 128; gy += 16) {
@@ -532,7 +530,6 @@ function drawCastleAndPrincess(ctx) {
         }
     }
 
-    // Viền đỉnh tháp răng cưa (vách tường gạch màu trắng đỉnh)
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(castleX, castleY, 24, 16);
     ctx.fillRect(castleX + 52, castleY, 24, 16);
@@ -541,24 +538,20 @@ function drawCastleAndPrincess(ctx) {
     ctx.fillRect(castleX, castleY + 64, 24, 16);
     ctx.fillRect(castleX + 104, castleY + 64, 24, 16);
 
-    // Cửa vòm lớn phía dưới
     ctx.fillStyle = '#000000';
     ctx.beginPath();
     ctx.arc(castleX + 64, castleY + 128, 24, Math.PI, 0, false);
     ctx.fill();
     ctx.fillRect(castleX + 40, castleY + 96, 48, 32);
 
-    // 2 cửa sổ vuông phía trên tháp
     ctx.fillRect(castleX + 32, castleY + 36, 16, 24);
     ctx.fillRect(castleX + 80, castleY + 36, 16, 24);
 
-    // CÔNG CHÚA PEACH ĐANG KHÓC Ở CỬA SỔ BÊN TRÁI THÁP
-    ctx.fillStyle = '#ffd700'; // Tóc vàng
+    ctx.fillStyle = '#ffd700';
     ctx.fillRect(castleX + 34, castleY + 38, 12, 10);
-    ctx.fillStyle = '#ff69b4'; // Váy hồng
+    ctx.fillStyle = '#ff69b4';
     ctx.fillRect(castleX + 34, castleY + 48, 12, 12);
     
-    // Nước mắt nhấp nháy
     if (Math.floor(animFrame / 15) % 2 === 0) {
         ctx.fillStyle = '#00ffff';
         ctx.fillRect(castleX + 36, castleY + 46, 2, 3);
@@ -613,7 +606,7 @@ const goombas = [
 const mario = {
     x: 50, y: 200, w: 28, h: 32, vx: 0, vy: 0, speed: 3.5, jumpPower: 11, grounded: false, facing: 'right', moving: false,
     update() {
-        if (isStabbing) return;
+        if (isStabbing || isCutscene) return;
 
         let currentSpeed = keys.shift ? this.speed * 1.4 : this.speed;
         this.moving = false;
@@ -697,7 +690,7 @@ const mario = {
 const marioEXE = {
     x: 0, y: 0, w: 32, h: 32, speed: 3.1,
     update() {
-        if (!exeSpawned || isStabbing) return;
+        if (!exeSpawned || isStabbing || isCutscene) return;
 
         if (this.x < mario.x) this.x += this.speed;
         if (this.x > mario.x) this.x -= this.speed;
@@ -720,6 +713,7 @@ function resetGame() {
     coins = 0;
     cameraX = 0;
     isHorrorPhase = false;
+    isCutscene = false;
     exeSpawned = false;
     gameOver = false;
     gameWon = false;
@@ -771,26 +765,38 @@ function gameLoop() {
             if (g.x < g.minX || g.x > g.maxX) g.vx *= -1;
         }
 
-        cameraX = mario.x - canvas.width / 3;
-        if (cameraX < 0) cameraX = 0;
-        if (cameraX > maxMapWidth - canvas.width) cameraX = maxMapWidth - canvas.width;
+        if (!isCutscene) {
+            cameraX = mario.x - canvas.width / 3;
+            if (cameraX < 0) cameraX = 0;
+            if (cameraX > maxMapWidth - canvas.width) cameraX = maxMapWidth - canvas.width;
+        }
 
+        // KÍCH HOẠT CINEMATIC CUTSCENE KHI TIẾN TỚI KHU VỰC PHẢN DIỆN
         if (!isHorrorPhase && mario.x >= flagX - 180) {
             isHorrorPhase = true;
+            isCutscene = true;
             exeSpawned = true;
             marioEXE.x = flagX - 20;
             marioEXE.y = 9 * BLOCK_SIZE - 32;
 
+            // Khóa camera tập trung thẳng vào phản diện và công chúa
+            cameraX = flagX - canvas.width / 2 + 50;
+
             flashAlpha = 1.0;
-            shakeAmount = 15;
+            shakeAmount = 18;
             playSound('scream');
             startHongNhanDrill();
 
             dialogBox.style.display = 'block';
-            setTimeout(() => { dialogBox.style.display = 'none'; }, 5000);
+
+            // Sau 5 giây, kết thúc cutscene và cho phép người chơi tiếp tục hành động (đi nhặt kiếm)
+            setTimeout(() => {
+                dialogBox.style.display = 'none';
+                isCutscene = false;
+            }, 5000);
 
             document.body.style.background = '#1a0000';
-            document.getElementById('hud-status').innerText = "⚠️ MARIO.EXE: 'Ngươi là kẻ yếu nhất ta từng thấy! Hãy chứng tỏ ngươi là một người đàn ông để giải cứu công chúa!'";
+            document.getElementById('hud-status').innerText = "⚠️ CINEMATIC: MARIO.EXE ĐÃ XUẤT HIỆN! HÃY TÌM KIẾM THANH KIẾM THÁNH!";
             document.getElementById('hud-status').classList.add('horror-hud');
             document.getElementById('world-title').innerText = "DRILL";
             document.getElementById('world-title').style.color = "#ff0000";
