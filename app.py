@@ -233,7 +233,7 @@ html_code = """
             </div>
             <div id="intro-desc">
                 Phiên bản Không Gian Im Lặng!<br>
-                Vượt qua chướng ngại vật, tiến về Lâu Đài và đối đầu với kẻ giả mạo.
+                Tiêu diệt phản diện, chạy tới cột cờ và giải cứu công chúa.
             </div>
             <div class="menu-buttons">
                 <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU</button>
@@ -249,9 +249,9 @@ html_code = """
                 • Nhảy: Phím <b>Space</b>, <b>Z</b> hoặc mũi tên <b>Lên / W</b><br>
                 • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
                 <b>2. Mục tiêu trò chơi:</b><br>
-                • Thu thập tiền vàng 🪙, vượt qua hố sâu và kẻ địch.<br>
-                • Khi đến gần cuối màn, đoạn chuyển cảnh (Cinematic) sẽ kích hoạt và tên phản diện <b>Mario.exe</b> xuất hiện!<br>
-                • Hãy nhanh tay tìm kiếm <b>Thanh Kiếm Thánh</b> phát sáng để đâm và tiêu diệt Mario.exe, cứu công chúa thành công!
+                • Thu thập tiền vàng 🪙, vượt qua chướng ngại vật.<br>
+                • Khi gần cuối màn, chạm vào <b>Thanh Kiếm Thánh</b> để đâm tiêu diệt Mario.exe[cite: 2, 5].<br>
+                • Sau khi tiêu diệt phản diện, hãy chạy tiếp tới <b>Cột Cờ cuối màn</b> để chiến thắng[cite: 2, 5]!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -310,6 +310,7 @@ let maxMapWidth = 0;
 let isHorrorPhase = false;
 let isCutscene = false;
 let exeSpawned = false;
+let exeDefeated = false; // Trạng thái phản diện đã bị tiêu diệt
 let gameOver = false;
 let gameWon = false;
 let flashAlpha = 0;
@@ -324,7 +325,7 @@ let swordY = 260;
 const keys = { left: false, right: false, jump: false, shift: false };
 
 window.addEventListener('keydown', e => {
-    if (!gameStarted || isStabbing || isCutscene || instructionsModal.style.display === 'flex' || gameOver) return;
+    if (!gameStarted || isStabbing || isCutscene || instructionsModal.style.display === 'flex' || gameOver || gameWon) return;
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
     if (e.key === 'Shift') keys.shift = true;
@@ -382,6 +383,7 @@ function drawMarioSprite(ctx, x, y, facing, isJumping, moving) {
 }
 
 function drawMarioEXESprite(ctx, x, y) {
+    if (exeDefeated) return;
     ctx.save();
     ctx.translate(x + 16, y + 16);
 
@@ -609,7 +611,7 @@ const goombas = [
 const mario = {
     x: 50, y: 200, w: 28, h: 32, vx: 0, vy: 0, speed: 3.5, jumpPower: 11, grounded: false, facing: 'right', moving: false,
     update() {
-        if (isStabbing || isCutscene || gameOver) return;
+        if (isStabbing || isCutscene || gameOver || gameWon) return;
 
         let currentSpeed = keys.shift ? this.speed * 1.4 : this.speed;
         this.moving = false;
@@ -653,6 +655,14 @@ const mario = {
             }
         }
 
+        // KIỂM TRA CHẠM CỘT CỜ ĐỂ CHIẾN THẮNG SAU KHI ĐÃ GIẾT PHẢN DIỆN
+        if (exeDefeated && flagpoleObj) {
+            if (this.x + this.w >= flagpoleObj.x && this.x <= flagpoleObj.x + flagpoleObj.w + 20) {
+                gameWon = true;
+                retryBtn.style.display = 'block';
+            }
+        }
+
         for (let g of goombas) {
             if (!g.alive) continue;
             if (this.x < g.x + 28 && this.x + this.w > g.x && this.y < g.y + 28 && this.y + this.h > g.y) {
@@ -682,7 +692,7 @@ const mario = {
 const marioEXE = {
     x: 0, y: 0, w: 32, h: 32, speed: 3.1,
     update() {
-        if (!exeSpawned || isStabbing || isCutscene || gameOver) return;
+        if (!exeSpawned || exeDefeated || isStabbing || isCutscene || gameOver) return;
 
         if (this.x < mario.x) this.x += this.speed;
         if (this.x > mario.x) this.x -= this.speed;
@@ -693,7 +703,7 @@ const marioEXE = {
             triggerGameOver();
         }
     },
-    draw() { if (exeSpawned) drawMarioEXESprite(ctx, this.x - cameraX, this.y); }
+    draw() { if (exeSpawned && !exeDefeated) drawMarioEXESprite(ctx, this.x - cameraX, this.y); }
 };
 
 function triggerGameOver() {
@@ -710,6 +720,7 @@ function resetGame() {
     isHorrorPhase = false;
     isCutscene = false;
     exeSpawned = false;
+    exeDefeated = false;
     gameOver = false;
     gameWon = false;
     isStabbing = false;
@@ -791,7 +802,8 @@ function gameLoop() {
             document.getElementById('world-title').style.color = "#ff0000";
         }
 
-        if (isHorrorPhase && !isStabbing && Math.abs(mario.x - swordX) < 30 && Math.abs(mario.y - swordY) < 35) {
+        // Nhặt kiếm đâm chết phản diện nhưng game CHƯA THẮNG NGAY
+        if (isHorrorPhase && !exeDefeated && !isStabbing && Math.abs(mario.x - swordX) < 30 && Math.abs(mario.y - swordY) < 35) {
             isStabbing = true;
             stabTimer = 0;
             shakeAmount = 20;
@@ -805,8 +817,9 @@ function gameLoop() {
             mario.y = marioEXE.y;
 
             if (stabTimer > 60) {
-                gameWon = true;
-                retryBtn.style.display = 'block';
+                exeDefeated = true; // Tiêu diệt xong phản diện
+                isStabbing = false;
+                document.getElementById('hud-status').innerText = "🚩 MARIO.EXE ĐÃ TIÊU DIỆT! HÃY CHẠY ĐẾN CỘT CỜ CUỐI MÀN!";
             }
         }
     }
@@ -836,7 +849,7 @@ function gameLoop() {
         }
     }
 
-    if (!isHorrorPhase && flagpoleObj) {
+    if (flagpoleObj) {
         drawFlagpoleAndBanner(ctx, flagpoleObj);
     }
 
@@ -854,7 +867,7 @@ function gameLoop() {
 
     for (let g of goombas) drawGoomba(ctx, g);
 
-    if (isHorrorPhase && !isStabbing && !gameWon) {
+    if (isHorrorPhase && !exeDefeated && !isStabbing && !gameWon) {
         ctx.save();
         ctx.translate(swordX - cameraX + 10, swordY + Math.sin(animFrame * 0.1) * 4);
         ctx.fillStyle = '#ffcc00';
@@ -915,10 +928,10 @@ function gameLoop() {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = '#22c55e';
         ctx.font = 'bold 32px monospace';
-        ctx.fillText("MARIO.EXE DESTROYED!", canvas.width / 2 - 200, canvas.height / 2 - 20);
+        ctx.fillText("VICTORY! PRINCESS SAVED!", canvas.width / 2 - 210, canvas.height / 2 - 20);
         ctx.fillStyle = '#ffffff';
-        ctx.font = '16px monospace';
-        ctx.fillText("Bạn đã đâm kiếm kết liễu Mario.exe và giải cứu công chúa thành công!", canvas.width / 2 - 280, canvas.height / 2 + 20);
+        ctx.font = '15px monospace';
+        ctx.fillText("Bạn đã tiêu diệt Mario.exe và chạm cột cờ giải cứu thành công công chúa!", canvas.width / 2 - 300, canvas.height / 2 + 20);
     }
 
     ctx.restore();
