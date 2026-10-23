@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Mario vs Mario.exe - layout="centered")
+st.set_page_config(page_title="Mario vs Mario.exe - Hồng Nhan Drill", layout="centered")
 
 html_code = """
 <!DOCTYPE html>
@@ -102,23 +102,6 @@ html_code = """
             line-height: 1.5;
             font-weight: bold;
         }
-
-        #music-btn {
-            position: absolute;
-            top: 55px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #fff;
-            color: #fff;
-            padding: 6px 14px;
-            font-size: 13px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            z-index: 30;
-            font-family: 'Courier New', Courier, monospace;
-        }
-        #music-btn:hover { background: rgba(255, 255, 255, 0.3); }
 
         #retry-btn {
             display: none;
@@ -249,7 +232,7 @@ html_code = """
                 <span class="c-red">M</span><span class="c-green">A</span><span class="c-yellow">R</span><span class="c-blue">I</span><span class="c-green">O</span>
             </div>
             <div id="intro-desc">
-                Phiên bản Hồng Nhan Drill Edition!<br>
+                Phiên bản Không Gian Im Lặng!<br>
                 Vượt qua chướng ngại vật, tiến về Lâu Đài và đối đầu với kẻ giả mạo.
             </div>
             <div class="menu-buttons">
@@ -279,8 +262,6 @@ html_code = """
             <div>WORLD<br><span id="world-title">1-1</span></div>
         </div>
 
-        <button id="music-btn" onclick="toggleMusic()">🔊 Hồng Nhan Drill: BẬT</button>
-
         <div id="dialog-box">
             <div id="dialog-speaker">😈 MARIO.EXE:</div>
             <div id="dialog-text">"Ngươi nghĩ mình có thể cứu được công chúa sao? Hãy chứng tỏ bản lĩnh đàn ông đi!"</div>
@@ -296,32 +277,17 @@ html_code = """
         🎮 <b>Di chuyển:</b> ⬅️ ➡️ | <b>Nhảy:</b> Space / Z / ⬆️ | <b>Chạy nhanh:</b> Shift
     </div>
 
-    <audio id="drillAudio" loop preload="auto">
-        <source src="https://files.catbox.moe/k3t2p4.mp3" type="audio/mpeg">
-    </audio>
-
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const retryBtn = document.getElementById('retry-btn');
-const musicBtn = document.getElementById('music-btn');
-const drillAudio = document.getElementById('drillAudio');
 const introOverlay = document.getElementById('intro-overlay');
 const instructionsModal = document.getElementById('instructions-modal');
 const dialogBox = document.getElementById('dialog-box');
 
-const AudioContext = window.AudioContext || window.webkitAudioContext;
-let audioCtx = null;
-let isMusicMuted = false;
 let gameStarted = false;
 
-function initAudio() {
-    if (!audioCtx) audioCtx = new AudioContext();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-}
-
 function startGame() {
-    initAudio();
     introOverlay.style.display = 'none';
     gameStarted = true;
 }
@@ -332,85 +298,6 @@ function openHowToPlay() {
 
 function closeHowToPlay() {
     instructionsModal.style.display = 'none';
-}
-
-function toggleMusic() {
-    initAudio();
-    isMusicMuted = !isMusicMuted;
-    if (isMusicMuted) {
-        musicBtn.innerText = "🔇 Hồng Nhan Drill: TẮT";
-        drillAudio.pause();
-    } else {
-        musicBtn.innerText = "🔊 Hồng Nhan Drill: BẬT";
-        if (isHorrorPhase && !gameOver && !gameWon) {
-            drillAudio.play().catch(e => {});
-        }
-    }
-}
-
-function startHongNhanDrill() {
-    if (!isMusicMuted) {
-        drillAudio.currentTime = 0;
-        drillAudio.play().catch(e => {});
-    }
-}
-
-function stopHongNhanDrill() {
-    drillAudio.pause();
-    drillAudio.currentTime = 0;
-}
-
-function playSound(type) {
-    if (!audioCtx) return;
-    try {
-        const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        if (type === 'jump') {
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(160, now);
-            osc.frequency.exponentialRampToValueAtTime(550, now + 0.15);
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.15);
-            osc.start(now);
-            osc.stop(now + 0.15);
-        } else if (type === 'coin') {
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(987.77, now);
-            osc.frequency.setValueAtTime(1318.51, now + 0.08);
-            gain.gain.setValueAtTime(0.12, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.25);
-            osc.start(now);
-            osc.stop(now + 0.25);
-        } else if (type === 'stomp') {
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(300, now);
-            osc.frequency.linearRampToValueAtTime(80, now + 0.12);
-            gain.gain.setValueAtTime(0.2, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.12);
-            osc.start(now);
-            osc.stop(now + 0.12);
-        } else if (type === 'scream') {
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(650, now);
-            osc.frequency.exponentialRampToValueAtTime(90, now + 0.9);
-            gain.gain.setValueAtTime(0.35, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.9);
-            osc.start(now);
-            osc.stop(now + 0.9);
-        } else if (type === 'slash') {
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(1200, now);
-            osc.frequency.exponentialRampToValueAtTime(100, now + 0.4);
-            gain.gain.setValueAtTime(0.4, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.4);
-            osc.start(now);
-            osc.stop(now + 0.4);
-        }
-    } catch(e){}
 }
 
 const GRAVITY = 0.48;
@@ -438,7 +325,6 @@ const keys = { left: false, right: false, jump: false, shift: false };
 
 window.addEventListener('keydown', e => {
     if (!gameStarted || isStabbing || isCutscene || instructionsModal.style.display === 'flex' || gameOver) return;
-    initAudio();
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
     if (e.key === 'Shift') keys.shift = true;
@@ -446,7 +332,6 @@ window.addEventListener('keydown', e => {
         if (!keys.jump && mario.grounded) {
             mario.vy = -mario.jumpPower;
             mario.grounded = false;
-            playSound('jump');
         }
         keys.jump = true;
     }
@@ -533,43 +418,35 @@ function drawMarioEXESprite(ctx, x, y) {
     ctx.restore();
 }
 
-// HÀM VẼ KHUÔN MẶT MARIO.EXE PHÓNG TO KINH DỊ CHO MÀN HÌNH THUA (GAME OVER)[cite: 8]
 function drawMarioEXEJumpscare(ctx, cx, cy) {
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.scale(3.2, 3.2); // Phóng to khuôn mặt
+    ctx.scale(3.2, 3.2);
 
-    // Mũ đỏ sẫm trùm trên cùng
     ctx.fillStyle = '#6e0a0a';
     ctx.fillRect(-25, -45, 50, 16);
     ctx.fillRect(-30, -32, 60, 14);
-    // Logo chữ M trên mũ (màu trắng ngà)
     ctx.fillStyle = '#fce8e6';
     ctx.fillRect(-6, -42, 12, 10);
 
-    // Khuôn mặt đen kịt (nền tối thẳm)
     ctx.fillStyle = '#0f0505';
     ctx.fillRect(-32, -18, 64, 45);
 
-    // Mắt đỏ ngầu quỷ dị phát sáng
     ctx.fillStyle = '#ff0000';
     ctx.fillRect(-18, -12, 10, 10);
     ctx.fillRect(8, -12, 10, 10);
-    ctx.fillStyle = '#ffffff'; // Tâm mắt trắng
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(-14, -10, 3, 4);
     ctx.fillRect(11, -10, 3, 4);
 
-    // Mũi to tròn màu trắng ngà đặc trưng
     ctx.fillStyle = '#fce8e6';
     ctx.beginPath();
     ctx.arc(0, -2, 10, 0, Math.PI * 2);
     ctx.fill();
 
-    // Bộ ria mép đen bản lớn
     ctx.fillStyle = '#000000';
     ctx.fillRect(-24, 6, 48, 10);
 
-    // MIỆNG RỘNG TO VỚI HÀNG RĂNG SẮC NHỌN TRẮNG DÀI (ĐÚNG MẪU ẢNH)[cite: 8]
     ctx.fillStyle = '#000000';
     ctx.fillRect(-22, 16, 44, 38);
 
@@ -577,12 +454,10 @@ function drawMarioEXEJumpscare(ctx, cx, cy) {
     ctx.lineWidth = 3;
     ctx.strokeRect(-22, 16, 44, 38);
 
-    // Răng trên
     ctx.fillStyle = '#fce8e6';
     for (let rx = -18; rx < 18; rx += 7) {
         ctx.fillRect(rx, 16, 5, 10);
     }
-    // Răng dưới
     for (let rx = -18; rx < 18; rx += 7) {
         ctx.fillRect(rx, 44, 5, 10);
     }
@@ -773,7 +648,6 @@ const mario = {
                         b.empty = true;
                         coins++;
                         score += 200;
-                        playSound('coin');
                     }
                 }
             }
@@ -786,7 +660,6 @@ const mario = {
                     g.alive = false;
                     this.vy = -7.5;
                     score += 100;
-                    playSound('stomp');
                 } else {
                     triggerGameOver();
                 }
@@ -828,8 +701,6 @@ function triggerGameOver() {
     gameOver = true;
     retryBtn.style.display = 'block';
     dialogBox.style.display = 'none';
-    playSound('scream');
-    stopHongNhanDrill();
 }
 
 function resetGame() {
@@ -853,7 +724,6 @@ function resetGame() {
 
     for (let g of goombas) g.alive = true;
 
-    stopHongNhanDrill();
     retryBtn.style.display = 'none';
     dialogBox.style.display = 'none';
 
@@ -906,8 +776,6 @@ function gameLoop() {
 
             flashAlpha = 1.0;
             shakeAmount = 18;
-            playSound('scream');
-            startHongNhanDrill();
 
             dialogBox.style.display = 'block';
 
@@ -926,7 +794,6 @@ function gameLoop() {
         if (isHorrorPhase && !isStabbing && Math.abs(mario.x - swordX) < 30 && Math.abs(mario.y - swordY) < 35) {
             isStabbing = true;
             stabTimer = 0;
-            playSound('slash');
             shakeAmount = 20;
             flashAlpha = 1.0;
         }
@@ -940,7 +807,6 @@ function gameLoop() {
             if (stabTimer > 60) {
                 gameWon = true;
                 retryBtn.style.display = 'block';
-                stopHongNhanDrill();
             }
         }
     }
@@ -1031,23 +897,19 @@ function gameLoop() {
     document.getElementById('score').innerText = String(score).padStart(6, '0');
     document.getElementById('coins').innerText = String(coins).padStart(2, '0');
 
-    // HIỂN THỊ JUMPSCARE KHUÔN MẶT MARIO.EXE KHI GAME OVER[cite: 8]
     if (gameOver) {
-        // Nền tối mờ ám
         ctx.fillStyle = '#080101';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Vẽ khuôn mặt Mario.exe phóng to ở chính giữa màn hình
         drawMarioEXEJumpscare(ctx, canvas.width / 2, canvas.height / 2 - 20);
 
-        // Dòng chữ thông báo Game Over phong cách kinh dị
         ctx.fillStyle = '#ff0000';
         ctx.font = 'bold 28px monospace';
         ctx.textAlign = 'center';
         ctx.shadowColor = '#000';
         ctx.shadowBlur = 12;
         ctx.fillText("YOU DIED", canvas.width / 2, 45);
-        ctx.textAlign = 'left'; // reset
+        ctx.textAlign = 'left';
     } else if (gameWon) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
