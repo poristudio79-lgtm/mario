@@ -140,10 +140,11 @@ html_code = """
         }
         #retry-btn:hover { background: #ff0000; transform: translate(-50%, -50%) scale(1.08); }
 
+        /* MÀN HÌNH INTRO MENU & HOW TO PLAY MODAL */
         #intro-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(0, 0, 0, 0.96);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -153,11 +154,11 @@ html_code = """
             z-index: 50;
         }
         .mario-logo {
-            font-size: 44px;
+            font-size: 42px;
             font-weight: 900;
             font-family: 'Arial Black', Gadget, sans-serif;
             letter-spacing: 2px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             text-shadow: 3px 3px #000;
             display: flex;
             gap: 4px;
@@ -168,43 +169,112 @@ html_code = """
         .c-green { color: #22c55e; }
 
         #intro-desc {
-            font-size: 14px;
+            font-size: 13px;
             color: #ddd;
             max-width: 480px;
-            line-height: 1.6;
-            margin-bottom: 25px;
+            line-height: 1.5;
+            margin-bottom: 20px;
         }
-        #start-btn {
-            padding: 12px 30px;
-            font-size: 18px;
+        .menu-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        #start-btn, #howtoplay-btn {
+            padding: 11px 24px;
+            font-size: 16px;
             font-weight: bold;
             font-family: 'Courier New', Courier, monospace;
-            color: #000;
-            background: #ffcc00;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            box-shadow: 0 0 10px #ffcc00;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
+        #start-btn { color: #000; background: #ffcc00; }
         #start-btn:hover { background: #fff; transform: scale(1.05); }
+
+        #howtoplay-btn { color: #fff; background: #22c55e; }
+        #howtoplay-btn:hover { background: #16a34a; transform: scale(1.05); }
+
+        /* BẢNG HƯỚNG DẪN CHI TIẾT (MODAL) */
+        #instructions-modal {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 15, 0.95);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 25px;
+            z-index: 60;
+        }
+        #instructions-modal h2 {
+            color: #ffcc00;
+            font-size: 22px;
+            margin-bottom: 12px;
+            text-shadow: 2px 2px #ff0000;
+        }
+        .instruction-content {
+            font-size: 13px;
+            color: #e2e8f0;
+            max-width: 480px;
+            line-height: 1.6;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            margin-bottom: 20px;
+        }
+        #back-menu-btn {
+            padding: 10px 24px;
+            font-size: 15px;
+            font-weight: bold;
+            font-family: 'Courier New', Courier, monospace;
+            color: #fff;
+            background: #e52521;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        #back-menu-btn:hover { background: #ff0000; transform: scale(1.05); }
     </style>
 </head>
 <body>
 
     <div id="game-wrapper">
+        <!-- MÀN HÌNH INTRO MENU -->
         <div id="intro-overlay">
             <div class="mario-logo">
                 <span class="c-blue">S</span><span class="c-yellow">U</span><span class="c-red">P</span><span class="c-green">E</span><span class="c-yellow">R</span>
             </div>
-            <div class="mario-logo" style="margin-top: -15px; margin-bottom: 20px;">
+            <div class="mario-logo" style="margin-top: -15px; margin-bottom: 15px;">
                 <span class="c-red">M</span><span class="c-green">A</span><span class="c-yellow">R</span><span class="c-blue">I</span><span class="c-green">O</span>
             </div>
             <div id="intro-desc">
-                Chào mừng bạn đến với phiên bản Hồng Nhan Drill Edition!<br>
-                Hãy giúp Mario tiến về Lâu Đài gạch cổ điển cuối màn để giải cứu công chúa[cite: 2, 5].<br>
-                <b>Đón chờ phân cảnh đối đầu kịch tính với Mario.exe!</b>
+                Phiên bản Hồng Nhan Drill Edition!<br>
+                Vượt qua chướng ngại vật, tiến về Lâu Đài và đối đầu với kẻ giả mạo.
             </div>
-            <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU CHƠI</button>
+            <div class="menu-buttons">
+                <button id="start-btn" onclick="startGame()">▶️ BẮT ĐẦU</button>
+                <button id="howtoplay-btn" onclick="openHowToPlay()">📖 HƯỚNG DẪN</button>
+            </div>
+        </div>
+
+        <!-- BẢNG HOW TO PLAY -->
+        <div id="instructions-modal">
+            <h2>📖 HƯỚNG DẪN CÁCH CHƠI</h2>
+            <div class="instruction-content">
+                <b>1. Điều khiển cơ bản:</b><br>
+                • Di chuyển: Phím mũi tên <b>Trái / Phải</b> (hoặc <b>A / D</b>)<br>
+                • Nhảy: Phím <b>Space</b>, <b>Z</b> hoặc mũi tên <b>Lên / W</b><br>
+                • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
+                <b>2. Mục tiêu trò chơi:</b><br>
+                • Thu thập tiền vàng 🪙, vượt qua hố sâu và kẻ địch.<br>
+                • Khi đến gần cuối màn, đoạn chuyển cảnh (Cinematic) sẽ kích hoạt và tên phản diện <b>Mario.exe</b> xuất hiện!<br>
+                • Hãy nhanh tay tìm kiếm <b>Thanh Kiếm Thánh</b> phát sáng để đâm và tiêu diệt Mario.exe, cứu công chúa thành công!
+            </div>
+            <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
 
         <div id="ui-bar">
@@ -241,6 +311,7 @@ const retryBtn = document.getElementById('retry-btn');
 const musicBtn = document.getElementById('music-btn');
 const drillAudio = document.getElementById('drillAudio');
 const introOverlay = document.getElementById('intro-overlay');
+const instructionsModal = document.getElementById('instructions-modal');
 const dialogBox = document.getElementById('dialog-box');
 
 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -257,6 +328,14 @@ function startGame() {
     initAudio();
     introOverlay.style.display = 'none';
     gameStarted = true;
+}
+
+function openHowToPlay() {
+    instructionsModal.style.display = 'flex';
+}
+
+function closeHowToPlay() {
+    instructionsModal.style.display = 'none';
 }
 
 function toggleMusic() {
@@ -362,7 +441,7 @@ let swordY = 260;
 const keys = { left: false, right: false, jump: false, shift: false };
 
 window.addEventListener('keydown', e => {
-    if (!gameStarted || isStabbing || isCutscene) return;
+    if (!gameStarted || isStabbing || isCutscene || instructionsModal.style.display === 'flex') return;
     initAudio();
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
@@ -421,42 +500,35 @@ function drawMarioSprite(ctx, x, y, facing, isJumping, moving) {
     ctx.restore();
 }
 
-// HỆ THỐNG VẼ MARIO.EXE CHUẨN TỪ ẢNH PIXEL GỐC (MŨ ĐỎ SẪM, MẶT ĐEN, MẮT ĐỎ QUỶ DỊ)[cite: 6]
 function drawMarioEXESprite(ctx, x, y) {
     ctx.save();
     ctx.translate(x + 16, y + 16);
 
-    // Mũ đỏ sẫm đặc trưng của Mario.exe
     ctx.fillStyle = '#8b0000';
     ctx.fillRect(-10, -16, 18, 6);
     ctx.fillRect(-12, -12, 20, 6);
 
-    // Khuôn mặt đen kịt đáng sợ
     ctx.fillStyle = '#0a0a0a';
     ctx.fillRect(-10, -8, 16, 10);
 
-    // Mắt đỏ phát sáng quỷ dị
     ctx.fillStyle = '#ff0000';
     ctx.fillRect(-6, -7, 3, 4);
     ctx.fillRect(2, -7, 3, 4);
-    ctx.fillStyle = '#ffffff'; // Tâm mắt trắng
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(-5, -6, 1, 2);
     ctx.fillRect(3, -6, 1, 2);
 
-    // Bộ ria mép đen bản lớn
     ctx.fillStyle = '#000000';
     ctx.fillRect(-8, -3, 16, 4);
 
-    // Áo đỏ sẫm & Quần xanh đậm ám ảnh
     ctx.fillStyle = '#7a0000';
     ctx.fillRect(-10, 2, 20, 8);
     ctx.fillStyle = '#1b4d8a';
     ctx.fillRect(-8, 6, 16, 6);
-    ctx.fillStyle = '#ffcc00'; // Cúc áo vàng
+    ctx.fillStyle = '#ffcc00';
     ctx.fillRect(-5, 7, 2, 2);
     ctx.fillRect(3, 7, 2, 2);
 
-    // Giày đen rêu độc đáo
     ctx.fillStyle = '#3a3a22';
     let legOffset = Math.sin(animFrame * 0.4) * 5;
     ctx.fillRect(-10 + legOffset, 12, 8, 4);
