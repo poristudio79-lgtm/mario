@@ -262,8 +262,8 @@ html_code = """
                 <span class="c-yellow" style="margin-left: 8px;">SKIBIDI</span>
             </div>
             <div id="intro-desc">
-                Chào mừng đến với Super Mario Skibidi!<br>
-                Chọn chế độ Khó (Skibidi Mode) với bản đồ thử thách mới cực kỳ hấp dẫn.
+                Super Mario Skibidi Edition!<br>
+                Thánh kiếm sẽ xuất hiện ở **vị trí ngẫu nhiên** mỗi khi Mario.exe truy đuổi.
             </div>
 
             <div id="main-menu-buttons" class="menu-buttons">
@@ -288,8 +288,8 @@ html_code = """
                 • Nhảy: Phím <b>Space</b>, <b>Z</b> hoặc mũi tên <b>Lên / W</b><br>
                 • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
                 <b>2. Mục tiêu trò chơi:</b><br>
-                • Skibidi Hard Mode: Bản đồ thiết kế dạng zic-zac độc quyền, có thể vượt qua 100%.<br>
-                • Lượm thánh kiếm khi gặp Mario.exe và về đích cứu công chúa!
+                • Khi Mario.exe xuất hiện, hãy tìm kiếm thánh kiếm được giấu ở vị trí **ngẫu nhiên** trên bản đồ.<br>
+                • Chạm vào kiếm để tiêu diệt phản diện và tiến về cột cờ cứu công chúa!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -768,7 +768,6 @@ function drawCastleAndPrincess(ctx) {
     drawPrincessPixelArt(ctx, castleX + 40, castleY + 46);
 }
 
-// SKIBIDI MAP KHÁC - ĐƯỢC THIẾT KẾ CÂN BẰNG, HẤP DẪN VÀ CHẮC CHẮN QUA ĐƯỢC
 function loadLevel(difficulty) {
     mapBlocks = [];
     spikes = [];
@@ -790,7 +789,6 @@ function loadLevel(difficulty) {
             "===================   =============   ======================"
         ];
     } else {
-        // SKIBIDI HARD MAP: Bố cục zic-zac hoàn toàn mới, các tầng lửng độc đáo và bẫy chiến thuật
         layout = [
             "                                                                              ",
             "                                                                              ",
@@ -944,7 +942,7 @@ function initGame(difficulty) {
     loadLevel(currentDifficulty);
 
     if (currentDifficulty === 'hard') {
-        marioEXE.speed = 2.8; // Tốc độ Skibidi Mode vừa phải, cân bằng và thú vị
+        marioEXE.speed = 2.8;
     } else {
         marioEXE.speed = 2.4;
     }
@@ -1033,7 +1031,10 @@ function gameLoop() {
             marioEXE.x = flagX - 20;
             marioEXE.y = 8 * BLOCK_SIZE - 32;
 
-            swordX = mario.x + 120;
+            // THÁNH KIẾM XUẤT HIỆN Ở VỊ TRÍ NGẪU NHIÊN TRÊN MẠC (trong khoảng từ 100 đến flagX - 150)
+            let minSwordX = 150;
+            let maxSwordX = flagX - 150;
+            swordX = Math.floor(Math.random() * (maxSwordX - minSwordX + 1)) + minSwordX;
             swordY = 8 * BLOCK_SIZE - 24;
 
             cameraX = flagX - canvas.width / 2 + 50;
@@ -1052,7 +1053,7 @@ function gameLoop() {
 
             document.body.style.background = '#1a0000';
             canvas.style.background = '#120000';
-            document.getElementById('hud-status').innerText = "⚠️ SKIBIDI WARNING: MARIO.EXE XUẤT HIỆN! LƯỢM THÁNH KIẾM NGAY!";
+            document.getElementById('hud-status').innerText = "⚠️ SKIBIDI WARNING: THÁNH KIẾM ĐÃ XUẤT HIỆN NGẪU NHIÊN TRÊN ĐƯỜNG!";
             document.getElementById('hud-status').classList.add('horror-hud');
             document.getElementById('world-title').innerText = "SKB-EXE";
             document.getElementById('world-title').style.color = "#ff0000";
@@ -1229,7 +1230,7 @@ function gameLoop() {
         ctx.fillText("SKIBIDI VICTORY!", canvas.width / 2, canvas.height / 2 + 50);
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px monospace';
-        ctx.fillText("Bạn đã chinh phục Super Mario Skibidi thành công!", canvas.width / 2, canvas.height / 2 + 80);
+        ctx.fillText("Bạn đã tìm thấy thánh kiếm ngẫu nhiên và cứu công chúa thành công!", canvas.width / 2, canvas.height / 2 + 80);
         ctx.textAlign = 'left';
     }
 
