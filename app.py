@@ -262,7 +262,7 @@ html_code = """
             </div>
             <div id="intro-desc">
                 Super Mario Edition!<br>
-                Thánh kiếm xuất hiện ở **vị trí ngẫu nhiên** mỗi khi Mario.exe truy đuổi.
+                Đã gỡ bỏ toàn bộ bẫy gai trên trời. Nhảy đội đầu khối (?) để nhận xu thoải mái!
             </div>
 
             <div id="main-menu-buttons" class="menu-buttons">
@@ -274,7 +274,7 @@ html_code = """
                 <div style="font-size: 16px; font-weight: bold; color: #ffcc00; margin-bottom: 5px;">CHỌN ĐỘ KHÓ:</div>
                 <div class="menu-buttons">
                     <button id="easy-btn" onclick="initGame('easy')">🟢 DỄ</button>
-                    <button id="hard-btn" onclick="initGame('hard')">🔴 KHÓ (Cân bằng)</button>
+                    <button id="hard-btn" onclick="initGame('hard')">🔴 KHÓ</button>
                 </div>
             </div>
         </div>
@@ -287,8 +287,9 @@ html_code = """
                 • Nhảy: Phím <b>Space</b>, <b>Z</b> hoặc mũi tên <b>Lên / W</b><br>
                 • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
                 <b>2. Mục tiêu trò chơi:</b><br>
-                • Khi Mario.exe xuất hiện, hãy tìm thánh kiếm ở vị trí **ngẫu nhiên** trên bản đồ.<br>
-                • Chạm vào kiếm để tiêu diệt phản diện và tiến về cột cờ cứu công chúa Peach!
+                • Nhảy đội trán từ dưới lên các khối (?) để nhận xu.<br>
+                • Lượm thánh kiếm ngẫu nhiên khi Mario.exe xuất hiện.<br>
+                • Tiến về cột cờ giải cứu công chúa Peach thành công!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -476,7 +477,6 @@ let swordY = 260;
 
 let activeCoins = [];
 let mapBlocks = [];
-let spikes = [];
 let goombas = [];
 let flagpoleObj = null;
 let flagX = 0;
@@ -769,7 +769,6 @@ function drawCastleAndPrincess(ctx) {
 
 function loadLevel(difficulty) {
     mapBlocks = [];
-    spikes = [];
     goombas = [];
     flagpoleObj = null;
 
@@ -792,11 +791,11 @@ function loadLevel(difficulty) {
             "                                                                              ",
             "                                                                              ",
             "                   ?  $? $$$ ?                     ?  ?$?                     ",
-            "               ---------   -----               ^  ------         |            ",
+            "               ---------   -----               -----             |            ",
             "                                                                 |            ",
             "         ?  ?$?                     -----                       [ ]           ",
-            "                    ^       ^       -----                                     ",
-            "        ---                           ^                                       ",
+            "                                    -----                                     ",
+            "        ---                                                                   ",
             "=== == ===   === === ===   === === ===   === === ===   === === === === === ===",
             "=== == ===   === === ===   === === ===   === === ===   === === === === === ==="
         ];
@@ -814,7 +813,6 @@ function loadLevel(difficulty) {
             else if (char === '?') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'question', empty: false, bounce: 0 });
             else if (char === '$') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'brick' });
             else if (char === '-') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'pipe' });
-            else if (char === '^') spikes.push({ x, y: y + 16, w: BLOCK_SIZE, h: 16 });
             else if (char === '|') {
                 flagX = x;
                 flagpoleObj = { x, y: y - 2 * BLOCK_SIZE, w: 10, h: 3 * BLOCK_SIZE };
@@ -902,12 +900,6 @@ const mario = {
                 } else {
                     triggerGameOver();
                 }
-            }
-        }
-
-        for (let s of spikes) {
-            if (this.x < s.x + s.w && this.x + this.w > s.x && this.y < s.y + s.h && this.y + this.h > s.y) {
-                triggerGameOver();
             }
         }
 
@@ -1148,16 +1140,6 @@ function gameLoop() {
     }
 
     drawCastleAndPrincess(ctx);
-
-    for (let s of spikes) {
-        if (s.x + s.w < cameraX || s.x > cameraX + canvas.width) continue;
-        ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#ff0000' : '#888';
-        ctx.beginPath();
-        ctx.moveTo(s.x - cameraX, s.y + s.h);
-        ctx.lineTo(s.x - cameraX + s.w / 2, s.y);
-        ctx.lineTo(s.x - cameraX + s.w, s.y + s.h);
-        ctx.fill();
-    }
 
     for (let g of goombas) drawGoomba(ctx, g);
 
