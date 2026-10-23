@@ -262,7 +262,7 @@ html_code = """
             </div>
             <div id="intro-desc">
                 Phiên bản Dark Drill Edition!<br>
-                Chọn độ khó (Chế độ Khó đã được tinh chỉnh lại vừa tay hơn).
+                Chọn độ khó để bắt đầu cuộc chiến cứu công chúa Peach.
             </div>
 
             <div id="main-menu-buttons" class="menu-buttons">
@@ -287,9 +287,9 @@ html_code = """
                 • Nhảy: Phím <b>Space</b>, <b>Z</b> hoặc mũi tên <b>Lên / W</b><br>
                 • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
                 <b>2. Mục tiêu trò chơi:</b><br>
-                • Chế độ Dễ: Thoải mái, ít cản trở.<br>
-                • Chế độ Khó: Đã được cân bằng lại, thử thách vừa phải.<br>
-                • Tiêu diệt phản diện và chạm cột cờ gặp Công chúa Peach!
+                • Đụng trán các khối (?) để nhận xu.<br>
+                • Chạm vào thánh kiếm để tiêu diệt Mario.exe khi bị rượt đuổi.<br>
+                • Chạm cột cờ để giải cứu công chúa Peach thành công!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -768,7 +768,6 @@ function drawCastleAndPrincess(ctx) {
     drawPrincessPixelArt(ctx, castleX + 40, castleY + 46);
 }
 
-// KHỞI TẠO MAP THEO ĐỘ KHÓ (CHẾ ĐỘ KHÓ ĐÃ ĐƯỢC GIẢM BỚT ĐỘ GẮT CHO VỪA TAY)
 function loadLevel(difficulty) {
     mapBlocks = [];
     spikes = [];
@@ -790,7 +789,6 @@ function loadLevel(difficulty) {
             "===================   =============   ======================"
         ];
     } else {
-        // CHẾ ĐỘ KHÓ: Đã tinh chỉnh bớt gai hiểm và giãn khoảng cách hố sâu cho vừa tay hơn
         layout = [
             "                                                                          ",
             "                                                                          ",
@@ -944,7 +942,7 @@ function initGame(difficulty) {
     loadLevel(currentDifficulty);
 
     if (currentDifficulty === 'hard') {
-        marioEXE.speed = 3.2; // Đã giảm tốc độ rượt đuổi của Mario.exe ở chế độ khó cho vừa tay hơn
+        marioEXE.speed = 3.2;
     } else {
         marioEXE.speed = 2.4;
     }
@@ -1033,6 +1031,10 @@ function gameLoop() {
             marioEXE.x = flagX - 20;
             marioEXE.y = 8 * BLOCK_SIZE - 32;
 
+            // Đặt vị trí xuất hiện thánh kiếm cố định trước mặt Mario để dễ thấy và dễ lượm
+            swordX = mario.x + 120;
+            swordY = 8 * BLOCK_SIZE - 24;
+
             cameraX = flagX - canvas.width / 2 + 50;
 
             flashAlpha = 1.0;
@@ -1049,13 +1051,14 @@ function gameLoop() {
 
             document.body.style.background = '#1a0000';
             canvas.style.background = '#120000';
-            document.getElementById('hud-status').innerText = "⚠️ CINEMATIC: MARIO.EXE ĐÃ XUẤT HIỆN! HÃY TÌM KIẾM THÁNH KIẾM!";
+            document.getElementById('hud-status').innerText = "⚠️ CINEMATIC: MARIO.EXE ĐÃ XUẤT HIỆN! HÃY CHẠY ĐẾN LƯỢM THÁNH KIẾM!";
             document.getElementById('hud-status').classList.add('horror-hud');
             document.getElementById('world-title').innerText = "DRILL";
             document.getElementById('world-title').style.color = "#ff0000";
         }
 
-        if (isHorrorPhase && !exeDefeated && !isStabbing && Math.abs(mario.x - swordX) < 30 && Math.abs(mario.y - swordY) < 35) {
+        // ĐÃ MỞ RỘNG VÙNG VA CHẠM ĐỂ DỄ DÀNG LƯỢM KIẾM NGAY KHI CHẠM VÀO
+        if (isHorrorPhase && !exeDefeated && !isStabbing && Math.abs(mario.x - swordX) < 45 && Math.abs(mario.y - swordY) < 50) {
             isStabbing = true;
             stabTimer = 0;
             playSound('slash');
@@ -1164,7 +1167,7 @@ function gameLoop() {
         ctx.translate(swordX - cameraX + 10, swordY + Math.sin(animFrame * 0.1) * 4);
         ctx.fillStyle = '#ffcc00';
         ctx.shadowColor = '#ffff00';
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 15;
         ctx.fillRect(-2, -18, 4, 22);
         ctx.fillRect(-7, 2, 14, 4);
         ctx.fillRect(-2, 6, 4, 6);
@@ -1226,7 +1229,7 @@ function gameLoop() {
         ctx.fillText("VICTORY! PRINCESS SAVED!", canvas.width / 2, canvas.height / 2 + 50);
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px monospace';
-        ctx.fillText("Bạn đã vượt qua thử thách thành công, tiêu diệt Mario.exe và cứu công chúa Peach!", canvas.width / 2, canvas.height / 2 + 80);
+        ctx.fillText("Bạn đã rút thánh kiếm thành công, tiêu diệt Mario.exe và cứu công chúa Peach!", canvas.width / 2, canvas.height / 2 + 80);
         ctx.textAlign = 'left';
     }
 
