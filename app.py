@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Mario vs Mario.exe - Dark Drill Edition", layout="centered")
+st.set_page_config(page_title="Super Mario Skibidi", layout="centered")
 
 html_code = """
 <!DOCTYPE html>
@@ -153,11 +153,11 @@ html_code = """
             z-index: 50;
         }
         .mario-logo {
-            font-size: 42px;
+            font-size: 38px;
             font-weight: 900;
             font-family: 'Arial Black', Gadget, sans-serif;
             letter-spacing: 2px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             text-shadow: 3px 3px #000;
             display: flex;
             gap: 4px;
@@ -257,12 +257,13 @@ html_code = """
             <div class="mario-logo">
                 <span class="c-blue">S</span><span class="c-yellow">U</span><span class="c-red">P</span><span class="c-green">E</span><span class="c-yellow">R</span>
             </div>
-            <div class="mario-logo" style="margin-top: -15px; margin-bottom: 15px;">
+            <div class="mario-logo" style="margin-top: -15px; margin-bottom: 12px;">
                 <span class="c-red">M</span><span class="c-green">A</span><span class="c-yellow">R</span><span class="c-blue">I</span><span class="c-green">O</span>
+                <span class="c-yellow" style="margin-left: 8px;">SKIBIDI</span>
             </div>
             <div id="intro-desc">
-                Phiên bản Dark Drill Edition!<br>
-                Chế độ Khó đã được cân bằng lại, đảm bảo có thể vượt qua.
+                Chào mừng đến với Super Mario Skibidi!<br>
+                Chọn chế độ Khó (Skibidi Mode) với bản đồ thử thách mới cực kỳ hấp dẫn.
             </div>
 
             <div id="main-menu-buttons" class="menu-buttons">
@@ -274,7 +275,7 @@ html_code = """
                 <div style="font-size: 16px; font-weight: bold; color: #ffcc00; margin-bottom: 5px;">CHỌN ĐỘ KHÓ:</div>
                 <div class="menu-buttons">
                     <button id="easy-btn" onclick="initGame('easy')">🟢 DỄ</button>
-                    <button id="hard-btn" onclick="initGame('hard')">🔴 KHÓ (Đã cân bằng)</button>
+                    <button id="hard-btn" onclick="initGame('hard')">🔴 SKIBIDI HARD</button>
                 </div>
             </div>
         </div>
@@ -287,9 +288,8 @@ html_code = """
                 • Nhảy: Phím <b>Space</b>, <b>Z</b> hoặc mũi tên <b>Lên / W</b><br>
                 • Chạy nhanh: Giữ phím <b>Shift</b><br><br>
                 <b>2. Mục tiêu trò chơi:</b><br>
-                • Đụng trán các khối (?) để nhận xu.<br>
-                • Chế độ Khó nay đã vừa tay hơn, có thể vượt qua và lượm kiếm dễ dàng.<br>
-                • Chạm cột cờ để giải cứu công chúa Peach thành công!
+                • Skibidi Hard Mode: Bản đồ thiết kế dạng zic-zac độc quyền, có thể vượt qua 100%.<br>
+                • Lượm thánh kiếm khi gặp Mario.exe và về đích cứu công chúa!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -297,17 +297,17 @@ html_code = """
         <div id="ui-bar">
             <div>MARIO<br><span id="score">000000</span></div>
             <div>COINS<br>🪙 x<span id="coins">00</span></div>
-            <div>WORLD<br><span id="world-title">1-1</span></div>
+            <div>WORLD<br><span id="world-title">SKIBIDI</span></div>
         </div>
 
         <button id="music-btn" onclick="toggleMusic()">🔊 Nhạc nền: BẬT</button>
 
         <div id="dialog-box">
-            <div id="dialog-speaker">😈 MARIO.EXE:</div>
-            <div id="dialog-text">"Ngươi nghĩ mình có thể cứu được công chúa sao? Hãy chứng tỏ bản lĩnh đàn ông đi!"</div>
+            <div id="dialog-speaker">😈 SKIBIDI MARIO.EXE:</div>
+            <div id="dialog-text">"Skibidi dop dop yes yes! Ngươi không thể thoát khỏi ta đâu!"</div>
         </div>
 
-        <div id="hud-status">🌟 Chặng đường thử thách hướng về Lâu Đài!</div>
+        <div id="hud-status">🌟 Chặng đường Skibidi hướng về Lâu Đài!</div>
         <canvas id="gameCanvas" width="640" height="400"></canvas>
         
         <button id="retry-btn" onclick="resetGame()">🔄 TRY AGAIN</button>
@@ -728,7 +728,7 @@ function drawFlagpoleAndBanner(ctx, flagpole) {
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 20px monospace';
-    ctx.fillText('M', fx + 18, fy + 33);
+    ctx.fillText('SKB', fx + 12, fy + 33);
 }
 
 function drawCastleAndPrincess(ctx) {
@@ -768,7 +768,7 @@ function drawCastleAndPrincess(ctx) {
     drawPrincessPixelArt(ctx, castleX + 40, castleY + 46);
 }
 
-// KHỞI TẠO MAP THEO ĐỘ KHÓ (CHẾ ĐỘ KHÓ ĐÃ ĐƯỢC CÂN BẰNG LẠI DỄ DÀNG VƯỢT QUA HƠN)
+// SKIBIDI MAP KHÁC - ĐƯỢC THIẾT KẾ CÂN BẰNG, HẤP DẪN VÀ CHẮC CHẮN QUA ĐƯỢC
 function loadLevel(difficulty) {
     mapBlocks = [];
     spikes = [];
@@ -790,18 +790,18 @@ function loadLevel(difficulty) {
             "===================   =============   ======================"
         ];
     } else {
-        // CHẾ ĐỘ KHÓ CÂN BẰNG: Giảm bớt hố sâu liên hoàn, giãn khoảng cách bẫy gai hợp lý hơn
+        // SKIBIDI HARD MAP: Bố cục zic-zac hoàn toàn mới, các tầng lửng độc đáo và bẫy chiến thuật
         layout = [
-            "                                                                          ",
-            "                                                                          ",
-            "                   ?  $?                                 ?  ?$?           ",
-            "               ^  ------                                 -----            ",
-            "                                                                          ",
-            "         ?  ?$?             -----                   -----            |   ",
-            "                            -----                   -----            |   ",
-            "        ---     ^                                                   [ ]  ",
-            "=== == ===   === === === === === === === ===   === === === === === === ===",
-            "=== == ===   === === === === === === === ===   === === === === === === ==="
+            "                                                                              ",
+            "                                                                              ",
+            "                   ?  $? $$$ ?                     ?  ?$?                     ",
+            "               ---------   -----               ^  ------         |            ",
+            "                                                                 |            ",
+            "         ?  ?$?                     -----                       [ ]           ",
+            "                    ^       ^       -----                                     ",
+            "        ---                           ^                                       ",
+            "=== == ===   === === ===   === === ===   === === ===   === === === === === ===",
+            "=== == ===   === === ===   === === ===   === === ===   === === === === === ==="
         ];
     }
 
@@ -830,8 +830,8 @@ function loadLevel(difficulty) {
         goombas.push({ x: 300, y: 8 * BLOCK_SIZE - 28, vx: -1, minX: 250, maxX: 400, alive: true });
     } else {
         goombas.push(
-            { x: 260, y: 8 * BLOCK_SIZE - 28, vx: -1, minX: 200, maxX: 340, alive: true },
-            { x: 500, y: 8 * BLOCK_SIZE - 28, vx: -1, minX: 440, maxX: 580, alive: true }
+            { x: 250, y: 8 * BLOCK_SIZE - 28, vx: -1, minX: 180, maxX: 320, alive: true },
+            { x: 450, y: 8 * BLOCK_SIZE - 28, vx: -1, minX: 380, maxX: 520, alive: true }
         );
     }
 }
@@ -944,7 +944,7 @@ function initGame(difficulty) {
     loadLevel(currentDifficulty);
 
     if (currentDifficulty === 'hard') {
-        marioEXE.speed = 2.9; // Giảm tốc độ Mario.exe ở chế độ khó để người chơi đủ sức phản xạ và chiến thắng
+        marioEXE.speed = 2.8; // Tốc độ Skibidi Mode vừa phải, cân bằng và thú vị
     } else {
         marioEXE.speed = 2.4;
     }
@@ -994,9 +994,9 @@ function resetGame() {
 
     document.body.style.background = '#050505';
     canvas.style.background = '#5c94fc';
-    document.getElementById('hud-status').innerText = "🌟 Chặng đường thử thách hướng về Lâu Đài!";
+    document.getElementById('hud-status').innerText = "🌟 Chặng đường Skibidi hướng về Lâu Đài!";
     document.getElementById('hud-status').classList.remove('horror-hud');
-    document.getElementById('world-title').innerText = "1-1";
+    document.getElementById('world-title').innerText = "SKIBIDI";
     document.getElementById('world-title').style.color = "#fff";
 }
 
@@ -1052,9 +1052,9 @@ function gameLoop() {
 
             document.body.style.background = '#1a0000';
             canvas.style.background = '#120000';
-            document.getElementById('hud-status').innerText = "⚠️ CINEMATIC: MARIO.EXE ĐÃ XUẤT HIỆN! HÃY CHẠY ĐẾN LƯỢM THÁNH KIẾM!";
+            document.getElementById('hud-status').innerText = "⚠️ SKIBIDI WARNING: MARIO.EXE XUẤT HIỆN! LƯỢM THÁNH KIẾM NGAY!";
             document.getElementById('hud-status').classList.add('horror-hud');
-            document.getElementById('world-title').innerText = "DRILL";
+            document.getElementById('world-title').innerText = "SKB-EXE";
             document.getElementById('world-title').style.color = "#ff0000";
         }
 
@@ -1078,9 +1078,9 @@ function gameLoop() {
                 stopBGM();
                 canvas.style.background = '#5c94fc';
                 document.body.style.background = '#050505';
-                document.getElementById('hud-status').innerText = "🚩 ĐÃ DIỆT PHẢN DIỆN! HÃY CHẠY ĐẾN CỘT CỜ GIẢI CỨU CÔNG CHÚA!";
+                document.getElementById('hud-status').innerText = "🚩 SKIBIDI VICTORY! HÃY CHẠY ĐẾN CỘT CỜ CỨU CÔNG CHÚA!";
                 document.getElementById('hud-status').classList.remove('horror-hud');
-                document.getElementById('world-title').innerText = "1-1";
+                document.getElementById('world-title').innerText = "SKIBIDI";
                 document.getElementById('world-title').style.color = "#fff";
             }
         }
@@ -1215,7 +1215,7 @@ function gameLoop() {
         ctx.textAlign = 'center';
         ctx.shadowColor = '#000';
         ctx.shadowBlur = 12;
-        ctx.fillText("YOU DIED", canvas.width / 2, 45);
+        ctx.fillText("SKIBIDI DIED", canvas.width / 2, 45);
         ctx.textAlign = 'left';
     } else if (gameWon) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
@@ -1226,10 +1226,10 @@ function gameLoop() {
         ctx.fillStyle = '#22c55e';
         ctx.font = 'bold 30px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText("VICTORY! PRINCESS SAVED!", canvas.width / 2, canvas.height / 2 + 50);
+        ctx.fillText("SKIBIDI VICTORY!", canvas.width / 2, canvas.height / 2 + 50);
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px monospace';
-        ctx.fillText("Bạn đã vượt qua chế độ Khó, tiêu diệt Mario.exe và cứu công chúa Peach!", canvas.width / 2, canvas.height / 2 + 80);
+        ctx.fillText("Bạn đã chinh phục Super Mario Skibidi thành công!", canvas.width / 2, canvas.height / 2 + 80);
         ctx.textAlign = 'left';
     }
 
