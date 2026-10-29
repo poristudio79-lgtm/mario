@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Super Mario - Final Edition", layout="centered")
+st.set_page_config(page_title="Super Mario - Epic Shadow Edition", layout="centered")
 
 html_code = """
 <!DOCTYPE html>
@@ -78,7 +78,7 @@ html_code = """
         #dialog-box {
             display: none;
             position: absolute;
-            top: 30%;
+            top: 25%;
             left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(10, 0, 0, 0.96);
@@ -296,7 +296,7 @@ html_code = """
                 <b>1. Mẹo thu thập xu:</b><br>
                 • Nhảy đội trán lên khối `(?)` để khối xẹp xuống và đồng xu văng ra nhận xu.<br><br>
                 <b>2. Sinh tử chiến:</b><br>
-                • Tìm thánh kiếm ngẫu nhiên khi phản diện xuất hiện để tiêu diệt hắn và cứu công chúa!
+                • Khi đến khu vực cuối, phản diện sẽ từ trong bóng tối bước ra. Tìm thánh kiếm ngẫu nhiên để tiêu diệt hắn và cứu công chúa!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -469,6 +469,7 @@ let cameraX = 0;
 let maxMapWidth = 0;
 let isHorrorPhase = false;
 let isCutscene = false;
+let shadowStep = 0; // Tiến trình bước ra từ bóng tối
 let exeSpawned = false;
 let exeDefeated = false;
 let gameOver = false;
@@ -916,7 +917,7 @@ const mario = {
                     this.vy = 0;
                     if (b.type === 'question' && !b.empty) {
                         b.empty = true;
-                        b.bounce = 8; // Tăng biên độ nảy giúp hiệu ứng khối xẹp/nẩy rõ ràng hơn
+                        b.bounce = 8;
                         coins++;
                         score += 200;
                         playSound('coin');
@@ -1002,6 +1003,7 @@ function resetGame() {
     cameraX = 0;
     isHorrorPhase = false;
     isCutscene = false;
+    shadowStep = 0;
     exeSpawned = false;
     exeDefeated = false;
     gameOver = false;
@@ -1060,11 +1062,14 @@ function gameLoop() {
             if (cameraX > maxMapWidth - canvas.width) cameraX = maxMapWidth - canvas.width;
         }
 
+        // KÍCH HOẠT CẮT CẢNH PHẢN DIỆN BƯỚC TỪ BÓNG TỐI RANG BƯỚC RA
         if (!isHorrorPhase && mario.x >= flagX - 180) {
             isHorrorPhase = true;
             isCutscene = true;
-            exeSpawned = true;
-            marioEXE.x = flagX - 20;
+            shadowStep = 0; // Bắt đầu tiến trình bóng tối
+
+            // Đặt phản diện ở x xa phía bên phải ngoài bóng tối để bước dần ra
+            marioEXE.x = flagX + 120;
             marioEXE.y = 8 * BLOCK_SIZE - 32;
 
             let minSwordX = 150;
@@ -1074,24 +1079,33 @@ function gameLoop() {
 
             cameraX = flagX - canvas.width / 2 + 50;
 
-            flashAlpha = 1.0;
-            shakeAmount = 18;
+            flashAlpha = 0.8;
+            shakeAmount = 14;
             playSound('scream');
             startBGM();
 
             dialogBox.style.display = 'block';
 
-            setTimeout(() => {
-                dialogBox.style.display = 'none';
-                isCutscene = false;
-            }, 5000);
-
             document.body.style.background = '#1a0000';
             canvas.style.background = '#300000';
-            document.getElementById('hud-status').innerText = "⚠️ WARNING: PHẢN DIỆN XUẤT HIỆN! TÌM THÁNH KIẾM NGAY!";
+            document.getElementById('hud-status').innerText = "⚠️ WARNING: PHẢN DIỆN TỪ BÓNG TỐI ĐANG BƯỚC RA! TÌM THÁNH KIẾM NGAY!";
             document.getElementById('hud-status').classList.add('horror-hud');
             document.getElementById('world-title').innerText = "DRILL";
             document.getElementById('world-title').style.color = "#ff0000";
+        }
+
+        // TIẾN TRÌNH BƯỚC RA TỪ BÓNG TỐI TRONG CẮT CẢNH
+        if (isCutscene && isHorrorPhase && !exeSpawned) {
+            shadowStep += 0.015; // Tốc độ bước ra
+            if (shadowStep < 1) {
+                marioEXE.x = (flagX + 120) - (shadowStep * 140); // Từ từ di chuyển từ bóng tối sâu ra ngoài
+            } else {
+                exeSpawned = true;
+                setTimeout(() => {
+                    dialogBox.style.display = 'none';
+                    isCutscene = false;
+                }, 1500);
+            }
         }
 
         if (isHorrorPhase && !exeDefeated) {
@@ -1147,12 +1161,10 @@ function gameLoop() {
         let renderH = b.h;
         let renderW = b.w;
 
-        // HIỆU ỨNG KHỐI (?) XẸP XUỐNG VÀ NẢY LÊN KHI ĐƯỢC KÍCH HOẠT
         if (b.bounce > 0) {
             let bounceVal = Math.sin((b.bounce / 8) * Math.PI);
             renderY -= bounceVal * 10;
             if (b.type === 'question') {
-                // Xẹp chiều cao và bè chiều rộng xuống một chút tạo độ nhún đàn hồi
                 renderH = BLOCK_SIZE - (bounceVal * 12);
                 renderW = BLOCK_SIZE + (bounceVal * 4);
             }
@@ -1230,7 +1242,20 @@ function gameLoop() {
 
     if (!gameOver) {
         mario.draw();
-        marioEXE.draw();
+
+        // VẼ PHẢN DIỆN BƯỚC RA TỪ BÓNG TỐI LÚC CẮT CẢNH
+        if (isHorrorPhase && !exeDefeated) {
+            drawMarioEXESprite(ctx, marioEXE.x - cameraX, marioEXE.y);
+            
+            // Vẽ lớp phủ bóng tối u uất đang thu hẹp dần khi phản diện bước ra
+            if (shadowStep < 1) {
+                let grad = ctx.createLinearGradient(canvas.width - 250, 0, canvas.width, 0);
+                grad.addColorStop(0, "rgba(0,0,0,0)");
+                grad.addColorStop(1 - shadowStep, "rgba(0,0,0,0.98)");
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
     }
 
     if (lightningActive && !exeDefeated) {
