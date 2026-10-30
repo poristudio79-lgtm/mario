@@ -277,7 +277,7 @@ html_code = """
 
             <div id="main-menu-buttons" class="menu-buttons">
                 <button id="start-btn" onclick="showDifficultyMenu()">▶️ BẮT ĐẦU</button>
-                <button id="howtoplay-btn" onclick="openHowToPlay()">📖 LUẬT CHƠI</button>
+                <button id="howtoplay-btn" onclick="openHowToPlay()">📖 KỊCH BẢN</button>
             </div>
 
             <div id="difficulty-screen">
@@ -290,13 +290,11 @@ html_code = """
         </div>
 
         <div id="instructions-modal">
-            <h2>📖 LUẬT CHƠI CHI TIẾT</h2>
+            <h2>📖 KỊCH BẢN TRÒ CHƠI</h2>
             <div class="instruction-content">
-                <b>1. Tránh né phản diện:</b><br>
-                • Con phản diện Mario.EXE sẽ đuổi theo sát nút bạn!<br><br>
-                <b>2. Tìm Thánh Kiếm & Chiến Thắng:</b><br>
-                • Đi tìm Thánh Kiếm ngẫu nhiên trên bản đồ.<br>
-                • Nhặt kiếm xong, click chuột để đâm tiêu diệt phản diện, sau đó đến lâu đài gặp công chúa Peach!
+                • <b>Hành trình cổ điển:</b> Vượt chướng ngại vật, nhảy đội đầu vào khối `(?)` để tự động thu thập xu.<br>
+                • <b>Cú lừa kinh hoàng:</b> Gần tới lâu đài, Mario.EXE xuất hiện đón đầu, chê bai khiến bầu trời hóa đỏ và chớp giật liên hồi.<br>
+                • <b>Phản công:</b> Tìm Thánh Kiếm ngẫu nhiên trên bản đồ, click chuột để đâm tiêu diệt phản diện và tiến tới chung vui cùng Công chúa Peach!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -311,10 +309,10 @@ html_code = """
 
         <div id="dialog-box">
             <div id="dialog-speaker">😈 MARIO.EXE:</div>
-            <div id="dialog-text">"Đừng hòng thoát khỏi tao, bản sao yếu đuối!"</div>
+            <div id="dialog-text">"Tưởng vượt qua mấy chướng ngại vật ghê lắm sao? Mày mãi chỉ là bản sao yếu đuối!"</div>
         </div>
 
-        <div id="hud-status">🌟 Chạy trốn phản diện & Tìm Thánh Kiếm trên map!</div>
+        <div id="hud-status">🌟 Vượt chướng ngại vật & Thu thập xu!</div>
         <canvas id="gameCanvas" width="640" height="400"></canvas>
         
         <button id="retry-btn" onclick="resetGame()">🔄 TRY AGAIN</button>
@@ -497,18 +495,18 @@ window.addEventListener('keyup', e => {
 
 canvas.addEventListener('click', e => {
     initAudio();
+    // Khi lụm được kiếm và click chuột, Mario đâm tiêu diệt phản diện
     if (hasSword && !exeDefeated) {
-        // Đâm thẳng vào phản diện khi đã có kiếm và click chuột
         exeDefeated = true;
         playSound('slash');
         dialogBox.style.display = 'none';
-        hudStatus.innerText = "🏆 BẠN ĐÃ DÂM TIÊU DIỆT MARIO.EXE! HÃY TIẾN TỚI LÂU ĐÀI GẶP CÔNG CHÚA PEACH!";
+        hudStatus.innerText = "🏆 MARIO ĐÃ ĐÂM TIÊU DIỆT MARIO.EXE! BẦU TRỜI TRỞ LẠI XANH VÀ TIẾN TỚI GẶP CÔNG CHÚA PEACH!";
         hudStatus.classList.remove('horror-hud');
-        canvas.style.background = "#5c94fc"; // Khôi phục bầu trời xanh
+        canvas.style.background = "#5c94fc"; // Trả lại bầu trời xanh
     }
 });
 
-// Vẽ nhân vật Mario có chân động tác bước đi
+// Vẽ nhân vật Mario có tay chân hoạt ảnh chân thực
 function drawMarioSprite(ctx, x, y, facing, isJumping, moving) {
     ctx.save();
     ctx.translate(x + 16, y + 16);
@@ -545,7 +543,6 @@ function drawMarioSprite(ctx, x, y, facing, isJumping, moving) {
                 else if (char === 'Y') ctx.fillStyle = Y;
 
                 let legOffset = 0;
-                // Hiệu ứng cử động chân khi di chuyển
                 if (r >= 14 && moving && !isJumping) {
                     legOffset = Math.sin(animFrame * 0.4) * 2;
                 }
@@ -606,7 +603,7 @@ function drawTraditionalBrick(ctx, x, y, w, h, empty) {
     }
 }
 
-// Vẽ lâu đài và Công chúa Peach đứng chờ ở cửa
+// Vẽ lâu đài và công chúa Peach ở cửa
 function drawCastleAndPrincess(ctx) {
     let castleX = flagX - 70 - cameraX;
     let castleY = 5 * BLOCK_SIZE;
@@ -617,9 +614,9 @@ function drawCastleAndPrincess(ctx) {
     ctx.fillRect(castleX + 24, castleY + 32, 20, 24);
     ctx.fillRect(castleX + 84, castleY + 32, 20, 24);
 
-    // Vẽ Công chúa Peach ở cửa lâu đài
+    // Công chúa Peach
     ctx.fillStyle = '#ffb6c1'; ctx.fillRect(castleX + 52, castleY + 104, 24, 24);
-    ctx.fillStyle = '#ff1493'; ctx.fillRect(castleX + 54, castleY + 100, 20, 8); // Tóc công chúa
+    ctx.fillStyle = '#ff1493'; ctx.fillRect(castleX + 54, castleY + 100, 20, 8);
 
     let poleX = castleX + 64, poleY = castleY - 32;
     ctx.fillStyle = '#fff'; ctx.fillRect(poleX - 2, poleY, 4, 32);
@@ -706,13 +703,13 @@ function loadLevel(difficulty) {
         }
     }
 
-    // Đặt Thánh Kiếm ngẫu nhiên ở một vị trí bất kỳ trên map
-    let randomCol = 10 + Math.floor(Math.random() * 30);
+    // Thánh kiếm xuất hiện ngẫu nhiên trên map
+    let randomCol = 12 + Math.floor(Math.random() * 25);
     swordItem.x = randomCol * BLOCK_SIZE;
     swordItem.y = 6 * BLOCK_SIZE;
 
-    // Vị trí khởi đầu của con phản diện đuổi theo sau Mario
-    marioEXE.x = 20;
+    // Mario.EXE xuất hiện đón đầu gần lâu đài
+    marioEXE.x = flagX - 300;
     marioEXE.y = 8 * BLOCK_SIZE - 32;
 }
 
@@ -769,30 +766,35 @@ const mario = {
             if (fc.alpha <= 0) floatingCoins.splice(i, 1);
         }
 
-        // Nhặt Thánh Kiếm ngẫu nhiên trên map
-        if (!swordItem.collected && this.x < swordItem.x + swordItem.w && this.x + this.w > swordItem.x && this.y < swordItem.y + swordItem.h && this.y + this.h > swordItem.y) {
-            swordItem.collected = true;
-            hasSword = true;
+        // KHI TIẾN GẦN LÂU ĐÀI -> MARIO.EXE HIỆN RA ĐÓN ĐẦU VÀ CHÊ BAI, BẦU TRỜI HÓA ĐỎ
+        if (this.x > flagX - 350 && !isHorrorPhase) {
             isHorrorPhase = true;
-            canvas.style.background = "#4a0000"; // Đổi bầu trời đỏ khi nhặt kiếm
-            playSound('sword');
-            hudStatus.innerText = "⚔️ ĐÃ LỤM THÁNH KIẾM! HÃY CLICK CHUỘT ĐỂ ĐÂM TIÊU DIỆT MARIO.EXE!";
+            canvas.style.background = "#4a0000";
+            hudStatus.innerText = "⚠️ MARIO.EXE XUẤT HIỆN! BẦU TRỜI HÓA ĐỎ! HÃY TÌM THÁNH KIẾM!";
             hudStatus.classList.add('horror-hud');
             dialogBox.style.display = 'block';
             stopBGM(); startBGM();
         }
 
-        // Kiểm tra va chạm với con phản diện đang đuổi theo (nếu chưa tiêu diệt)
-        if (!exeDefeated && this.x < marioEXE.x + 28 && this.x + this.w > marioEXE.x && this.y < marioEXE.y + 32 && this.y + this.h > marioEXE.y) {
+        // Nhặt Thánh Kiếm ngẫu nhiên trên map
+        if (!swordItem.collected && this.x < swordItem.x + swordItem.w && this.x + this.w > swordItem.x && this.y < swordItem.y + swordItem.h && this.y + this.h > swordItem.y) {
+            swordItem.collected = true;
+            hasSword = true;
+            playSound('sword');
+            hudStatus.innerText = "⚔️ ĐÃ LỤM THÁNH KIẾM! CLICK CHUỘT ĐỂ ĐÂM TIÊU DIỆT MARIO.EXE!";
+        }
+
+        // Va chạm phản diện khi chưa tiêu diệt
+        if (!exeDefeated && isHorrorPhase && this.x < marioEXE.x + 28 && this.x + this.w > marioEXE.x && this.y < marioEXE.y + 32 && this.y + this.h > marioEXE.y) {
             triggerGameOver();
         }
 
-        // Nếu đã tiêu diệt phản diện và tiến đến cột cờ lâu đài gặp công chúa Peach
+        // Khi đã tiêu diệt phản diện, tiến tới cột cờ gặp công chúa Peach
         if (exeDefeated && flagpoleObj && this.x + this.w >= flagpoleObj.x) {
             gameWon = true;
             retryBtn.style.display = 'block';
             stopBGM();
-            hudStatus.innerText = "🎉 CHIẾN THẮNG! BẠN VÀ CÔNG CHÚA PEACH ĐÃ AN TOÀN!";
+            hudStatus.innerText = "🎉 CHIẾN THẮNG! BẠN ĐÃ CỨU CÔNG CHÚA PEACH AN TOÀN!";
         }
 
         if (this.y > canvas.height + 60) triggerGameOver();
@@ -801,10 +803,10 @@ const mario = {
 };
 
 const marioEXE = {
-    x: 0, y: 0, speed: 2.2,
+    x: 0, y: 0, speed: 2.0,
     update() {
-        if (gameOver || gameWon || exeDefeated) return;
-        // Con phản diện liên tục đuổi theo Mario với tốc độ bám sát
+        if (gameOver || gameWon || exeDefeated || !isHorrorPhase) return;
+        // Phản diện rượt đuổi Mario khi bước vào pha kinh dị
         if (this.x < mario.x - 15) {
             this.x += this.speed;
         } else if (this.x > mario.x + 15) {
@@ -813,7 +815,9 @@ const marioEXE = {
         this.y = 8 * BLOCK_SIZE - 32;
     },
     draw() {
-        drawMarioEXESprite(ctx, this.x - cameraX, this.y);
+        if (isHorrorPhase) {
+            drawMarioEXESprite(ctx, this.x - cameraX, this.y);
+        }
     }
 };
 
@@ -821,7 +825,7 @@ function triggerGameOver() {
     gameOver = true;
     retryBtn.style.display = 'block';
     stopBGM();
-    hudStatus.innerText = "💀 BẠN ĐÃ BỊ MARIO.EXE BẮT KỊP! THẤT BẠI!";
+    hudStatus.innerText = "💀 BẠN ĐÃ THẤT BẠI TRƯỚC MARIO.EXE!";
 }
 
 function initGame(difficulty) {
@@ -839,7 +843,7 @@ function resetGame() {
     retryBtn.style.display = 'none';
     dialogBox.style.display = 'none';
     hudStatus.classList.remove('horror-hud');
-    hudStatus.innerText = "🌟 Chạy trốn phản diện & Tìm Thánh Kiếm trên map!";
+    hudStatus.innerText = "🌟 Vượt chướng ngại vật & Thu thập xu!";
     initGame(currentDifficulty);
 }
 
@@ -854,6 +858,7 @@ function gameLoop() {
         cameraX = mario.x - canvas.width / 3;
         if (cameraX < 0) cameraX = 0;
 
+        // Hiệu ứng tia chớp đánh qua khi ở pha kinh dị
         if (isHorrorPhase && !exeDefeated && Math.random() < 0.02) {
             ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -896,7 +901,6 @@ function gameLoop() {
             ctx.restore();
         }
 
-        // Vẽ Thánh Kiếm ngẫu nhiên trên map nếu chưa lụm
         if (!swordItem.collected) {
             drawHolySword(ctx, swordItem.x - cameraX + 14, swordItem.y + 14);
         }
