@@ -294,7 +294,7 @@ html_code = """
                 • Nhảy đội trán lên khối `(?)` vàng rực rỡ để nhận xu.<br><br>
                 <b>2. Sinh tử chiến:</b><br>
                 • Tìm <b>Thánh Kiếm</b> xuất hiện ngẫu nhiên trên bản đồ.<br>
-                • Khi đến lâu đài, Mario.EXE xuất hiện. Nhấp vào màn hình để dùng thánh kiếm kết liễu hắn!
+                • Khi đến lâu đài, Mario.EXE xuất hiện. Nhấp chuột vào màn hình để dùng thánh kiếm kết liễu hắn!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -509,37 +509,107 @@ canvas.addEventListener('click', e => {
     }
 });
 
-// Hàm vẽ khối gạch dấu chấm hỏi (?) siêu nét, có hiệu ứng pixel chuẩn Mario truyền thống
+// Hàm vẽ chuẩn nhân vật NES Mario 8-bit theo đúng hình ảnh người dùng cung cấp
+function drawMarioSprite(ctx, x, y, facing, isJumping, moving) {
+    ctx.save();
+    ctx.translate(x + 16, y + 16);
+    if (facing === 'left') ctx.scale(-1, 1);
+
+    const p = 2; // pixel size factor
+    const R = '#e52521'; // Red
+    const B = '#002db3'; // Blue
+    const S = '#fccc97'; // Skin
+    const H = '#8b4513'; // Hair/Boots
+    const Y = '#ffcc00'; // Yellow buttons
+
+    // Bản đồ lưới pixel chính xác chuẩn hình mẫu NES Mario
+    const marioPixels = [
+        "      RRRRRR        ",
+        "    RRRRRRRRRR      ",
+        "    HHHSSHS         ",
+        "   HSHSSSHSS        ",
+        "   HSHHSSSHSSS      ",
+        "    HHHHSSSSS       ",
+        "      SSSSS         ",
+        "     B BBBB         ",
+        "    BBBBYBBYB       ",
+        "    BBBBBBBBB       ",
+        "     BBBBBBB        ",
+        "      RRRRR         ",
+        "    RRRRRRRRR       ",
+        "    R R R R R       ",
+        "    H H   H H       ",
+        "   HH H   H HH      "
+    ];
+
+    for (let r = 0; r < marioPixels.length; r++) {
+        for (let c = 0; c < marioPixels[r].length; c++) {
+            let char = marioPixels[r][c];
+            if (char !== ' ') {
+                if (char === 'R') ctx.fillStyle = R;
+                else if (char === 'B') ctx.fillStyle = B;
+                else if (char === 'S') ctx.fillStyle = S;
+                else if (char === 'H') ctx.fillStyle = H;
+                else if (char === 'Y') ctx.fillStyle = Y;
+                
+                ctx.fillRect((c - 8) * 1.6, (r - 8) * 1.8, 1.8, 1.8);
+            }
+        }
+    }
+    ctx.restore();
+}
+
+function drawMarioEXESprite(ctx, x, y) {
+    if (exeDefeated) return;
+    ctx.save();
+    ctx.translate(x + 16, y + 16);
+    ctx.fillStyle = '#8b0000'; ctx.fillRect(-10, -16, 18, 6);
+    ctx.fillStyle = '#0a0a0a'; ctx.fillRect(-10, -8, 16, 10);
+    ctx.fillStyle = '#ff0000'; ctx.fillRect(-6, -7, 3, 4); ctx.fillRect(2, -7, 3, 4);
+    ctx.fillStyle = '#7a0000'; ctx.fillRect(-10, 2, 20, 8);
+    ctx.restore();
+}
+
+// Vẽ gạch nền mặt đất cổ điển chuẩn NES (giống hình mẫu bản đồ)
+function drawGroundBlock(ctx, x, y, w, h) {
+    ctx.fillStyle = '#c84c0c';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, w, h);
+
+    // Đường viền sáng góc trên & trái
+    ctx.fillStyle = '#fcbc5c';
+    ctx.fillRect(x + 2, y + 2, w - 4, 6);
+    ctx.fillStyle = '#880000';
+    ctx.fillRect(x, y + 14, w, 2);
+    ctx.fillRect(x + 14, y, 2, h);
+}
+
+// Khối dấu chấm hỏi (?) siêu nét, có hiệu ứng pixel cổ điển
 function drawQuestionBlock(ctx, x, y, w, h, empty) {
     if (!empty) {
-        // Màu nền vàng tươi sáng rực rỡ
         ctx.fillStyle = '#ffcc00';
         ctx.fillRect(x, y, w, h);
-
-        // Viền khối 3D sắc sảo
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 2.5;
         ctx.strokeRect(x, y, w, h);
 
-        // Góc phản quang sáng (Highlight) phong cách cổ điển
         ctx.fillStyle = '#ffee66';
         ctx.fillRect(x + 3, y + 3, 6, 6);
         ctx.fillRect(x + w - 9, y + 3, 6, 6);
 
-        // Vẽ ký tự dấu chấm hỏi (?) sắc nét chuẩn pixel màu đen đậm
         ctx.fillStyle = '#000000';
         ctx.font = 'bold 20px "Courier New", monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('?', x + w / 2, y + h / 2 + 1);
     } else {
-        // Khối xám trống sau khi đã ăn hết xu
         ctx.fillStyle = '#777777';
         ctx.fillRect(x, y, w, h);
         ctx.strokeStyle = '#333333';
         ctx.lineWidth = 2;
         ctx.strokeRect(x, y, w, h);
-        
         ctx.fillStyle = '#555555';
         ctx.fillRect(x + 4, y + 4, w - 8, h - 8);
     }
@@ -571,18 +641,66 @@ function drawTraditionalBrick(ctx, x, y, w, h, empty) {
     }
 }
 
-function drawGroundBlock(ctx, x, y, w, h) {
-    ctx.fillStyle = '#c84c0c';
-    ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, w, h);
+// Vẽ Lâu đài gạch chuẩn cổ điển NES kèm cờ ngôi sao đỏ trên đỉnh
+function drawCastleAndPrincess(ctx) {
+    let castleX = flagX - 70 - cameraX;
+    let castleY = 5 * BLOCK_SIZE;
 
-    ctx.fillStyle = '#fcbc5c';
-    ctx.fillRect(x + 2, y + 2, w - 4, 6);
-    ctx.fillStyle = '#880000';
-    ctx.fillRect(x, y + 12, w, 2);
-    ctx.fillRect(x + 12, y, 2, h);
+    // Thân lâu đài gạch
+    ctx.fillStyle = isHorrorPhase ? '#300a0a' : '#b8521a';
+    ctx.fillRect(castleX, castleY, 128, 128);
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 2; 
+    ctx.strokeRect(castleX, castleY, 128, 128);
+
+    // Cửa ra vào màu đen
+    ctx.fillStyle = '#000000'; 
+    ctx.fillRect(castleX + 40, castleY + 96, 48, 32);
+
+    // Cửa sổ lâu đài
+    ctx.fillRect(castleX + 24, castleY + 32, 20, 24);
+    ctx.fillRect(castleX + 84, castleY + 32, 20, 24);
+
+    // Cột cờ trên đỉnh lâu đài
+    let poleX = castleX + 64;
+    let poleY = castleY - 32;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(poleX - 2, poleY, 4, 32);
+
+    // Lá cờ đỏ có ngôi sao trắng
+    ctx.fillStyle = '#e52521';
+    ctx.fillRect(poleX + 2, poleY + 4, 24, 16);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px Arial';
+    ctx.fillText('★', poleX + 7, poleY + 17);
+}
+
+// Vẽ mây trắng cổ điển NES trên bầu trời
+function drawClouds(ctx) {
+    ctx.fillStyle = '#ffffff';
+    let cloudPositions = [150, 450, 850, 1250, 1650];
+    for (let cx of cloudPositions) {
+        let renderX = cx - cameraX * 0.4; // Hiệu ứng Parallax nhẹ
+        if (renderX > -100 && renderX < canvas.width + 100) {
+            ctx.fillRect(renderX, 60, 64, 24);
+            ctx.fillRect(renderX + 12, 48, 40, 12);
+            ctx.fillRect(renderX + 20, 84, 24, 8);
+        }
+    }
+}
+
+// Vẽ lùm cây và ngọn đồi xanh chuẩn NES
+function drawScenery(ctx) {
+    // Ngọn đồi xanh
+    ctx.fillStyle = '#00aa00';
+    ctx.beginPath();
+    let hillX = 220 - cameraX;
+    ctx.arc(hillX, 8 * BLOCK_SIZE, 64, Math.PI, 0, false);
+    ctx.fill();
+
+    // Lùm bụi pixel
+    ctx.fillStyle = '#008800';
+    let bushX = 400 - cameraX;
+    ctx.fillRect(bushX, 8 * BLOCK_SIZE - 24, 64, 24);
 }
 
 function drawHolySword(ctx, x, y) {
@@ -606,50 +724,59 @@ function drawHolySword(ctx, x, y) {
     ctx.restore();
 }
 
-function drawMarioSprite(ctx, x, y, facing, isJumping, moving) {
-    ctx.save();
-    ctx.translate(x + 16, y + 16);
-    if (facing === 'left') ctx.scale(-1, 1);
+let score = 0;
+let coins = 0;
+let cameraX = 0;
+let maxMapWidth = 0;
+let isHorrorPhase = false;
+let isCutscene = false;
+let exeDefeated = false;
+let gameOver = false;
+let gameWon = false;
+let animFrame = 0;
 
-    ctx.fillStyle = '#ff0000';
-    ctx.fillRect(-10, -16, 18, 6);
-    ctx.fillRect(-8, -6, 14, 10);
-    ctx.fillStyle = '#fccc97';
-    ctx.fillRect(-10, -10, 16, 6);
-    ctx.fillStyle = '#0020c2';
-    ctx.fillRect(-8, 2, 16, 8);
+let hasSword = false;
+let swordItem = { x: 0, y: 0, w: 28, h: 28, collected: false };
 
-    ctx.fillStyle = '#8b4513';
-    if (isJumping) {
-        ctx.fillRect(-12, 8, 8, 6); ctx.fillRect(4, 6, 8, 6);
-    } else if (moving) {
-        let legOffset = Math.sin(animFrame * 0.3) * 5;
-        ctx.fillRect(-10 + legOffset, 10, 8, 6); ctx.fillRect(2 - legOffset, 10, 8, 6);
-    } else {
-        ctx.fillRect(-10, 10, 8, 6); ctx.fillRect(2, 10, 8, 6);
+let mapBlocks = [];
+let goombas = [];
+let flagpoleObj = null;
+let flagX = 0;
+
+const keys = { left: false, right: false, jump: false, shift: false };
+
+window.addEventListener('keydown', e => {
+    if (!gameStarted || isCutscene || instructionsModal.style.display === 'flex' || gameOver || gameWon) return;
+    initAudio();
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+    if (e.key === 'Shift') keys.shift = true;
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ' || e.key === 'z' || e.key === 'Z') {
+        if (!keys.jump && mario.grounded) {
+            mario.vy = -mario.jumpPower;
+            mario.grounded = false;
+            playSound('jump');
+        }
+        keys.jump = true;
     }
-    ctx.restore();
-}
+});
 
-function drawMarioEXESprite(ctx, x, y) {
-    if (exeDefeated) return;
-    ctx.save();
-    ctx.translate(x + 16, y + 16);
-    ctx.fillStyle = '#8b0000'; ctx.fillRect(-10, -16, 18, 6);
-    ctx.fillStyle = '#0a0a0a'; ctx.fillRect(-10, -8, 16, 10);
-    ctx.fillStyle = '#ff0000'; ctx.fillRect(-6, -7, 3, 4); ctx.fillRect(2, -7, 3, 4);
-    ctx.fillStyle = '#7a0000'; ctx.fillRect(-10, 2, 20, 8);
-    ctx.restore();
-}
+window.addEventListener('keyup', e => {
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+    if (e.key === 'Shift') keys.shift = false;
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ' || e.key === 'z' || e.key === 'Z') keys.jump = false;
+});
 
-function drawCastleAndPrincess(ctx) {
-    let castleX = flagX - 70 - cameraX;
-    let castleY = 5 * BLOCK_SIZE;
-    ctx.fillStyle = isHorrorPhase ? '#300a0a' : '#b8521a';
-    ctx.fillRect(castleX, castleY, 128, 128);
-    ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect(castleX, castleY, 128, 128);
-    ctx.fillStyle = '#000000'; ctx.fillRect(castleX + 40, castleY + 96, 48, 32);
-}
+canvas.addEventListener('click', e => {
+    if (isHorrorPhase && hasSword && !exeDefeated) {
+        exeDefeated = true;
+        playSound('slash');
+        dialogBox.style.display = 'none';
+        hudStatus.innerText = "🏆 MARIO.EXE ĐÃ BỊ TIÊU DIỆT! HÃY CHẠY TỚI CỜ LÂU ĐÀI!";
+        hudStatus.classList.remove('horror-hud');
+    }
+});
 
 function loadLevel(difficulty) {
     mapBlocks = []; goombas = []; flagpoleObj = null;
@@ -802,10 +929,15 @@ function gameLoop() {
         cameraX = mario.x - canvas.width / 3;
         if (cameraX < 0) cameraX = 0;
 
+        // Hiệu ứng sét đánh chớp lóe khi ở pha kinh dị
         if (isHorrorPhase && !exeDefeated && Math.random() < 0.02) {
             ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
+
+        // Vẽ mây và phong cảnh cổ điển chuẩn NES
+        drawClouds(ctx);
+        drawScenery(ctx);
 
         // Render Blocks
         for (let b of mapBlocks) {
