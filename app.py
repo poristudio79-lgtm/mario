@@ -292,11 +292,11 @@ html_code = """
         <div id="instructions-modal">
             <h2>📖 LUẬT CHƠI CHI TIẾT</h2>
             <div class="instruction-content">
-                <b>1. Mẹo thu thập xu:</b><br>
+                <b>1. Khám phá:</b><br>
                 • Nhảy đội trán lên khối `(?)` để lấy xu.<br><br>
-                <b>2. Sinh tử chiến:</b><br>
-                • Tìm <b>Thánh Kiếm</b> xuất hiện ngẫu nhiên.<br>
-                • Khi gặp Mario.EXE, click chuột để dùng Thánh Kiếm kết liễu hắn!
+                <b>2. Chạm trán Mario.EXE:</b><br>
+                • Khi gặp Mario.EXE, <b>Thánh Kiếm sẽ xuất hiện</b>!<br>
+                • Chạm vào kiếm hoặc click chuột vào màn hình để tiêu diệt hắn!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -314,7 +314,7 @@ html_code = """
             <div id="dialog-text">"Chào đường hầm tử thần, bản sao yếu đuối! Mạng mày tới đây là hết rồi!"</div>
         </div>
 
-        <div id="hud-status">🌟 Khám phá bản đồ & Tìm Thánh Kiếm!</div>
+        <div id="hud-status">🌟 Chạy về phía trước để tìm Lâu Đài!</div>
         <canvas id="gameCanvas" width="640" height="400"></canvas>
         
         <button id="retry-btn" onclick="resetGame()">🔄 TRY AGAIN</button>
@@ -478,6 +478,7 @@ let gameWon = false;
 let animFrame = 0;
 
 let hasSword = false;
+let swordVisible = false; // Bán kính hiển thị của kiếm
 let swordItem = { x: 0, y: 0, w: 28, h: 28, collected: false };
 
 let mapBlocks = [];
@@ -511,8 +512,10 @@ window.addEventListener('keyup', e => {
 
 canvas.addEventListener('click', e => {
     initAudio();
-    if (isHorrorPhase && hasSword && !exeDefeated) {
+    if (isHorrorPhase && swordVisible && !exeDefeated) {
         exeDefeated = true;
+        hasSword = true;
+        swordItem.collected = true;
         playSound('slash');
         dialogBox.style.display = 'none';
         hudStatus.innerText = "🏆 MARIO.EXE ĐÃ BỊ TIÊU DIỆT! HÃY CHẠY TỚI CỜ LÂU ĐÀI!";
@@ -721,8 +724,11 @@ function drawHolySword(ctx, x, y) {
 
 function loadLevel(difficulty) {
     mapBlocks = []; flagpoleObj = null;
-    hasSword = false; swordItem.collected = false;
-    isHorrorPhase = false; exeDefeated = false;
+    hasSword = false; 
+    swordVisible = false; // Mặc định kiếm KHÔNG xuất hiện
+    swordItem.collected = false;
+    isHorrorPhase = false; 
+    exeDefeated = false;
     canvas.style.background = "#5c94fc";
 
     let layout = [
@@ -756,9 +762,6 @@ function loadLevel(difficulty) {
             }
         }
     }
-
-    swordItem.x = (350 + Math.floor(Math.random() * 500));
-    swordItem.y = 6 * BLOCK_SIZE;
 }
 
 const mario = {
@@ -798,21 +801,31 @@ const mario = {
             }
         }
 
-        if (!swordItem.collected && this.x < swordItem.x + swordItem.w && this.x + this.w > swordItem.x && this.y < swordItem.y + swordItem.h && this.y + this.h > swordItem.y) {
-            swordItem.collected = true;
-            hasSword = true;
-            playSound('sword');
-            hudStatus.innerText = "⚔️ BẠN ĐÃ NHẶT ĐƯỢC THÁNH KIẾM! HÃY TIẾN LÊN PHÍA TRƯỚC!";
-        }
-
+        // KHI GẶP PHẢN DIỆN (MARIO.EXE) -> MỚI XUẤT HIỆN THÁNH KIẾM
         if (this.x > flagX - 350 && !isHorrorPhase) {
             isHorrorPhase = true;
+            swordVisible = true; // HIỆN THÁNH KIẾM
+            swordItem.x = this.x + 80; // Xuất hiện ngay trước mặt Mario
+            swordItem.y = 6 * BLOCK_SIZE;
+
             canvas.style.background = "#4a0000";
-            hudStatus.innerText = "⚠️ BẦU TRỜI HÓA ĐỎ! MARIO.EXE XUẤT HIỆN!";
+            hudStatus.innerText = "⚡ THÁNH KIẾM XUẤT HIỆN! NHẤP CHUỘT ĐỂ TIÊU DIỆT MARIO.EXE!";
             hudStatus.classList.add('horror-hud');
             dialogBox.style.display = 'block';
+            playSound('sword');
             stopBGM();
             startBGM();
+        }
+
+        // Nhặt kiếm khi va chạm
+        if (swordVisible && !swordItem.collected && this.x < swordItem.x + swordItem.w && this.x + this.w > swordItem.x && this.y < swordItem.y + swordItem.h && this.y + this.h > swordItem.y) {
+            exeDefeated = true;
+            hasSword = true;
+            swordItem.collected = true;
+            playSound('slash');
+            dialogBox.style.display = 'none';
+            hudStatus.innerText = "🏆 MARIO.EXE ĐÃ BỊ TIÊU DIỆT! HÃY CHẠY TỚI CỜ LÂU ĐÀI!";
+            hudStatus.classList.remove('horror-hud');
         }
 
         if (exeDefeated && flagpoleObj && this.x + this.w >= flagpoleObj.x) {
@@ -860,7 +873,7 @@ function resetGame() {
     retryBtn.style.display = 'none';
     dialogBox.style.display = 'none';
     hudStatus.classList.remove('horror-hud');
-    hudStatus.innerText = "🌟 Khám phá bản đồ & Tìm Thánh Kiếm!";
+    hudStatus.innerText = "🌟 Chạy về phía trước để tìm Lâu Đài!";
     initGame(currentDifficulty);
 }
 
@@ -896,7 +909,8 @@ function gameLoop() {
             }
         }
 
-        if (!swordItem.collected) {
+        // CHỈ VẼ KHÓI VÀ THÁNH KIẾM KHI ĐÃ ĐẾN PHA KINH DỊ (GẶP MARIO.EXE)
+        if (swordVisible && !swordItem.collected) {
             drawHolySword(ctx, swordItem.x - cameraX + 14, swordItem.y + 14);
         }
 
