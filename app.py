@@ -515,14 +515,12 @@ function drawMarioSprite(ctx, x, y, facing, isJumping, moving) {
     ctx.translate(x + 16, y + 16);
     if (facing === 'left') ctx.scale(-1, 1);
 
-    const p = 2; // pixel size factor
     const R = '#e52521'; // Red
     const B = '#002db3'; // Blue
     const S = '#fccc97'; // Skin
     const H = '#8b4513'; // Hair/Boots
     const Y = '#ffcc00'; // Yellow buttons
 
-    // Bản đồ lưới pixel chính xác chuẩn hình mẫu NES Mario
     const marioPixels = [
         "      RRRRRR        ",
         "    RRRRRRRRRR      ",
@@ -578,7 +576,6 @@ function drawGroundBlock(ctx, x, y, w, h) {
     ctx.lineWidth = 2;
     ctx.strokeRect(x, y, w, h);
 
-    // Đường viền sáng góc trên & trái
     ctx.fillStyle = '#fcbc5c';
     ctx.fillRect(x + 2, y + 2, w - 4, 6);
     ctx.fillStyle = '#880000';
@@ -641,32 +638,27 @@ function drawTraditionalBrick(ctx, x, y, w, h, empty) {
     }
 }
 
-// Vẽ Lâu đài gạch chuẩn cổ điển NES kèm cờ ngôi sao đỏ trên đỉnh
+// Vẽ Lâu đài gạch chuẩn cổ điển NES kèm cờ sao trắng trên đỉnh
 function drawCastleAndPrincess(ctx) {
     let castleX = flagX - 70 - cameraX;
     let castleY = 5 * BLOCK_SIZE;
 
-    // Thân lâu đài gạch
     ctx.fillStyle = isHorrorPhase ? '#300a0a' : '#b8521a';
     ctx.fillRect(castleX, castleY, 128, 128);
     ctx.strokeStyle = '#000'; ctx.lineWidth = 2; 
     ctx.strokeRect(castleX, castleY, 128, 128);
 
-    // Cửa ra vào màu đen
     ctx.fillStyle = '#000000'; 
     ctx.fillRect(castleX + 40, castleY + 96, 48, 32);
 
-    // Cửa sổ lâu đài
     ctx.fillRect(castleX + 24, castleY + 32, 20, 24);
     ctx.fillRect(castleX + 84, castleY + 32, 20, 24);
 
-    // Cột cờ trên đỉnh lâu đài
     let poleX = castleX + 64;
     let poleY = castleY - 32;
     ctx.fillStyle = '#fff';
     ctx.fillRect(poleX - 2, poleY, 4, 32);
 
-    // Lá cờ đỏ có ngôi sao trắng
     ctx.fillStyle = '#e52521';
     ctx.fillRect(poleX + 2, poleY + 4, 24, 16);
     ctx.fillStyle = '#fff';
@@ -679,7 +671,7 @@ function drawClouds(ctx) {
     ctx.fillStyle = '#ffffff';
     let cloudPositions = [150, 450, 850, 1250, 1650];
     for (let cx of cloudPositions) {
-        let renderX = cx - cameraX * 0.4; // Hiệu ứng Parallax nhẹ
+        let renderX = cx - cameraX * 0.4;
         if (renderX > -100 && renderX < canvas.width + 100) {
             ctx.fillRect(renderX, 60, 64, 24);
             ctx.fillRect(renderX + 12, 48, 40, 12);
@@ -690,14 +682,12 @@ function drawClouds(ctx) {
 
 // Vẽ lùm cây và ngọn đồi xanh chuẩn NES
 function drawScenery(ctx) {
-    // Ngọn đồi xanh
     ctx.fillStyle = '#00aa00';
     ctx.beginPath();
     let hillX = 220 - cameraX;
     ctx.arc(hillX, 8 * BLOCK_SIZE, 64, Math.PI, 0, false);
     ctx.fill();
 
-    // Lùm bụi pixel
     ctx.fillStyle = '#008800';
     let bushX = 400 - cameraX;
     ctx.fillRect(bushX, 8 * BLOCK_SIZE - 24, 64, 24);
@@ -929,17 +919,14 @@ function gameLoop() {
         cameraX = mario.x - canvas.width / 3;
         if (cameraX < 0) cameraX = 0;
 
-        // Hiệu ứng sét đánh chớp lóe khi ở pha kinh dị
         if (isHorrorPhase && !exeDefeated && Math.random() < 0.02) {
             ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
-        // Vẽ mây và phong cảnh cổ điển chuẩn NES
         drawClouds(ctx);
         drawScenery(ctx);
 
-        // Render Blocks
         for (let b of mapBlocks) {
             if (b.type === 'ground') {
                 drawGroundBlock(ctx, b.x - cameraX, b.y, b.w, b.h);
