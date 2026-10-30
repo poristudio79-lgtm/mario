@@ -27,6 +27,8 @@ html_code = """
             border: 4px solid #fff;
             border-radius: 6px;
             overflow: hidden;
+            width: 640px;
+            height: 400px;
         }
         canvas { display: block; background: #5c94fc; transition: background 1s ease; }
         #ui-bar {
@@ -268,8 +270,8 @@ html_code = """
             
             <div id="menu-instructions">
                 🎮 <b>HƯỚNG DẪN ĐIỀU KHIỂN:</b><br>
-                • Di chuyển: Phím mũi tên <b>Trái / Phải</b> (hoặc <b>A / D</b>)<br>
-                • Nhảy: Phím <b>Space</b>, <b>Z</b> hoặc mũi tên <b>Lên / W</b><br>
+                • Di chuyển: Phím <b>Trái / Phải</b> (hoặc <b>A / D</b>)<br>
+                • Nhảy: Phím <b>Space</b>, <b>Z</b> hoặc phím <b>Lên / W</b><br>
                 • Chạy nhanh: Giữ phím <b>Shift</b>
             </div>
 
@@ -282,7 +284,7 @@ html_code = """
                 <div style="font-size: 16px; font-weight: bold; color: #ffcc00; margin-bottom: 5px;">CHỌN ĐỘ KHÓ:</div>
                 <div class="menu-buttons">
                     <button id="easy-btn" onclick="initGame('easy')">🟢 DỄ</button>
-                    <button id="hard-btn" onclick="initGame('hard')">🔴 KHÓ (Cân bằng)</button>
+                    <button id="hard-btn" onclick="initGame('hard')">🔴 KHÓ</button>
                 </div>
             </div>
         </div>
@@ -291,10 +293,10 @@ html_code = """
             <h2>📖 LUẬT CHƠI CHI TIẾT</h2>
             <div class="instruction-content">
                 <b>1. Mẹo thu thập xu:</b><br>
-                • Nhảy đội trán lên khối `(?)` vàng rực rỡ để nhận xu.<br><br>
+                • Nhảy đội trán lên khối `(?)` để lấy xu.<br><br>
                 <b>2. Sinh tử chiến:</b><br>
-                • Tìm <b>Thánh Kiếm</b> xuất hiện ngẫu nhiên trên bản đồ.<br>
-                • Khi đến lâu đài, Mario.EXE xuất hiện. Nhấp chuột vào màn hình để dùng thánh kiếm kết liễu hắn!
+                • Tìm <b>Thánh Kiếm</b> xuất hiện ngẫu nhiên.<br>
+                • Khi gặp Mario.EXE, click chuột để dùng Thánh Kiếm kết liễu hắn!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -342,8 +344,12 @@ let currentDifficulty = 'easy';
 let bgMusicInterval = null;
 
 function initAudio() {
-    if (!audioCtx) audioCtx = new AudioContext();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (!audioCtx) {
+        audioCtx = new AudioContext();
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
 }
 
 function showDifficultyMenu() {
@@ -352,8 +358,13 @@ function showDifficultyMenu() {
     difficultyScreen.style.display = 'flex';
 }
 
-function openHowToPlay() { instructionsModal.style.display = 'flex'; }
-function closeHowToPlay() { instructionsModal.style.display = 'none'; }
+function openHowToPlay() { 
+    initAudio();
+    instructionsModal.style.display = 'flex'; 
+}
+function closeHowToPlay() { 
+    instructionsModal.style.display = 'none'; 
+}
 
 function toggleMusic() {
     initAudio();
@@ -470,15 +481,14 @@ let hasSword = false;
 let swordItem = { x: 0, y: 0, w: 28, h: 28, collected: false };
 
 let mapBlocks = [];
-let goombas = [];
 let flagpoleObj = null;
 let flagX = 0;
 
 const keys = { left: false, right: false, jump: false, shift: false };
 
 window.addEventListener('keydown', e => {
-    if (!gameStarted || isCutscene || instructionsModal.style.display === 'flex' || gameOver || gameWon) return;
     initAudio();
+    if (!gameStarted || isCutscene || instructionsModal.style.display === 'flex' || gameOver || gameWon) return;
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
     if (e.key === 'Shift') keys.shift = true;
@@ -500,6 +510,7 @@ window.addEventListener('keyup', e => {
 });
 
 canvas.addEventListener('click', e => {
+    initAudio();
     if (isHorrorPhase && hasSword && !exeDefeated) {
         exeDefeated = true;
         playSound('slash');
@@ -509,17 +520,16 @@ canvas.addEventListener('click', e => {
     }
 });
 
-// Hàm vẽ chuẩn nhân vật NES Mario 8-bit theo đúng hình ảnh người dùng cung cấp
 function drawMarioSprite(ctx, x, y, facing, isJumping, moving) {
     ctx.save();
     ctx.translate(x + 16, y + 16);
     if (facing === 'left') ctx.scale(-1, 1);
 
-    const R = '#e52521'; // Red
-    const B = '#002db3'; // Blue
-    const S = '#fccc97'; // Skin
-    const H = '#8b4513'; // Hair/Boots
-    const Y = '#ffcc00'; // Yellow buttons
+    const R = '#e52521'; 
+    const B = '#002db3'; 
+    const S = '#fccc97'; 
+    const H = '#8b4513'; 
+    const Y = '#ffcc00'; 
 
     const marioPixels = [
         "      RRRRRR        ",
@@ -568,7 +578,6 @@ function drawMarioEXESprite(ctx, x, y) {
     ctx.restore();
 }
 
-// Vẽ gạch nền mặt đất cổ điển chuẩn NES (giống hình mẫu bản đồ)
 function drawGroundBlock(ctx, x, y, w, h) {
     ctx.fillStyle = '#c84c0c';
     ctx.fillRect(x, y, w, h);
@@ -583,7 +592,6 @@ function drawGroundBlock(ctx, x, y, w, h) {
     ctx.fillRect(x + 14, y, 2, h);
 }
 
-// Khối dấu chấm hỏi (?) siêu nét, có hiệu ứng pixel cổ điển
 function drawQuestionBlock(ctx, x, y, w, h, empty) {
     if (!empty) {
         ctx.fillStyle = '#ffcc00';
@@ -638,7 +646,6 @@ function drawTraditionalBrick(ctx, x, y, w, h, empty) {
     }
 }
 
-// Vẽ Lâu đài gạch chuẩn cổ điển NES kèm cờ sao trắng trên đỉnh
 function drawCastleAndPrincess(ctx) {
     let castleX = flagX - 70 - cameraX;
     let castleY = 5 * BLOCK_SIZE;
@@ -666,7 +673,6 @@ function drawCastleAndPrincess(ctx) {
     ctx.fillText('★', poleX + 7, poleY + 17);
 }
 
-// Vẽ mây trắng cổ điển NES trên bầu trời
 function drawClouds(ctx) {
     ctx.fillStyle = '#ffffff';
     let cloudPositions = [150, 450, 850, 1250, 1650];
@@ -680,7 +686,6 @@ function drawClouds(ctx) {
     }
 }
 
-// Vẽ lùm cây và ngọn đồi xanh chuẩn NES
 function drawScenery(ctx) {
     ctx.fillStyle = '#00aa00';
     ctx.beginPath();
@@ -714,62 +719,8 @@ function drawHolySword(ctx, x, y) {
     ctx.restore();
 }
 
-let score = 0;
-let coins = 0;
-let cameraX = 0;
-let maxMapWidth = 0;
-let isHorrorPhase = false;
-let isCutscene = false;
-let exeDefeated = false;
-let gameOver = false;
-let gameWon = false;
-let animFrame = 0;
-
-let hasSword = false;
-let swordItem = { x: 0, y: 0, w: 28, h: 28, collected: false };
-
-let mapBlocks = [];
-let goombas = [];
-let flagpoleObj = null;
-let flagX = 0;
-
-const keys = { left: false, right: false, jump: false, shift: false };
-
-window.addEventListener('keydown', e => {
-    if (!gameStarted || isCutscene || instructionsModal.style.display === 'flex' || gameOver || gameWon) return;
-    initAudio();
-    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
-    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
-    if (e.key === 'Shift') keys.shift = true;
-    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ' || e.key === 'z' || e.key === 'Z') {
-        if (!keys.jump && mario.grounded) {
-            mario.vy = -mario.jumpPower;
-            mario.grounded = false;
-            playSound('jump');
-        }
-        keys.jump = true;
-    }
-});
-
-window.addEventListener('keyup', e => {
-    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
-    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
-    if (e.key === 'Shift') keys.shift = false;
-    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ' || e.key === 'z' || e.key === 'Z') keys.jump = false;
-});
-
-canvas.addEventListener('click', e => {
-    if (isHorrorPhase && hasSword && !exeDefeated) {
-        exeDefeated = true;
-        playSound('slash');
-        dialogBox.style.display = 'none';
-        hudStatus.innerText = "🏆 MARIO.EXE ĐÃ BỊ TIÊU DIỆT! HÃY CHẠY TỚI CỜ LÂU ĐÀI!";
-        hudStatus.classList.remove('horror-hud');
-    }
-});
-
 function loadLevel(difficulty) {
-    mapBlocks = []; goombas = []; flagpoleObj = null;
+    mapBlocks = []; flagpoleObj = null;
     hasSword = false; swordItem.collected = false;
     isHorrorPhase = false; exeDefeated = false;
     canvas.style.background = "#5c94fc";
@@ -808,7 +759,6 @@ function loadLevel(difficulty) {
 
     swordItem.x = (350 + Math.floor(Math.random() * 500));
     swordItem.y = 6 * BLOCK_SIZE;
-    goombas.push({ x: 300, y: 8 * BLOCK_SIZE - 28, vx: -1, alive: true });
 }
 
 const mario = {
@@ -892,12 +842,16 @@ function triggerGameOver() {
 }
 
 function initGame(difficulty) {
+    initAudio();
     currentDifficulty = difficulty;
     gameStarted = true;
-    gameOver = false; gameWon = false;
-    score = 0; coins = 0;
+    gameOver = false; 
+    gameWon = false;
+    score = 0; 
+    coins = 0;
     introOverlay.style.display = 'none';
-    mario.x = 50; mario.y = 200;
+    mario.x = 50; 
+    mario.y = 200;
     loadLevel(difficulty);
     startBGM();
 }
