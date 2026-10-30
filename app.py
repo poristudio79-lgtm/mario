@@ -28,7 +28,7 @@ html_code = """
             border-radius: 6px;
             overflow: hidden;
         }
-        canvas { display: block; background: #5c94fc; transition: background 0.5s ease; }
+        canvas { display: block; background: #5c94fc; transition: background 1s ease; }
         #ui-bar {
             position: absolute;
             top: 10px;
@@ -182,10 +182,7 @@ html_code = """
         }
         #menu-instructions b { color: #ffcc00; }
 
-        .menu-buttons {
-            display: flex;
-            gap: 12px;
-        }
+        .menu-buttons { display: flex; gap: 12px; }
         #start-btn, #howtoplay-btn, #easy-btn, #hard-btn {
             padding: 11px 24px;
             font-size: 16px;
@@ -294,9 +291,10 @@ html_code = """
             <h2>📖 LUẬT CHƠI CHI TIẾT</h2>
             <div class="instruction-content">
                 <b>1. Mẹo thu thập xu:</b><br>
-                • Nhảy đội trán lên khối `(?)` để khối xẹp xuống và đồng xu văng ra nhận xu.<br><br>
+                • Nhảy đội trán lên khối `(?)` để khối xẹp xuống và nhận xu.<br><br>
                 <b>2. Sinh tử chiến:</b><br>
-                • Khi đến khu vực cuối, phản diện sẽ từ trong bóng tối bước ra. Tìm thánh kiếm ngẫu nhiên để tiêu diệt hắn và cứu công chúa!
+                • Tìm <b>Thánh Kiếm</b> ngẫu nhiên trên bản đồ.<br>
+                • Khi đến lâu đài, Mario.EXE xuất hiện. Nhấp vào Thánh Kiếm để kết liễu hắn và cứu công chúa!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -311,10 +309,10 @@ html_code = """
 
         <div id="dialog-box">
             <div id="dialog-speaker">😈 MARIO.EXE:</div>
-            <div id="dialog-text">"Chào đường hầm tử thần, bản sao yếu đuối ạ! Ngươi nghĩ bước qua được xác tao để cứu con công chúa đó sao? Hahaha, mạng mày tới đây là hết rồi!"</div>
+            <div id="dialog-text">"Chào đường hầm tử thần, bản sao yếu đuối! Mạng mày tới đây là hết rồi!"</div>
         </div>
 
-        <div id="hud-status">🌟 Chặng đường thử thách hướng về Lâu Đài!</div>
+        <div id="hud-status">🌟 Khám phá bản đồ & Tìm Thánh Kiếm!</div>
         <canvas id="gameCanvas" width="640" height="400"></canvas>
         
         <button id="retry-btn" onclick="resetGame()">🔄 TRY AGAIN</button>
@@ -334,6 +332,7 @@ const instructionsModal = document.getElementById('instructions-modal');
 const dialogBox = document.getElementById('dialog-box');
 const mainMenuButtons = document.getElementById('main-menu-buttons');
 const difficultyScreen = document.getElementById('difficulty-screen');
+const hudStatus = document.getElementById('hud-status');
 
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
@@ -353,13 +352,8 @@ function showDifficultyMenu() {
     difficultyScreen.style.display = 'flex';
 }
 
-function openHowToPlay() {
-    instructionsModal.style.display = 'flex';
-}
-
-function closeHowToPlay() {
-    instructionsModal.style.display = 'none';
-}
+function openHowToPlay() { instructionsModal.style.display = 'flex'; }
+function closeHowToPlay() { instructionsModal.style.display = 'none'; }
 
 function toggleMusic() {
     initAudio();
@@ -369,16 +363,19 @@ function toggleMusic() {
         stopBGM();
     } else {
         musicBtn.innerText = "🔊 Nhạc nền: BẬT";
-        if (isHorrorPhase && !gameOver && !gameWon) {
-            startBGM();
-        }
+        startBGM();
     }
 }
 
+// BGM Switching System: Cheerful vs Horror
 function startBGM() {
     if (isMusicMuted || bgMusicInterval) return;
-    const notes = [130.81, 155.56, 174.61, 196.00, 220.00, 261.63, 311.13];
     let step = 0;
+    
+    // Cheerful Melody Notes vs Horror Suspense Notes
+    const cheerfulNotes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 293.66, 349.23, 440.00, 349.23];
+    const horrorNotes = [130.81, 155.56, 174.61, 196.00, 220.00, 261.63, 311.13];
+
     bgMusicInterval = setInterval(() => {
         if (!audioCtx || isMusicMuted || gameOver || gameWon) return;
         try {
@@ -388,16 +385,28 @@ function startBGM() {
             osc.connect(gain);
             gain.connect(audioCtx.destination);
 
-            osc.type = 'sawtooth';
-            let freq = notes[step % notes.length];
-            osc.frequency.setValueAtTime(freq, now);
-            gain.gain.setValueAtTime(0.08, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.18);
-            osc.start(now);
-            osc.stop(now + 0.18);
+            if (!isHorrorPhase) {
+                // Cheerful Theme
+                osc.type = 'triangle';
+                let freq = cheerfulNotes[step % cheerfulNotes.length];
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(0.06, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else {
+                // Horror Suspense Theme
+                osc.type = 'sawtooth';
+                let freq = horrorNotes[step % horrorNotes.length];
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(0.09, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.18);
+                osc.start(now);
+                osc.stop(now + 0.18);
+            }
             step++;
         } catch(e){}
-    }, 200);
+    }, isHorrorPhase ? 200 : 180);
 }
 
 function stopBGM() {
@@ -432,6 +441,14 @@ function playSound(type) {
             gain.gain.linearRampToValueAtTime(0, now + 0.25);
             osc.start(now);
             osc.stop(now + 0.25);
+        } else if (type === 'sword') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(440, now);
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
         } else if (type === 'stomp') {
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(300, now);
@@ -440,14 +457,6 @@ function playSound(type) {
             gain.gain.linearRampToValueAtTime(0, now + 0.12);
             osc.start(now);
             osc.stop(now + 0.12);
-        } else if (type === 'scream') {
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(650, now);
-            osc.frequency.exponentialRampToValueAtTime(90, now + 0.9);
-            gain.gain.setValueAtTime(0.35, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.9);
-            osc.start(now);
-            osc.stop(now + 0.9);
         } else if (type === 'slash') {
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(1200, now);
@@ -469,25 +478,17 @@ let cameraX = 0;
 let maxMapWidth = 0;
 let isHorrorPhase = false;
 let isCutscene = false;
-let shadowStep = 0; // Tiến trình bước ra từ bóng tối
-let exeSpawned = false;
 let exeDefeated = false;
 let gameOver = false;
 let gameWon = false;
-let flashAlpha = 0;
-let shakeAmount = 0;
 let animFrame = 0;
 
-let isStabbing = false;
-let stabTimer = 0;
-let swordX = 220;
-let swordY = 260;
+let hasSword = false;
+let swordItem = { x: 0, y: 0, w: 28, h: 28, collected: false };
 
-let lightningTimer = 0;
 let lightningActive = false;
-let lightningFlash = 0;
+let lightningTimer = 0;
 
-let activeCoins = [];
 let mapBlocks = [];
 let goombas = [];
 let flagpoleObj = null;
@@ -496,7 +497,7 @@ let flagX = 0;
 const keys = { left: false, right: false, jump: false, shift: false };
 
 window.addEventListener('keydown', e => {
-    if (!gameStarted || isStabbing || isCutscene || instructionsModal.style.display === 'flex' || gameOver || gameWon) return;
+    if (!gameStarted || isCutscene || instructionsModal.style.display === 'flex' || gameOver || gameWon) return;
     initAudio();
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
@@ -517,6 +518,59 @@ window.addEventListener('keyup', e => {
     if (e.key === 'Shift') keys.shift = false;
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ' || e.key === 'z' || e.key === 'Z') keys.jump = false;
 });
+
+canvas.addEventListener('click', e => {
+    if (isHorrorPhase && hasSword && !exeDefeated) {
+        // Slash Boss
+        exeDefeated = true;
+        playSound('slash');
+        dialogBox.style.display = 'none';
+        hudStatus.innerText = "🏆 MARIO.EXE ĐÃ BỊ TIÊU DIỆT! HÃY CHẠY TỚI CỜ LÂU ĐÀI!";
+        hudStatus.classList.remove('horror-hud');
+    }
+});
+
+function drawHolySword(ctx, x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Aura Glow
+    let glow = ctx.createRadialGradient(0, 0, 2, 0, 0, 25);
+    glow.addColorStop(0, 'rgba(0, 229, 255, 0.9)');
+    glow.addColorStop(0.5, 'rgba(0, 150, 255, 0.4)');
+    glow.addColorStop(1, 'rgba(0, 0, 255, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI * 2); ctx.fill();
+
+    // Blade Metallic Gradient
+    let grad = ctx.createLinearGradient(-4, 0, 4, 0);
+    grad.addColorStop(0, '#e0f7fa');
+    grad.addColorStop(0.5, '#00e5ff');
+    grad.addColorStop(1, '#00838f');
+    ctx.fillStyle = grad;
+    
+    // Sword Shape
+    ctx.beginPath();
+    ctx.moveTo(0, -18);
+    ctx.lineTo(4, -8);
+    ctx.lineTo(3, 8);
+    ctx.lineTo(-3, 8);
+    ctx.lineTo(-4, -8);
+    ctx.closePath();
+    ctx.fill();
+
+    // Crossguard
+    ctx.fillStyle = '#ffd700';
+    ctx.fillRect(-8, 8, 16, 4);
+
+    // Hilt & Gem
+    ctx.fillStyle = '#8d6e63';
+    ctx.fillRect(-2, 12, 4, 7);
+    ctx.fillStyle = '#ff1744';
+    ctx.beginPath(); ctx.arc(0, 10, 2, 0, Math.PI * 2); ctx.fill();
+
+    ctx.restore();
+}
 
 function drawMarioSprite(ctx, x, y, facing, isJumping, moving) {
     ctx.save();
@@ -572,280 +626,47 @@ function drawMarioEXESprite(ctx, x, y) {
     ctx.fillStyle = '#ff0000';
     ctx.fillRect(-6, -7, 3, 4);
     ctx.fillRect(2, -7, 3, 4);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(-5, -6, 1, 2);
-    ctx.fillRect(3, -6, 1, 2);
-
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(-8, -3, 16, 4);
 
     ctx.fillStyle = '#7a0000';
     ctx.fillRect(-10, 2, 20, 8);
     ctx.fillStyle = '#1b4d8a';
     ctx.fillRect(-8, 6, 16, 6);
-    ctx.fillStyle = '#ffcc00';
-    ctx.fillRect(-5, 7, 2, 2);
-    ctx.fillRect(3, 7, 2, 2);
-
-    ctx.fillStyle = '#ff3333';
-    ctx.fillRect(-14, 4, 5, 5);
-    ctx.fillRect(9, 4, 5, 5);
-
-    ctx.fillStyle = '#3a3a22';
-    let legOffset = Math.sin(animFrame * 0.4) * 5;
-    ctx.fillRect(-10 + legOffset, 12, 8, 4);
-    ctx.fillRect(2 - legOffset, 12, 8, 4);
 
     ctx.restore();
-}
-
-function drawMarioEXEJumpscare(ctx, cx, cy) {
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.scale(3.2, 3.2);
-
-    ctx.fillStyle = '#6e0a0a';
-    ctx.fillRect(-25, -45, 50, 16);
-    ctx.fillRect(-30, -32, 60, 14);
-    ctx.fillStyle = '#fce8e6';
-    ctx.fillRect(-6, -42, 12, 10);
-
-    ctx.fillStyle = '#0f0505';
-    ctx.fillRect(-32, -18, 64, 45);
-
-    ctx.fillStyle = '#ff0000';
-    ctx.fillRect(-18, -12, 10, 10);
-    ctx.fillRect(8, -12, 10, 10);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(-14, -10, 3, 4);
-    ctx.fillRect(11, -10, 3, 4);
-
-    ctx.fillStyle = '#fce8e6';
-    ctx.beginPath();
-    ctx.arc(0, -2, 10, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(-24, 6, 48, 10);
-
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(-22, 16, 44, 38);
-
-    ctx.strokeStyle = '#fce8e6';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(-22, 16, 44, 38);
-
-    ctx.fillStyle = '#fce8e6';
-    for (let rx = -18; rx < 18; rx += 7) {
-        ctx.fillRect(rx, 16, 5, 10);
-    }
-    for (let rx = -18; rx < 18; rx += 7) {
-        ctx.fillRect(rx, 44, 5, 10);
-    }
-
-    ctx.restore();
-}
-
-function drawPrincessPixelArt(ctx, x, y, happy) {
-    ctx.save();
-    ctx.translate(x, y);
-
-    ctx.fillStyle = '#ffcc00';
-    ctx.fillRect(-14, -22, 18, 24);
-    ctx.fillStyle = '#e69500';
-    ctx.fillRect(-16, -18, 4, 18);
-    ctx.fillRect(-14, 2, 14, 8);
-
-    ctx.fillStyle = '#ffcc00';
-    ctx.fillRect(-6, -30, 12, 6);
-    ctx.fillStyle = '#00cccc';
-    ctx.fillRect(-5, -28, 2, 3);
-    ctx.fillStyle = '#ff33cc';
-    ctx.fillRect(-1, -29, 2, 4);
-    ctx.fillStyle = '#00cccc';
-    ctx.fillRect(3, -28, 2, 3);
-
-    ctx.fillStyle = '#fccc97';
-    ctx.fillRect(-6, -20, 12, 12);
-    ctx.fillStyle = '#ffcc00';
-    ctx.fillRect(-8, -24, 16, 5);
-
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(-3, -16, 2, 4);
-    ctx.fillRect(1, -16, 2, 4);
-
-    if (happy) {
-        ctx.fillStyle = '#ff0066';
-        ctx.fillRect(-2, -10, 4, 2);
-        ctx.fillRect(-3, -9, 1, 1);
-        ctx.fillRect(2, -9, 1, 1);
-    } else {
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(-1, -10, 2, 1);
-    }
-
-    ctx.fillStyle = '#00cccc';
-    ctx.fillRect(-8, -14, 3, 3);
-
-    ctx.fillStyle = '#ff33cc';
-    ctx.fillRect(-10, -6, 20, 14);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(-12, -4, 4, 8);
-    ctx.fillRect(8, -4, 4, 8);
-    ctx.fillStyle = '#e0115f';
-    ctx.fillRect(-14, 8, 28, 14);
-    ctx.fillStyle = '#ff66cc';
-    ctx.fillRect(-12, 12, 24, 8);
-
-    ctx.restore();
-}
-
-function drawMountains(ctx) {
-    ctx.fillStyle = '#008000';
-    let mountainPositions = [100, 350, 600, 850, 1150, 1450, 1750, 2050];
-    for (let mx of mountainPositions) {
-        let drawX = mx - cameraX * 0.4;
-        if (drawX < -150 || drawX > canvas.width + 150) continue;
-        
-        ctx.beginPath();
-        ctx.moveTo(drawX, canvas.height - 64);
-        ctx.lineTo(drawX + 70, canvas.height - 180);
-        ctx.lineTo(drawX + 140, canvas.height - 64);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.moveTo(drawX + 70, canvas.height - 180);
-        ctx.lineTo(drawX + 55, canvas.height - 150);
-        ctx.lineTo(drawX + 85, canvas.height - 150);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = '#008000';
-    }
-}
-
-function drawGoomba(ctx, g) {
-    if (!g.alive) return;
-    ctx.save();
-    ctx.translate(g.x - cameraX + 16, g.y + 16);
-    let legOffset = Math.sin(animFrame * 0.2) * 3;
-
-    ctx.fillStyle = isHorrorPhase ? '#4a0000' : '#8b4513';
-    ctx.beginPath();
-    ctx.arc(0, -2, 14, Math.PI, 0, false);
-    ctx.fill();
-
-    ctx.fillStyle = isHorrorPhase ? '#ff0000' : '#ffe4c4';
-    ctx.fillRect(-10, -2, 20, 12);
-
-    ctx.fillStyle = isHorrorPhase ? '#ff0000' : '#000';
-    ctx.fillRect(-6, 0, 3, 5);
-    ctx.fillRect(3, 0, 3, 5);
-
-    ctx.fillStyle = '#000';
-    ctx.fillRect(-10 + legOffset, 10, 8, 5);
-    ctx.fillRect(2 - legOffset, 10, 8, 5);
-    ctx.restore();
-}
-
-function drawFlagpoleAndBanner(ctx, flagpole) {
-    let fx = flagpole.x - cameraX;
-    let fy = flagpole.y;
-
-    ctx.fillStyle = '#d0d0d0';
-    ctx.fillRect(fx, fy, 8, flagpole.h);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(fx, fy, 3, flagpole.h);
-
-    ctx.fillStyle = '#ffcc00';
-    ctx.beginPath();
-    ctx.arc(fx + 4, fy, 8, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#e52521';
-    ctx.beginPath();
-    ctx.moveTo(fx + 8, fy + 8);
-    ctx.lineTo(fx + 64, fy + 26);
-    ctx.lineTo(fx + 8, fy + 44);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 20px monospace';
-    ctx.fillText('M', fx + 18, fy + 33);
 }
 
 function drawCastleAndPrincess(ctx) {
     let castleX = flagX - 70 - cameraX;
     let castleY = 5 * BLOCK_SIZE;
 
-    ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#4a1515' : '#b8521a';
+    ctx.fillStyle = isHorrorPhase ? '#300a0a' : '#b8521a';
     ctx.fillRect(castleX, castleY, 128, 128);
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 2;
     ctx.strokeRect(castleX, castleY, 128, 128);
 
-    ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#2d0b0b' : '#873600';
-    for(let gx = castleX; gx < castleX + 128; gx += 16) {
-        for(let gy = castleY; gy < castleY + 128; gy += 16) {
-            ctx.strokeRect(gx, gy, 16, 16);
-        }
-    }
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(castleX, castleY, 24, 16);
-    ctx.fillRect(castleX + 52, castleY, 24, 16);
-    ctx.fillRect(castleX + 104, castleY, 24, 16);
-
-    ctx.fillRect(castleX, castleY + 64, 24, 16);
-    ctx.fillRect(castleX + 104, castleY + 64, 24, 16);
-
     ctx.fillStyle = '#000000';
-    ctx.beginPath();
-    ctx.arc(castleX + 64, castleY + 128, 24, Math.PI, 0, false);
-    ctx.fill();
     ctx.fillRect(castleX + 40, castleY + 96, 48, 32);
-
-    ctx.fillRect(castleX + 32, castleY + 36, 16, 24);
-    ctx.fillRect(castleX + 80, castleY + 36, 16, 24);
-
-    drawPrincessPixelArt(ctx, castleX + 40, castleY + 46, exeDefeated);
 }
 
 function loadLevel(difficulty) {
-    mapBlocks = [];
-    goombas = [];
-    flagpoleObj = null;
+    mapBlocks = []; goombas = []; flagpoleObj = null;
+    hasSword = false; swordItem.collected = false;
+    isHorrorPhase = false; exeDefeated = false;
+    canvas.style.background = "#5c94fc";
 
-    let layout = [];
-    if (difficulty === 'easy') {
-        layout = [
-            "                                                            ",
-            "                                                            ",
-            "                   ?  $?                 ?  ?$?             ",
-            "               ---------                 -----              ",
-            "                                                            ",
-            "         ?  ?$?                         -----            |  ",
-            "                                        -----            |  ",
-            "        ---                                             [ ] ",
-            "===================   =============   ======================",
-            "===================   =============   ======================"
-        ];
-    } else {
-        layout = [
-            "                                                                              ",
-            "                                                                              ",
-            "                   ?  $? $$$ ?                     ?  ?$?                     ",
-            "               ---------   -----               -----             |            ",
-            "                                                                 |            ",
-            "         ?  ?$?                     -----                       [ ]           ",
-            "                                    -----                                     ",
-            "        ---                                                                   ",
-            "=== == ===   === === ===   === === ===   === === ===   === === === === === ===",
-            "=== == ===   === === ===   === === ===   === === ===   === === === === === ==="
-        ];
-    }
+    let layout = [
+        "                                                                ",
+        "                                                                ",
+        "                    ?   $?                 ?   ?$               ",
+        "                ---------                 -----                 ",
+        "                                                                ",
+        "         ?   ?$                        -----            |       ",
+        "                                     -----              |       ",
+        "        ---                                            [ ]      ",
+        "===================   =============   ==========================",
+        "===================   =============   =========================="
+    ];
 
     maxMapWidth = layout[0].length * BLOCK_SIZE;
 
@@ -856,31 +677,26 @@ function loadLevel(difficulty) {
             const y = r * BLOCK_SIZE;
 
             if (char === '=') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'ground' });
-            else if (char === '?') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'question', empty: false, bounce: 0 });
-            else if (char === '$') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'brick' });
+            else if (char === '?') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'question', empty: false });
             else if (char === '-') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'pipe' });
             else if (char === '|') {
                 flagX = x;
                 flagpoleObj = { x, y: y - 2 * BLOCK_SIZE, w: 10, h: 3 * BLOCK_SIZE };
-                mapBlocks.push({ x, y, w: 10, h: BLOCK_SIZE, type: 'flagpole' });
             }
         }
     }
 
-    if (difficulty === 'easy') {
-        goombas.push({ x: 300, y: 8 * BLOCK_SIZE - 28, vx: -1, minX: 250, maxX: 400, alive: true });
-    } else {
-        goombas.push(
-            { x: 250, y: 8 * BLOCK_SIZE - 28, vx: -1, minX: 180, maxX: 320, alive: true },
-            { x: 450, y: 8 * BLOCK_SIZE - 28, vx: -1, minX: 380, maxX: 520, alive: true }
-        );
-    }
+    // Spawn Random Sword Position
+    swordItem.x = (350 + Math.floor(Math.random() * 500));
+    swordItem.y = 6 * BLOCK_SIZE;
+
+    goombas.push({ x: 300, y: 8 * BLOCK_SIZE - 28, vx: -1, alive: true });
 }
 
 const mario = {
     x: 50, y: 200, w: 28, h: 32, vx: 0, vy: 0, speed: 3.5, jumpPower: 11, grounded: false, facing: 'right', moving: false,
     update() {
-        if (isStabbing || isCutscene || gameOver || gameWon) return;
+        if (isCutscene || gameOver || gameWon) return;
 
         let currentSpeed = keys.shift ? this.speed * 1.4 : this.speed;
         this.moving = false;
@@ -889,453 +705,148 @@ const mario = {
         else if (keys.right) { this.vx = currentSpeed; this.facing = 'right'; this.moving = true; }
         else this.vx = 0;
 
-        let prevY = this.y;
         this.vy += GRAVITY;
+        this.x += this.vx; if (this.x < 0) this.x = 0;
 
-        this.x += this.vx;
-        if (this.x < 0) this.x = 0;
-
+        // Collision Maps
         for (let b of mapBlocks) {
-            if (b.type === 'air' || (isHorrorPhase && !exeDefeated && b.type === 'flagpole')) continue;
             if (this.x < b.x + b.w && this.x + this.w > b.x && this.y < b.y + b.h && this.y + this.h > b.y) {
                 if (this.vx > 0) this.x = b.x - this.w;
                 else if (this.vx < 0) this.x = b.x + b.w;
             }
         }
 
-        this.y += this.vy;
-        this.grounded = false;
+        this.y += this.vy; this.grounded = false;
         for (let b of mapBlocks) {
-            if (b.type === 'air' || (isHorrorPhase && !exeDefeated && b.type === 'flagpole')) continue;
             if (this.x < b.x + b.w && this.x + this.w > b.x && this.y < b.y + b.h && this.y + this.h > b.y) {
                 if (this.vy > 0) {
-                    this.y = b.y - this.h;
-                    this.vy = 0;
-                    this.grounded = true;
+                    this.y = b.y - this.h; this.vy = 0; this.grounded = true;
                 } else if (this.vy < 0) {
-                    this.y = b.y + b.h;
-                    this.vy = 0;
+                    this.y = b.y + b.h; this.vy = 0;
                     if (b.type === 'question' && !b.empty) {
-                        b.empty = true;
-                        b.bounce = 8;
-                        coins++;
-                        score += 200;
+                        b.empty = true; coins++; score += 200;
                         playSound('coin');
-                        activeCoins.push({ x: b.x + 8, y: b.y, vy: -7, alpha: 1.0 });
                     }
                 }
             }
         }
 
-        if (exeDefeated && flagpoleObj) {
-            if (this.x + this.w >= flagpoleObj.x && this.x <= flagpoleObj.x + flagpoleObj.w + 20) {
-                gameWon = true;
-                retryBtn.style.display = 'block';
-                stopBGM();
-            }
+        // Sword Pick Up Collision
+        if (!swordItem.collected && this.x < swordItem.x + swordItem.w && this.x + this.w > swordItem.x && this.y < swordItem.y + swordItem.h && this.y + this.h > swordItem.y) {
+            swordItem.collected = true;
+            hasSword = true;
+            playSound('sword');
+            hudStatus.innerText = "⚔️ BẠN ĐÃ NHẶT ĐƯỢC THÁNH KIẾM! HÃY TIẾN LÊN PHÍA TRƯỚC!";
         }
 
-        for (let g of goombas) {
-            if (!g.alive) continue;
-            if (this.x < g.x + 28 && this.x + this.w > g.x && this.y < g.y + 28 && this.y + this.h > g.y) {
-                if (this.vy > 0 && prevY + this.h <= g.y + 12) {
-                    g.alive = false;
-                    this.vy = -7.5;
-                    score += 100;
-                    playSound('stomp');
-                } else {
-                    triggerGameOver();
-                }
-            }
+        // Trigger Horror Encounter Phase
+        if (this.x > flagX - 350 && !isHorrorPhase) {
+            isHorrorPhase = true;
+            canvas.style.background = "#4a0000"; // Red Sky
+            hudStatus.innerText = "⚠️ BẦU TRỜI HÓA ĐỎ! MARIO.EXE XUẤT HIỆN!";
+            hudStatus.classList.add('horror-hud');
+            dialogBox.style.display = 'block';
+            stopBGM();
+            startBGM(); // Restart BGM to Spooky Theme
         }
 
-        if (this.y > canvas.height + 60) {
-            triggerGameOver();
+        // Win Game Check
+        if (exeDefeated && flagpoleObj && this.x + this.w >= flagpoleObj.x) {
+            gameWon = true;
+            retryBtn.style.display = 'block';
+            stopBGM();
         }
+
+        if (this.y > canvas.height + 60) triggerGameOver();
     },
     draw() { drawMarioSprite(ctx, this.x - cameraX, this.y, this.facing, !this.grounded, this.moving); }
 };
 
 const marioEXE = {
-    x: 0, y: 0, w: 32, h: 32, speed: 2.5,
-    update() {
-        if (!exeSpawned || exeDefeated || isStabbing || isCutscene || gameOver) return;
-
-        if (this.x < mario.x) this.x += this.speed;
-        if (this.x > mario.x) this.x -= this.speed;
-        if (this.y < mario.y) this.y += 1;
-        if (this.y > mario.y) this.y -= 1;
-
-        if (Math.abs(this.x - mario.x) < 22 && Math.abs(this.y - mario.y) < 26) {
-            triggerGameOver();
-        }
-    },
-    draw() { if (exeSpawned && !exeDefeated) drawMarioEXESprite(ctx, this.x - cameraX, this.y); }
+    x: 0, y: 0,
+    draw() {
+        this.x = flagX - 180;
+        this.y = 8 * BLOCK_SIZE - 32;
+        drawMarioEXESprite(ctx, this.x - cameraX, this.y);
+    }
 };
 
-function initGame(difficulty) {
-    initAudio();
-    currentDifficulty = difficulty;
-    loadLevel(currentDifficulty);
-
-    if (currentDifficulty === 'hard') {
-        marioEXE.speed = 2.8;
-    } else {
-        marioEXE.speed = 2.4;
-    }
-
-    introOverlay.style.display = 'none';
-    gameStarted = true;
-}
-
 function triggerGameOver() {
-    if (gameOver) return;
     gameOver = true;
     retryBtn.style.display = 'block';
-    dialogBox.style.display = 'none';
-    playSound('scream');
     stopBGM();
+}
+
+function initGame(difficulty) {
+    currentDifficulty = difficulty;
+    gameStarted = true;
+    gameOver = false; gameWon = false;
+    score = 0; coins = 0;
+    introOverlay.style.display = 'none';
+    mario.x = 50; mario.y = 200;
+    loadLevel(difficulty);
+    startBGM();
 }
 
 function resetGame() {
-    score = 0;
-    coins = 0;
-    cameraX = 0;
-    isHorrorPhase = false;
-    isCutscene = false;
-    shadowStep = 0;
-    exeSpawned = false;
-    exeDefeated = false;
-    gameOver = false;
-    gameWon = false;
-    isStabbing = false;
-    stabTimer = 0;
-    flashAlpha = 0;
-    shakeAmount = 0;
-    activeCoins = [];
-
-    mario.x = 50;
-    mario.y = 200;
-    mario.vx = 0;
-    mario.vy = 0;
-
-    stopBGM();
     retryBtn.style.display = 'none';
     dialogBox.style.display = 'none';
-
-    gameStarted = false;
-    introOverlay.style.display = 'flex';
-    mainMenuButtons.style.display = 'none';
-    difficultyScreen.style.display = 'flex';
-
-    document.body.style.background = '#050505';
-    canvas.style.background = '#5c94fc';
-    document.getElementById('hud-status').innerText = "🌟 Chặng đường thử thách hướng về Lâu Đài!";
-    document.getElementById('hud-status').classList.remove('horror-hud');
-    document.getElementById('world-title').innerText = "1-1";
-    document.getElementById('world-title').style.color = "#fff";
+    hudStatus.classList.remove('horror-hud');
+    hudStatus.innerText = "🌟 Khám phá bản đồ & Tìm Thánh Kiếm!";
+    initGame(currentDifficulty);
 }
 
 function gameLoop() {
     animFrame++;
-    ctx.save();
-
-    if (shakeAmount > 0) {
-        ctx.translate((Math.random() - 0.5) * shakeAmount, (Math.random() - 0.5) * shakeAmount);
-        shakeAmount *= 0.9;
-    }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (gameStarted && !gameOver && !gameWon) {
+    if (gameStarted) {
         mario.update();
-        marioEXE.update();
 
-        for (let g of goombas) {
-            if (!g.alive) continue;
-            g.x += g.vx;
-            if (g.x < g.minX || g.x > g.maxX) g.vx *= -1;
-        }
+        // Smooth Camera Follow
+        cameraX = mario.x - canvas.width / 3;
+        if (cameraX < 0) cameraX = 0;
 
-        if (!isCutscene) {
-            cameraX = mario.x - canvas.width / 3;
-            if (cameraX < 0) cameraX = 0;
-            if (cameraX > maxMapWidth - canvas.width) cameraX = maxMapWidth - canvas.width;
-        }
-
-        // KÍCH HOẠT CẮT CẢNH PHẢN DIỆN BƯỚC TỪ BÓNG TỐI RANG BƯỚC RA
-        if (!isHorrorPhase && mario.x >= flagX - 180) {
-            isHorrorPhase = true;
-            isCutscene = true;
-            shadowStep = 0; // Bắt đầu tiến trình bóng tối
-
-            // Đặt phản diện ở x xa phía bên phải ngoài bóng tối để bước dần ra
-            marioEXE.x = flagX + 120;
-            marioEXE.y = 8 * BLOCK_SIZE - 32;
-
-            let minSwordX = 150;
-            let maxSwordX = flagX - 150;
-            swordX = Math.floor(Math.random() * (maxSwordX - minSwordX + 1)) + minSwordX;
-            swordY = 8 * BLOCK_SIZE - 24;
-
-            cameraX = flagX - canvas.width / 2 + 50;
-
-            flashAlpha = 0.8;
-            shakeAmount = 14;
-            playSound('scream');
-            startBGM();
-
-            dialogBox.style.display = 'block';
-
-            document.body.style.background = '#1a0000';
-            canvas.style.background = '#300000';
-            document.getElementById('hud-status').innerText = "⚠️ WARNING: PHẢN DIỆN TỪ BÓNG TỐI ĐANG BƯỚC RA! TÌM THÁNH KIẾM NGAY!";
-            document.getElementById('hud-status').classList.add('horror-hud');
-            document.getElementById('world-title').innerText = "DRILL";
-            document.getElementById('world-title').style.color = "#ff0000";
-        }
-
-        // TIẾN TRÌNH BƯỚC RA TỪ BÓNG TỐI TRONG CẮT CẢNH
-        if (isCutscene && isHorrorPhase && !exeSpawned) {
-            shadowStep += 0.015; // Tốc độ bước ra
-            if (shadowStep < 1) {
-                marioEXE.x = (flagX + 120) - (shadowStep * 140); // Từ từ di chuyển từ bóng tối sâu ra ngoài
-            } else {
-                exeSpawned = true;
-                setTimeout(() => {
-                    dialogBox.style.display = 'none';
-                    isCutscene = false;
-                }, 1500);
-            }
-        }
-
+        // Render Red Sky Lightning Flashes
         if (isHorrorPhase && !exeDefeated) {
             lightningTimer++;
-            if (lightningTimer > Math.random() * 80 + 40) {
-                lightningActive = true;
-                lightningFlash = 15;
-                lightningTimer = 0;
-                shakeAmount = 6;
-            }
-            if (lightningFlash > 0) lightningFlash--;
-            else lightningActive = false;
-        } else {
-            lightningActive = false;
-        }
-
-        if (isHorrorPhase && !exeDefeated && !isStabbing && Math.abs(mario.x - swordX) < 45 && Math.abs(mario.y - swordY) < 50) {
-            isStabbing = true;
-            stabTimer = 0;
-            playSound('slash');
-            shakeAmount = 20;
-            flashAlpha = 1.0;
-        }
-
-        if (isStabbing) {
-            stabTimer++;
-            mario.facing = 'right';
-            mario.x = marioEXE.x - 22;
-            mario.y = marioEXE.y;
-
-            if (stabTimer > 60) {
-                exeDefeated = true;
-                isStabbing = false;
-                stopBGM();
-
-                canvas.style.background = '#5c94fc';
-                document.body.style.background = '#050505';
-
-                document.getElementById('hud-status').innerText = "🚩 ĐÃ TIÊU DIỆT PHẢN DIỆN! TRỜI ĐÃ SÁNG LẠI, HÃY ĐẾN CỘT CỜ!";
-                document.getElementById('hud-status').classList.remove('horror-hud');
-                document.getElementById('world-title').innerText = "1-1";
-                document.getElementById('world-title').style.color = "#fff";
-            }
-        }
-    }
-
-    drawMountains(ctx);
-
-    for (let b of mapBlocks) {
-        if (b.x + b.w < cameraX || b.x > cameraX + canvas.width) continue;
-        
-        let renderY = b.y;
-        let renderH = b.h;
-        let renderW = b.w;
-
-        if (b.bounce > 0) {
-            let bounceVal = Math.sin((b.bounce / 8) * Math.PI);
-            renderY -= bounceVal * 10;
-            if (b.type === 'question') {
-                renderH = BLOCK_SIZE - (bounceVal * 12);
-                renderW = BLOCK_SIZE + (bounceVal * 4);
-            }
-            b.bounce--;
-        }
-
-        if (b.type === 'ground') {
-            ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#3a0d0d' : '#d86818';
-            ctx.fillRect(b.x - cameraX, renderY, renderW, renderH);
-            ctx.strokeStyle = '#000';
-            ctx.strokeRect(b.x - cameraX, renderY, renderW, renderH);
-        } else if (b.type === 'question') {
-            ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#2a1100' : (b.empty ? '#b87040' : '#fcb040');
-            ctx.fillRect(b.x - cameraX + (BLOCK_SIZE - renderW)/2, renderY, renderW, renderH);
-            ctx.strokeStyle = '#000';
-            ctx.strokeRect(b.x - cameraX + (BLOCK_SIZE - renderW)/2, renderY, renderW, renderH);
-            if (!b.empty) {
-                ctx.fillStyle = '#000';
-                ctx.font = 'bold 18px monospace';
-                ctx.fillText('?', b.x - cameraX + 10, renderY + 22);
-            }
-        } else if (b.type === 'brick') {
-            ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#550000' : '#b84418';
-            ctx.fillRect(b.x - cameraX, renderY, renderW, renderH);
-            ctx.strokeStyle = '#000';
-            ctx.strokeRect(b.x - cameraX, renderY, renderW, renderH);
-        } else if (b.type === 'pipe') {
-            ctx.fillStyle = (isHorrorPhase && !exeDefeated) ? '#1c3a1c' : '#00a800';
-            ctx.fillRect(b.x - cameraX, renderY, renderW, renderH);
-            ctx.strokeStyle = '#000';
-            ctx.strokeRect(b.x - cameraX, renderY, renderW, renderH);
-        }
-    }
-
-    for (let i = activeCoins.length - 1; i >= 0; i--) {
-        let ac = activeCoins[i];
-        ac.y += ac.vy;
-        ac.vy += 0.45;
-        ac.alpha -= 0.025;
-
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, ac.alpha);
-        ctx.fillStyle = '#ffcc00';
-        ctx.strokeStyle = '#b8860b';
-        ctx.beginPath();
-        ctx.ellipse(ac.x - cameraX, ac.y, 7, 12, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-
-        if (ac.alpha <= 0) {
-            activeCoins.splice(i, 1);
-        }
-    }
-
-    if (flagpoleObj) {
-        drawFlagpoleAndBanner(ctx, flagpoleObj);
-    }
-
-    drawCastleAndPrincess(ctx);
-
-    for (let g of goombas) drawGoomba(ctx, g);
-
-    if (isHorrorPhase && !exeDefeated && !isStabbing && !gameWon) {
-        ctx.save();
-        ctx.translate(swordX - cameraX + 10, swordY + Math.sin(animFrame * 0.1) * 4);
-        ctx.fillStyle = '#ffcc00';
-        ctx.shadowColor = '#ffff00';
-        ctx.shadowBlur = 15;
-        ctx.fillRect(-2, -18, 4, 22);
-        ctx.fillRect(-7, 2, 14, 4);
-        ctx.fillRect(-2, 6, 4, 6);
-        ctx.restore();
-    }
-
-    if (!gameOver) {
-        mario.draw();
-
-        // VẼ PHẢN DIỆN BƯỚC RA TỪ BÓNG TỐI LÚC CẮT CẢNH
-        if (isHorrorPhase && !exeDefeated) {
-            drawMarioEXESprite(ctx, marioEXE.x - cameraX, marioEXE.y);
-            
-            // Vẽ lớp phủ bóng tối u uất đang thu hẹp dần khi phản diện bước ra
-            if (shadowStep < 1) {
-                let grad = ctx.createLinearGradient(canvas.width - 250, 0, canvas.width, 0);
-                grad.addColorStop(0, "rgba(0,0,0,0)");
-                grad.addColorStop(1 - shadowStep, "rgba(0,0,0,0.98)");
-                ctx.fillStyle = grad;
+            if (lightningTimer % 120 === 0 || Math.random() < 0.02) {
+                ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
         }
+
+        // Render Blocks
+        for (let b of mapBlocks) {
+            ctx.fillStyle = b.type === 'ground' ? '#8b4513' : (b.type === 'question' ? (b.empty ? '#555' : '#ffcc00') : '#00aa00');
+            ctx.fillRect(b.x - cameraX, b.y, b.w, b.h);
+        }
+
+        // Render Random Sword
+        if (!swordItem.collected) {
+            drawHolySword(ctx, swordItem.x - cameraX + 14, swordItem.y + 14);
+        }
+
+        // Render Castle & Flag
+        if (flagpoleObj) {
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(flagpoleObj.x - cameraX, flagpoleObj.y, flagpoleObj.w, flagpoleObj.h);
+        }
+        drawCastleAndPrincess(ctx);
+
+        // Render Characters
+        mario.draw();
+        if (isHorrorPhase) marioEXE.draw();
+
+        // Update UI
+        document.getElementById('score').innerText = String(score).padStart(6, '0');
+        document.getElementById('coins').innerText = String(coins).padStart(2, '0');
     }
 
-    if (lightningActive && !exeDefeated) {
-        ctx.save();
-        ctx.strokeStyle = '#ffffff';
-        ctx.shadowColor = '#00ffff';
-        ctx.shadowBlur = 25;
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        let lx = Math.random() * canvas.width;
-        ctx.moveTo(lx, 0);
-        ctx.lineTo(lx - 40, canvas.height * 0.3);
-        ctx.lineTo(lx + 30, canvas.height * 0.6);
-        ctx.lineTo(lx - 20, canvas.height);
-        ctx.stroke();
-
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.restore();
-    }
-
-    if (isStabbing) {
-        ctx.save();
-        ctx.translate(mario.x - cameraX + 16, mario.y + 16);
-        ctx.fillStyle = '#ffff00';
-        ctx.shadowColor = '#ff0000';
-        ctx.shadowBlur = 20;
-        ctx.fillRect(5, -2, 28, 5);
-        ctx.fillRect(2, -6, 4, 13);
-        ctx.restore();
-    }
-
-    if (isHorrorPhase && !exeDefeated) {
-        ctx.fillStyle = 'rgba(150, 0, 0, 0.15)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    if (flashAlpha > 0) {
-        ctx.fillStyle = `rgba(255, 0, 0, ${flashAlpha})`;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        flashAlpha -= 0.05;
-    }
-
-    document.getElementById('score').innerText = String(score).padStart(6, '0');
-    document.getElementById('coins').innerText = String(coins).padStart(2, '0');
-
-    if (gameOver) {
-        ctx.fillStyle = '#080101';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        drawMarioEXEJumpscare(ctx, canvas.width / 2, canvas.height / 2 - 20);
-
-        ctx.fillStyle = '#ff0000';
-        ctx.font = 'bold 28px monospace';
-        ctx.textAlign = 'center';
-        ctx.shadowColor = '#000';
-        ctx.shadowBlur = 12;
-        ctx.fillText("YOU DIED", canvas.width / 2, 45);
-        ctx.textAlign = 'left';
-    } else if (gameWon) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        drawPrincessPixelArt(ctx, canvas.width / 2, canvas.height / 2 - 20, true);
-
-        ctx.fillStyle = '#22c55e';
-        ctx.font = 'bold 30px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText("VICTORY! PRINCESS SAVED!", canvas.width / 2, canvas.height / 2 + 50);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '14px monospace';
-        ctx.fillText("Bạn đã tiêu diệt phản diện xuất sắc và giải cứu công chúa thành công!", canvas.width / 2, canvas.height / 2 + 80);
-        ctx.textAlign = 'left';
-    }
-
-    ctx.restore();
     requestAnimationFrame(gameLoop);
 }
 
-requestAnimationFrame(gameLoop);
+gameLoop();
 </script>
 </body>
 </html>
