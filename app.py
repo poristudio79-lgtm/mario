@@ -291,10 +291,10 @@ html_code = """
             <h2>📖 LUẬT CHƠI CHI TIẾT</h2>
             <div class="instruction-content">
                 <b>1. Mẹo thu thập xu:</b><br>
-                • Nhảy đội trán lên khối `(?)` để khối xẹp xuống và nhận xu.<br><br>
+                • Nhảy đội trán lên khối `(?)` vàng rực rỡ để nhận xu.<br><br>
                 <b>2. Sinh tử chiến:</b><br>
-                • Tìm <b>Thánh Kiếm</b> ngẫu nhiên trên bản đồ.<br>
-                • Khi đến lâu đài, Mario.EXE xuất hiện. Nhấp vào Thánh Kiếm để kết liễu hắn và cứu công chúa!
+                • Tìm <b>Thánh Kiếm</b> xuất hiện ngẫu nhiên trên bản đồ.<br>
+                • Khi đến lâu đài, Mario.EXE xuất hiện. Nhấp vào màn hình để dùng thánh kiếm kết liễu hắn!
             </div>
             <button id="back-menu-btn" onclick="closeHowToPlay()">↩️ TRỞ VỀ MENU</button>
         </div>
@@ -367,12 +367,9 @@ function toggleMusic() {
     }
 }
 
-// BGM Switching System: Cheerful vs Horror
 function startBGM() {
     if (isMusicMuted || bgMusicInterval) return;
     let step = 0;
-    
-    // Cheerful Melody Notes vs Horror Suspense Notes
     const cheerfulNotes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 293.66, 349.23, 440.00, 349.23];
     const horrorNotes = [130.81, 155.56, 174.61, 196.00, 220.00, 261.63, 311.13];
 
@@ -386,7 +383,6 @@ function startBGM() {
             gain.connect(audioCtx.destination);
 
             if (!isHorrorPhase) {
-                // Cheerful Theme
                 osc.type = 'triangle';
                 let freq = cheerfulNotes[step % cheerfulNotes.length];
                 osc.frequency.setValueAtTime(freq, now);
@@ -395,7 +391,6 @@ function startBGM() {
                 osc.start(now);
                 osc.stop(now + 0.15);
             } else {
-                // Horror Suspense Theme
                 osc.type = 'sawtooth';
                 let freq = horrorNotes[step % horrorNotes.length];
                 osc.frequency.setValueAtTime(freq, now);
@@ -431,40 +426,28 @@ function playSound(type) {
             osc.frequency.exponentialRampToValueAtTime(550, now + 0.15);
             gain.gain.setValueAtTime(0.1, now);
             gain.gain.linearRampToValueAtTime(0, now + 0.15);
-            osc.start(now);
-            osc.stop(now + 0.15);
+            osc.start(now); osc.stop(now + 0.15);
         } else if (type === 'coin') {
             osc.type = 'sine';
             osc.frequency.setValueAtTime(987.77, now);
             osc.frequency.setValueAtTime(1318.51, now + 0.08);
             gain.gain.setValueAtTime(0.12, now);
             gain.gain.linearRampToValueAtTime(0, now + 0.25);
-            osc.start(now);
-            osc.stop(now + 0.25);
+            osc.start(now); osc.stop(now + 0.25);
         } else if (type === 'sword') {
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(440, now);
             osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
             gain.gain.setValueAtTime(0.2, now);
             gain.gain.linearRampToValueAtTime(0, now + 0.3);
-            osc.start(now);
-            osc.stop(now + 0.3);
-        } else if (type === 'stomp') {
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(300, now);
-            osc.frequency.linearRampToValueAtTime(80, now + 0.12);
-            gain.gain.setValueAtTime(0.2, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.12);
-            osc.start(now);
-            osc.stop(now + 0.12);
+            osc.start(now); osc.stop(now + 0.3);
         } else if (type === 'slash') {
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(1200, now);
             osc.frequency.exponentialRampToValueAtTime(100, now + 0.4);
             gain.gain.setValueAtTime(0.4, now);
             gain.gain.linearRampToValueAtTime(0, now + 0.4);
-            osc.start(now);
-            osc.stop(now + 0.4);
+            osc.start(now); osc.stop(now + 0.4);
         }
     } catch(e){}
 }
@@ -485,9 +468,6 @@ let animFrame = 0;
 
 let hasSword = false;
 let swordItem = { x: 0, y: 0, w: 28, h: 28, collected: false };
-
-let lightningActive = false;
-let lightningTimer = 0;
 
 let mapBlocks = [];
 let goombas = [];
@@ -521,7 +501,6 @@ window.addEventListener('keyup', e => {
 
 canvas.addEventListener('click', e => {
     if (isHorrorPhase && hasSword && !exeDefeated) {
-        // Slash Boss
         exeDefeated = true;
         playSound('slash');
         dialogBox.style.display = 'none';
@@ -530,11 +509,85 @@ canvas.addEventListener('click', e => {
     }
 });
 
+// Hàm vẽ khối gạch dấu chấm hỏi (?) siêu nét, có hiệu ứng pixel chuẩn Mario truyền thống
+function drawQuestionBlock(ctx, x, y, w, h, empty) {
+    if (!empty) {
+        // Màu nền vàng tươi sáng rực rỡ
+        ctx.fillStyle = '#ffcc00';
+        ctx.fillRect(x, y, w, h);
+
+        // Viền khối 3D sắc sảo
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(x, y, w, h);
+
+        // Góc phản quang sáng (Highlight) phong cách cổ điển
+        ctx.fillStyle = '#ffee66';
+        ctx.fillRect(x + 3, y + 3, 6, 6);
+        ctx.fillRect(x + w - 9, y + 3, 6, 6);
+
+        // Vẽ ký tự dấu chấm hỏi (?) sắc nét chuẩn pixel màu đen đậm
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 20px "Courier New", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('?', x + w / 2, y + h / 2 + 1);
+    } else {
+        // Khối xám trống sau khi đã ăn hết xu
+        ctx.fillStyle = '#777777';
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeStyle = '#333333';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, w, h);
+        
+        ctx.fillStyle = '#555555';
+        ctx.fillRect(x + 4, y + 4, w - 8, h - 8);
+    }
+}
+
+function drawTraditionalBrick(ctx, x, y, w, h, empty) {
+    if (!empty) {
+        ctx.fillStyle = '#b8521a';
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeStyle = '#331100';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, w, h);
+
+        ctx.fillStyle = '#ffcc99';
+        ctx.fillRect(x + 2, y + 2, 12, 12);
+        ctx.fillRect(x + 18, y + 2, 12, 12);
+        ctx.fillRect(x + 2, y + 18, 12, 12);
+        ctx.fillRect(x + 18, y + 18, 12, 12);
+
+        ctx.fillStyle = '#662200';
+        ctx.fillRect(x, y + 15, w, 2);
+        ctx.fillRect(x + 15, y, 2, h);
+    } else {
+        ctx.fillStyle = '#555';
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeStyle = '#222';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, w, h);
+    }
+}
+
+function drawGroundBlock(ctx, x, y, w, h) {
+    ctx.fillStyle = '#c84c0c';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, w, h);
+
+    ctx.fillStyle = '#fcbc5c';
+    ctx.fillRect(x + 2, y + 2, w - 4, 6);
+    ctx.fillStyle = '#880000';
+    ctx.fillRect(x, y + 12, w, 2);
+    ctx.fillRect(x + 12, y, 2, h);
+}
+
 function drawHolySword(ctx, x, y) {
     ctx.save();
     ctx.translate(x, y);
-
-    // Aura Glow
     let glow = ctx.createRadialGradient(0, 0, 2, 0, 0, 25);
     glow.addColorStop(0, 'rgba(0, 229, 255, 0.9)');
     glow.addColorStop(0.5, 'rgba(0, 150, 255, 0.4)');
@@ -542,33 +595,14 @@ function drawHolySword(ctx, x, y) {
     ctx.fillStyle = glow;
     ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI * 2); ctx.fill();
 
-    // Blade Metallic Gradient
     let grad = ctx.createLinearGradient(-4, 0, 4, 0);
-    grad.addColorStop(0, '#e0f7fa');
-    grad.addColorStop(0.5, '#00e5ff');
-    grad.addColorStop(1, '#00838f');
+    grad.addColorStop(0, '#e0f7fa'); grad.addColorStop(0.5, '#00e5ff'); grad.addColorStop(1, '#00838f');
     ctx.fillStyle = grad;
-    
-    // Sword Shape
-    ctx.beginPath();
-    ctx.moveTo(0, -18);
-    ctx.lineTo(4, -8);
-    ctx.lineTo(3, 8);
-    ctx.lineTo(-3, 8);
-    ctx.lineTo(-4, -8);
-    ctx.closePath();
-    ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(4, -8); ctx.lineTo(3, 8); ctx.lineTo(-3, 8); ctx.lineTo(-4, -8); ctx.closePath(); ctx.fill();
 
-    // Crossguard
-    ctx.fillStyle = '#ffd700';
-    ctx.fillRect(-8, 8, 16, 4);
-
-    // Hilt & Gem
-    ctx.fillStyle = '#8d6e63';
-    ctx.fillRect(-2, 12, 4, 7);
-    ctx.fillStyle = '#ff1744';
-    ctx.beginPath(); ctx.arc(0, 10, 2, 0, Math.PI * 2); ctx.fill();
-
+    ctx.fillStyle = '#ffd700'; ctx.fillRect(-8, 8, 16, 4);
+    ctx.fillStyle = '#8d6e63'; ctx.fillRect(-2, 12, 4, 7);
+    ctx.fillStyle = '#ff1744'; ctx.beginPath(); ctx.arc(0, 10, 2, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 }
 
@@ -582,31 +616,17 @@ function drawMarioSprite(ctx, x, y, facing, isJumping, moving) {
     ctx.fillRect(-8, -6, 14, 10);
     ctx.fillStyle = '#fccc97';
     ctx.fillRect(-10, -10, 16, 6);
-    ctx.fillStyle = '#000';
-    ctx.fillRect(2, -10, 3, 4);
-    ctx.fillRect(-4, -6, 12, 3);
-
     ctx.fillStyle = '#0020c2';
     ctx.fillRect(-8, 2, 16, 8);
-    ctx.fillStyle = '#ffff00';
-    ctx.fillRect(-6, 3, 3, 3);
-    ctx.fillRect(3, 3, 3, 3);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(-12, 3, 4, 5);
-    ctx.fillRect(8, 3, 4, 5);
 
     ctx.fillStyle = '#8b4513';
     if (isJumping) {
-        ctx.fillRect(-12, 8, 8, 6);
-        ctx.fillRect(4, 6, 8, 6);
+        ctx.fillRect(-12, 8, 8, 6); ctx.fillRect(4, 6, 8, 6);
     } else if (moving) {
         let legOffset = Math.sin(animFrame * 0.3) * 5;
-        ctx.fillRect(-10 + legOffset, 10, 8, 6);
-        ctx.fillRect(2 - legOffset, 10, 8, 6);
+        ctx.fillRect(-10 + legOffset, 10, 8, 6); ctx.fillRect(2 - legOffset, 10, 8, 6);
     } else {
-        ctx.fillRect(-10, 10, 8, 6);
-        ctx.fillRect(2, 10, 8, 6);
+        ctx.fillRect(-10, 10, 8, 6); ctx.fillRect(2, 10, 8, 6);
     }
     ctx.restore();
 }
@@ -615,38 +635,20 @@ function drawMarioEXESprite(ctx, x, y) {
     if (exeDefeated) return;
     ctx.save();
     ctx.translate(x + 16, y + 16);
-
-    ctx.fillStyle = '#8b0000';
-    ctx.fillRect(-10, -16, 18, 6);
-    ctx.fillRect(-12, -12, 20, 6);
-
-    ctx.fillStyle = '#0a0a0a';
-    ctx.fillRect(-10, -8, 16, 10);
-
-    ctx.fillStyle = '#ff0000';
-    ctx.fillRect(-6, -7, 3, 4);
-    ctx.fillRect(2, -7, 3, 4);
-
-    ctx.fillStyle = '#7a0000';
-    ctx.fillRect(-10, 2, 20, 8);
-    ctx.fillStyle = '#1b4d8a';
-    ctx.fillRect(-8, 6, 16, 6);
-
+    ctx.fillStyle = '#8b0000'; ctx.fillRect(-10, -16, 18, 6);
+    ctx.fillStyle = '#0a0a0a'; ctx.fillRect(-10, -8, 16, 10);
+    ctx.fillStyle = '#ff0000'; ctx.fillRect(-6, -7, 3, 4); ctx.fillRect(2, -7, 3, 4);
+    ctx.fillStyle = '#7a0000'; ctx.fillRect(-10, 2, 20, 8);
     ctx.restore();
 }
 
 function drawCastleAndPrincess(ctx) {
     let castleX = flagX - 70 - cameraX;
     let castleY = 5 * BLOCK_SIZE;
-
     ctx.fillStyle = isHorrorPhase ? '#300a0a' : '#b8521a';
     ctx.fillRect(castleX, castleY, 128, 128);
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(castleX, castleY, 128, 128);
-
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(castleX + 40, castleY + 96, 48, 32);
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect(castleX, castleY, 128, 128);
+    ctx.fillStyle = '#000000'; ctx.fillRect(castleX + 40, castleY + 96, 48, 32);
 }
 
 function loadLevel(difficulty) {
@@ -678,6 +680,7 @@ function loadLevel(difficulty) {
 
             if (char === '=') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'ground' });
             else if (char === '?') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'question', empty: false });
+            else if (char === '$') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'brick', empty: false });
             else if (char === '-') mapBlocks.push({ x, y, w: BLOCK_SIZE, h: BLOCK_SIZE, type: 'pipe' });
             else if (char === '|') {
                 flagX = x;
@@ -686,10 +689,8 @@ function loadLevel(difficulty) {
         }
     }
 
-    // Spawn Random Sword Position
     swordItem.x = (350 + Math.floor(Math.random() * 500));
     swordItem.y = 6 * BLOCK_SIZE;
-
     goombas.push({ x: 300, y: 8 * BLOCK_SIZE - 28, vx: -1, alive: true });
 }
 
@@ -708,7 +709,6 @@ const mario = {
         this.vy += GRAVITY;
         this.x += this.vx; if (this.x < 0) this.x = 0;
 
-        // Collision Maps
         for (let b of mapBlocks) {
             if (this.x < b.x + b.w && this.x + this.w > b.x && this.y < b.y + b.h && this.y + this.h > b.y) {
                 if (this.vx > 0) this.x = b.x - this.w;
@@ -723,7 +723,7 @@ const mario = {
                     this.y = b.y - this.h; this.vy = 0; this.grounded = true;
                 } else if (this.vy < 0) {
                     this.y = b.y + b.h; this.vy = 0;
-                    if (b.type === 'question' && !b.empty) {
+                    if ((b.type === 'question' || b.type === 'brick') && !b.empty) {
                         b.empty = true; coins++; score += 200;
                         playSound('coin');
                     }
@@ -731,7 +731,6 @@ const mario = {
             }
         }
 
-        // Sword Pick Up Collision
         if (!swordItem.collected && this.x < swordItem.x + swordItem.w && this.x + this.w > swordItem.x && this.y < swordItem.y + swordItem.h && this.y + this.h > swordItem.y) {
             swordItem.collected = true;
             hasSword = true;
@@ -739,18 +738,16 @@ const mario = {
             hudStatus.innerText = "⚔️ BẠN ĐÃ NHẶT ĐƯỢC THÁNH KIẾM! HÃY TIẾN LÊN PHÍA TRƯỚC!";
         }
 
-        // Trigger Horror Encounter Phase
         if (this.x > flagX - 350 && !isHorrorPhase) {
             isHorrorPhase = true;
-            canvas.style.background = "#4a0000"; // Red Sky
+            canvas.style.background = "#4a0000";
             hudStatus.innerText = "⚠️ BẦU TRỜI HÓA ĐỎ! MARIO.EXE XUẤT HIỆN!";
             hudStatus.classList.add('horror-hud');
             dialogBox.style.display = 'block';
             stopBGM();
-            startBGM(); // Restart BGM to Spooky Theme
+            startBGM();
         }
 
-        // Win Game Check
         if (exeDefeated && flagpoleObj && this.x + this.w >= flagpoleObj.x) {
             gameWon = true;
             retryBtn.style.display = 'block';
@@ -802,43 +799,43 @@ function gameLoop() {
 
     if (gameStarted) {
         mario.update();
-
-        // Smooth Camera Follow
         cameraX = mario.x - canvas.width / 3;
         if (cameraX < 0) cameraX = 0;
 
-        // Render Red Sky Lightning Flashes
-        if (isHorrorPhase && !exeDefeated) {
-            lightningTimer++;
-            if (lightningTimer % 120 === 0 || Math.random() < 0.02) {
-                ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
+        if (isHorrorPhase && !exeDefeated && Math.random() < 0.02) {
+            ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
         // Render Blocks
         for (let b of mapBlocks) {
-            ctx.fillStyle = b.type === 'ground' ? '#8b4513' : (b.type === 'question' ? (b.empty ? '#555' : '#ffcc00') : '#00aa00');
-            ctx.fillRect(b.x - cameraX, b.y, b.w, b.h);
+            if (b.type === 'ground') {
+                drawGroundBlock(ctx, b.x - cameraX, b.y, b.w, b.h);
+            } else if (b.type === 'question') {
+                drawQuestionBlock(ctx, b.x - cameraX, b.y, b.w, b.h, b.empty);
+            } else if (b.type === 'brick') {
+                drawTraditionalBrick(ctx, b.x - cameraX, b.y, b.w, b.h, b.empty);
+            } else if (b.type === 'pipe') {
+                ctx.fillStyle = '#00aa00';
+                ctx.fillRect(b.x - cameraX, b.y, b.w, b.h);
+                ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+                ctx.strokeRect(b.x - cameraX, b.y, b.w, b.h);
+            }
         }
 
-        // Render Random Sword
         if (!swordItem.collected) {
             drawHolySword(ctx, swordItem.x - cameraX + 14, swordItem.y + 14);
         }
 
-        // Render Castle & Flag
         if (flagpoleObj) {
             ctx.fillStyle = '#fff';
             ctx.fillRect(flagpoleObj.x - cameraX, flagpoleObj.y, flagpoleObj.w, flagpoleObj.h);
         }
         drawCastleAndPrincess(ctx);
 
-        // Render Characters
         mario.draw();
         if (isHorrorPhase) marioEXE.draw();
 
-        // Update UI
         document.getElementById('score').innerText = String(score).padStart(6, '0');
         document.getElementById('coins').innerText = String(coins).padStart(2, '0');
     }
